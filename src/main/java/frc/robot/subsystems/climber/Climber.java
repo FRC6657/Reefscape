@@ -4,7 +4,11 @@
 
 package frc.robot.subsystems.climber;
 
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
+import org.littletonrobotics.junction.Logger;
 
 public class Climber extends SubsystemBase {
 
@@ -16,5 +20,21 @@ public class Climber extends SubsystemBase {
   }
 
   @Override
-  public void periodic() {}
+  public void periodic() {
+    io.updateInputs(inputs);
+    Logger.processInputs("Climber", inputs);
+  }
+
+  public Command changeSetpoint(double setpoint) {
+    return this.runOnce(
+        () -> {
+          io.changeSetpoint(
+              MathUtil.clamp(
+                  setpoint, Constants.Climber.minRotations, Constants.Climber.maxRotations));
+        });
+  }
+
+  public boolean atSetpoint() {
+    return MathUtil.isNear(inputs.setpoint, inputs.position, 1);
+  }
 }
