@@ -25,6 +25,12 @@ public class Climber extends SubsystemBase {
     Logger.processInputs("Climber", inputs);
   }
 
+  /**
+   * Change the setpoint of the climber
+   *
+   * @param setpoint Rotations
+   * @return
+   */
   public Command changeSetpoint(double setpoint) {
     return this.runOnce(
         () -> {

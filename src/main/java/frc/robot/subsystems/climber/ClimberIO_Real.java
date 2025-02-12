@@ -12,57 +12,51 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.RobotController;
 import frc.robot.Constants;
 import org.littletonrobotics.junction.AutoLogOutput;
+import org.littletonrobotics.junction.Logger;
 
 public class ClimberIO_Real implements ClimberIO {
 
-  // motor controller
-  private SparkMax climberMotor;
-
-  RelativeEncoder climberEncoder;
+  // Motor
+  private SparkMax motor;
+  private RelativeEncoder encoder;
 
   // PID Controller
-  private PIDController climberPID = new PIDController(0, 0, 0); // TODO Tune
+  private PIDController pid = new PIDController(0, 0, 0); // TODO Tune
 
-  // store/log setpoints
-  @AutoLogOutput(key = "Climber/Angle Setpoint")
-  private double angleSetpoint = Constants.Climber.minRotations;
-
-  @AutoLogOutput(key = "Climber/Speed Setpoint")
-  private double speedSetpoint = 0;
+  // Log setpoint
+  @AutoLogOutput(key = "Climber/Setpoint")
+  private double setpoint = Constants.Climber.minRotations;
 
   public ClimberIO_Real() {
-    // motor configs
-    climberMotor = new SparkMax(Constants.CAN.Climber.id, MotorType.kBrushless);
-    climberMotor.setCANTimeout(250);
-    SparkMaxConfig mConfig = new SparkMaxConfig();
-    mConfig.inverted(false);
-    mConfig.voltageCompensation(12);
-    mConfig.smartCurrentLimit(Constants.Climber.currentLimit);
-    mConfig.idleMode(IdleMode.kBrake);
-    climberMotor.configure(mConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+    motor = new SparkMax(Constants.CAN.Climber.id, MotorType.kBrushless);
+    motor.setCANTimeout(250);
+    SparkMaxConfig config = new SparkMaxConfig();
+    config.inverted(false);
+    config.smartCurrentLimit(Constants.Climber.currentLimit);
+    config.idleMode(IdleMode.kBrake);
+    config.encoder.positionConversionFactor(1d / Constants.Climber.gearing);
+    config.encoder.velocityConversionFactor(1d / Constants.Climber.gearing);
+    motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+
     changeSetpoint(Constants.Climber.minRotations);
   }
 
   @Override
   public void updateInputs(ClimberIOInputs inputs) {
+    inputs.position = motor.getEncoder().getPosition();
+    inputs.velocity = motor.getEncoder().getVelocity();
+    inputs.current = motor.getOutputCurrent();
+    inputs.voltage = motor.getAppliedOutput() * RobotController.getBatteryVoltage();
+    inputs.temp = motor.getMotorTemperature();
+    inputs.setpoint = setpoint;
 
-    double pidOutput =
-        climberPID.calculate(Units.rotationsToRadians(inputs.encoderRelPosition), angleSetpoint);
-    climberMotor.setVoltage(pidOutput);
-
-    inputs.encoderRelPosition = Units.rotationsToRadians(climberEncoder.getPosition());
-    inputs.encoderVelocity = Units.rotationsToRadians(climberEncoder.getVelocity());
-
-    inputs.position = Units.rotationsToRadians(climberMotor.getEncoder().getPosition());
-    inputs.velocity = Units.rotationsToRadians(climberMotor.getEncoder().getVelocity());
-    inputs.current = climberMotor.getOutputCurrent();
-    inputs.voltage = climberMotor.getAppliedOutput() * RobotController.getBatteryVoltage();
-    inputs.temp = climberMotor.getMotorTemperature();
-    inputs.setpoint = angleSetpoint;
+    double pidOutput = pid.calculate(Units.rotationsToRadians(inputs.position), setpoint);
+    Logger.recordOutput("Climber/PIDOutputVoltage", pidOutput);
+    motor.setVoltage(pidOutput);
   }
 
   @Override
   public void changeSetpoint(double setpoint) {
-    angleSetpoint = setpoint;
+    this.setpoint = setpoint;
   }
 }
