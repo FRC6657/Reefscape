@@ -251,6 +251,9 @@ public class Constants {
     public static double maxAngle = Units.degreesToRadians(124);
     public static double minAngle = Units.degreesToRadians(10);
 
+    public static double coralScoreAngle = Units.degreesToRadians(100);
+    public static double algaeScoreAngle = Units.degreesToRadians(124);
+
     public static final double kPivotSupplyLimit = 40;
     public static final double kRollersCurrentLimit = 30;
 

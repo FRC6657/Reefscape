@@ -8,6 +8,7 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ScheduleCommand;
@@ -30,13 +31,22 @@ public class Superstructure {
   Outtake outtake;
   Intake intake;
 
+  @AutoLogOutput(key = "States/Selected Reef")
   private String selectedReef = "Left"; // Selected Reef Pole
 
+  @AutoLogOutput(key = "States/Elevator Level")
   private int elevatorLevel = 2; // Selected Reef Level
 
+  @AutoLogOutput(key = "States/Selected Piece")
+  private String selectedPiece = "Coral";
+
   private double[] elevatorSetpoints = {
-    0, 0, Units.inchesToMeters(14), Units.inchesToMeters(30), Units.inchesToMeters(55)
-  }; // Array for easily grabbing setpoint heights.
+    0,
+    0,
+    Units.inchesToMeters(14),
+    Units.inchesToMeters(30),
+    Units.inchesToMeters(55) // Array for easily grabbing setpoint heights.
+  };
 
   // Constructor
   public Superstructure(Swerve drivebase, Elevator elevator, Outtake outtake, Intake intake) {
@@ -125,13 +135,15 @@ public class Superstructure {
 
   // Simple command to change the selected reef pole.
   public Command selectReef(String reef) {
-    System.out.println("Selected Reef: " + reef);
-    return Commands.runOnce(
-        () -> {
-          this.selectedReef = reef;
-        });
+    return Commands.runOnce(() -> this.selectedReef = reef);
   }
 
+  // Select Coral Mode
+  public Command selectPiece(String piece) {
+    return Commands.runOnce(() -> selectedPiece = piece);
+  }
+
+  // Change Elevator Setpoint to the selected reef level.
   public Command raiseElevator() {
     return elevator.changeSetpoint(() -> elevatorSetpoints[elevatorLevel]);
   }
@@ -151,18 +163,79 @@ public class Superstructure {
                 .andThen(Commands.waitUntil(elevator::atSetpoint))));
   }
 
-  // Command to score a coral.
-  // Command will lower the elevator when finished.
-  // Ends when the elevator is at the bottom.
-  public Command ScoreCoral() {
+  // Command for intaking coral from the human player station
+  public Command ElevatorIntake() {
     return Commands.sequence(
-        Commands.print("Score Coral"),
-        Commands.waitSeconds(0.25),
-        elevator.changeSetpoint(0),
-        Commands.waitUntil(elevator::atSetpoint));
+        outtake.changeRollerSetpoint(-0.5),
+        Commands.waitUntil(outtake::coralDetected),
+        outtake.changeRollerSetpoint(0));
   }
 
-  // Simple Test Auto that just runs a path.
+  // Command for intaking game pieces from the ground
+  public Command GroundIntake() {
+    return Commands.either(
+        Commands.sequence( // Coral
+            intake.changePivotSetpoint(Units.degreesToRadians(2)),
+            intake.changeRollerSpeed(-Constants.Intake.kGroundIntakeSpeed)),
+        Commands.sequence( // Algae
+            intake.changePivotSetpoint(Units.degreesToRadians(60)),
+            intake.changeRollerSpeed(Constants.Intake.kGroundIntakeSpeed)),
+        () -> selectedPiece == "Coral");
+  }
+
+  // Retracts the intake, while keeping a grip on the game piece
+  public Command RetractIntake() {
+    return Commands.either(
+        Commands.sequence(
+            intake.changePivotSetpoint(Constants.Intake.maxAngle),
+            intake.changeRollerSpeed(-Constants.Intake.kFeedSpeed / 1.5)),
+        Commands.sequence(
+            intake.changePivotSetpoint(Constants.Intake.maxAngle),
+            intake.changeRollerSpeed(Constants.Intake.kFeedSpeed)),
+        () -> selectedPiece == "Coral");
+  }
+
+  // Scores a piece out of the ground intake.
+  public Command GroundIntakeScore() {
+    return Commands.either(
+            Commands.sequence(
+                intake.changePivotSetpoint(Constants.Intake.coralScoreAngle),
+                intake.changeRollerSpeed(Constants.Intake.kFeedSpeed)),
+            Commands.sequence(
+                intake.changePivotSetpoint(Constants.Intake.coralScoreAngle),
+                intake.changeRollerSpeed(-Constants.Intake.kGroundIntakeSpeed)),
+            () -> selectedPiece == "Coral")
+        .andThen(
+            Commands.sequence(
+                intake.changePivotSetpoint(Constants.Intake.maxAngle),
+                intake.changeRollerSpeed(0)));
+  }
+
+  // Scores a coral from the elevator
+  public Command ElevatorScore() {
+    return Commands.sequence(
+        outtake.changeRollerSetpoint(-0.4),
+        Commands.print("ElevatorScore"),
+        Commands.waitUntil(() -> !outtake.coralDetected()).unless(RobotBase::isSimulation),
+        outtake.changeRollerSetpoint(0));
+  }
+
+  // Scores a piece.
+  // If the elevator is up it will score from the elevator, otherwise it will score from the ground
+  // intake.
+  public Command Score() {
+    return Commands.either(GroundIntakeScore(), ElevatorScore(), elevator::isDown);
+  }
+
+  // Stows all mechanisms, and stops all rollers.
+  public Command HomeRobot() {
+    return Commands.sequence(
+        outtake.changeRollerSetpoint(0),
+        elevator.changeSetpoint(0),
+        intake.changePivotSetpoint(Constants.Intake.maxAngle),
+        intake.changeRollerSpeed(0));
+  }
+
   public AutoRoutine testAuto(AutoFactory factory, boolean mirror) {
 
     final AutoRoutine routine = factory.newRoutine("Test 3 Piece");
@@ -179,7 +252,7 @@ public class Superstructure {
         .onTrue(
             Commands.sequence(
                 ReefAlgin(mirror ? "Right" : "Left", 4).asProxy(),
-                ScoreCoral().asProxy(),
+                Score().asProxy(),
                 new ScheduleCommand(P1_I1.cmd())));
 
     P1_I1
@@ -195,7 +268,7 @@ public class Superstructure {
         .onTrue(
             Commands.sequence(
                 ReefAlgin(mirror ? "Right" : "Left", 4).asProxy(),
-                ScoreCoral().asProxy(),
+                Score().asProxy(),
                 new ScheduleCommand(P2_I2.cmd())));
 
     P2_I2
@@ -210,7 +283,7 @@ public class Superstructure {
         .atTime("Score")
         .onTrue(
             Commands.sequence(
-                ReefAlgin(mirror ? "Left" : "Right", 4).asProxy(), ScoreCoral().asProxy()));
+                ReefAlgin(mirror ? "Left" : "Right", 4).asProxy(), Score().asProxy()));
 
     routine.active().onTrue(Commands.sequence(S_P1.resetOdometry(), S_P1.cmd()));
 

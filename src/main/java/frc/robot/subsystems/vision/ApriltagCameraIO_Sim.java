@@ -34,7 +34,7 @@ public class ApriltagCameraIO_Sim implements ApriltagCameraIO {
     cameraSim.setMaxSightRange(7);
     sim.addCamera(cameraSim, cameraInfo.robotToCamera);
     try {
-      var field = AprilTagFieldLayout.loadField(AprilTagFields.k2025Reefscape);
+      var field = AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeWelded);
       field.setOrigin(OriginPosition.kBlueAllianceWallRightSide);
       sim.addAprilTags(field);
     } catch (Exception e) {

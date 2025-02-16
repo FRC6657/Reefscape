@@ -3,7 +3,6 @@ package frc.robot.subsystems.elevator;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
-import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.util.Units;
@@ -19,8 +18,6 @@ public class ElevatorIO_Real implements ElevatorIO {
 
   private double kSetpoint = Constants.Elevator.minHeight;
   private MotionMagicVoltage motionMagicVoltage = new MotionMagicVoltage(0);
-
-  private boolean useRawVoltage = true;
 
   public ElevatorIO_Real() {
 
@@ -103,38 +100,21 @@ public class ElevatorIO_Real implements ElevatorIO {
     inputs.leaderMotorVoltage = leaderMotor.get() * RobotController.getBatteryVoltage();
     inputs.followMotorVoltage = followMotor.getMotorVoltage().getValueAsDouble();
 
-    if (!useRawVoltage) {
-      // Stop if we are at 0
-      if (kSetpoint == Constants.Elevator.minHeight
-          && Math.abs(inputs.kPosition - inputs.kSetpoint)
-              < Constants.Elevator.setpointTollerance) {
-        leaderMotor.setControl(new VoltageOut(0));
-      } else {
-        leaderMotor.setControl(
-            motionMagicVoltage.withPosition(
-                Units.metersToInches(kSetpoint / Constants.Elevator.stages)
-                    / (Constants.Elevator.sprocketPD * Math.PI)));
-      }
+    leaderMotor.setControl(
+        motionMagicVoltage.withPosition(
+            Units.metersToInches(kSetpoint / Constants.Elevator.stages)
+                / (Constants.Elevator.sprocketPD * Math.PI)));
 
-      followMotor.setControl(new Follower(CAN.Elevetor_Leader.id, false));
+    followMotor.setControl(new Follower(CAN.Elevetor_Leader.id, false));
 
-      // Logging for motion magic internal variables for tuning purposes.
-      Logger.recordOutput("Elevator/MotionMagicPosition", motionMagicVoltage.Position);
-      Logger.recordOutput(
-          "Elevator/MotionMagicSetpoint", leaderMotor.getClosedLoopReference().getValueAsDouble());
-    }
+    // Logging for motion magic internal variables for tuning purposes.
+    Logger.recordOutput("Elevator/MotionMagicPosition", motionMagicVoltage.Position);
+    Logger.recordOutput(
+        "Elevator/MotionMagicSetpoint", leaderMotor.getClosedLoopReference().getValueAsDouble());
   }
 
   @Override
   public void changeSetpoint(double setpoint) {
-    useRawVoltage = false;
     kSetpoint = setpoint;
-  }
-
-  @Override
-  public void setRawVoltage(double voltage) {
-    useRawVoltage = true;
-    leaderMotor.setControl(new VoltageOut(voltage));
-    followMotor.setControl(new Follower(CAN.Elevetor_Leader.id, false));
   }
 }

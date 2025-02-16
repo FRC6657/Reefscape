@@ -26,7 +26,6 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.Constants.AutoConstants;
-import frc.robot.util.RepulsorFieldPlanner;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
@@ -52,8 +51,6 @@ public class Swerve extends SubsystemBase {
   private SwerveDrivePoseEstimator poseEstimator =
       new SwerveDrivePoseEstimator(
           kinematics, new Rotation2d(gyroInputs.yaw), getModulePositions(), new Pose2d());
-
-  private RepulsorFieldPlanner repulsor = new RepulsorFieldPlanner();
 
   public Swerve(ModuleIO[] moduleIOs, GyroIO gyroIO) {
 
@@ -170,25 +167,6 @@ public class Swerve extends SubsystemBase {
             })
         .until(() -> atPose(target.get()))
         .andThen(Commands.runOnce(() -> this.driveChassisSpeeds(new ChassisSpeeds())));
-  }
-
-  public Command repulsorCommand(Supplier<Pose2d> target) {
-    return this.run(
-            () -> {
-              Logger.recordOutput("Swerve/Repulsor/EndGoal", target.get());
-              // Check if we are within 1 meter of the end goal
-              if (getPose().getTranslation().getDistance(target.get().getTranslation()) < 1) {
-                Logger.recordOutput("Swerve/PositioningMode", "PID");
-                positionController(target.get());
-              } else {
-                Logger.recordOutput("Swerve/PositioningMode", "Repulsor");
-                repulsor.setGoal(target.get().getTranslation());
-                repulsorController(
-                    getPose(),
-                    repulsor.getCmd(getPose(), getCurrentFieldRelativeSpeeds(), 2, true));
-              }
-            })
-        .until(() -> atPose(target.get()));
   }
 
   public void positionController(Pose2d targetPose) {
