@@ -8,7 +8,6 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.RobotController;
 import frc.robot.Constants;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -18,27 +17,26 @@ public class ClimberIO_Real implements ClimberIO {
 
   // Motor
   private SparkMax motor;
-  private RelativeEncoder encoder;
 
   // PID Controller
   private PIDController pid = new PIDController(0, 0, 0); // TODO Tune
 
   // Log setpoint
   @AutoLogOutput(key = "Climber/Setpoint")
-  private double setpoint = Constants.Climber.minRotations;
+  private double setpoint = Constants.ClimberConstants.minRotations;
 
   public ClimberIO_Real() {
     motor = new SparkMax(Constants.CAN.Climber.id, MotorType.kBrushless);
     motor.setCANTimeout(250);
     SparkMaxConfig config = new SparkMaxConfig();
     config.inverted(false);
-    config.smartCurrentLimit(Constants.Climber.currentLimit);
+    config.smartCurrentLimit(Constants.ClimberConstants.currentLimit);
     config.idleMode(IdleMode.kBrake);
-    config.encoder.positionConversionFactor(1d / Constants.Climber.gearing);
-    config.encoder.velocityConversionFactor(1d / Constants.Climber.gearing);
+    config.encoder.positionConversionFactor(1d / Constants.ClimberConstants.gearing);
+    config.encoder.velocityConversionFactor(1d / Constants.ClimberConstants.gearing);
     motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
-    changeSetpoint(Constants.Climber.minRotations);
+    changeSetpoint(Constants.ClimberConstants.minRotations);
   }
 
   @Override
@@ -50,7 +48,7 @@ public class ClimberIO_Real implements ClimberIO {
     inputs.temp = motor.getMotorTemperature();
     inputs.setpoint = setpoint;
 
-    double pidOutput = pid.calculate(Units.rotationsToRadians(inputs.position), setpoint);
+    double pidOutput = pid.calculate(inputs.position, setpoint);
     Logger.recordOutput("Climber/PIDOutputVoltage", pidOutput);
     motor.setVoltage(pidOutput);
   }

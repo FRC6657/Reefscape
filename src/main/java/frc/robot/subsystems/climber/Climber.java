@@ -36,7 +36,7 @@ public class Climber extends SubsystemBase {
         () -> {
           io.changeSetpoint(
               MathUtil.clamp(
-                  setpoint, Constants.Climber.minRotations, Constants.Climber.maxRotations));
+                  setpoint, Constants.ClimberConstants.minRotations, Constants.ClimberConstants.maxRotations));
         });
   }
 

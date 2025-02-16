@@ -326,7 +326,7 @@ public class Constants {
             .withMotionMagicAcceleration((kMaxAcceleration / stages) / (sprocketPD * Math.PI));
   }
 
-  public static final class Climber {
+  public static final class ClimberConstants {
     public static double maxRotations = 90;
     public static double minRotations = 0;
     public static double gearing = 60d;

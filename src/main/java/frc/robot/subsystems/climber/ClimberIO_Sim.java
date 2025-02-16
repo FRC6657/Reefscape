@@ -18,17 +18,17 @@ public class ClimberIO_Sim implements ClimberIO {
   private double speedSetpoint = 0;
 
   @AutoLogOutput(key = "Climber/Angle Setpoint")
-  private double angleSetpoint = Constants.Climber.minRotations;
+  private double angleSetpoint = Constants.ClimberConstants.minRotations;
 
   private DCMotorSim climberSim =
       new DCMotorSim(
-          LinearSystemId.createDCMotorSystem(DCMotor.getNEO(1), 0.0001, Constants.Climber.gearing),
+          LinearSystemId.createDCMotorSystem(DCMotor.getNEO(1), 0.0001, Constants.ClimberConstants.gearing),
           DCMotor.getNEO(1));
 
   private PIDController climberPID = new PIDController(96d / 360, 0, 0);
 
   public ClimberIO_Sim() {
-    climberSim.setState(Units.degreesToRadians(Constants.Climber.maxRotations), 0);
+    climberSim.setState(Units.degreesToRadians(Constants.ClimberConstants.maxRotations), 0);
     climberPID.setTolerance(2);
   }
 

@@ -21,8 +21,13 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.Swerve.ModuleInformation;
+import frc.robot.Constants.ClimberConstants;
 import frc.robot.Constants.VisionConstants;
 import frc.robot.subsystems.Superstructure;
+import frc.robot.subsystems.climber.Climber;
+import frc.robot.subsystems.climber.ClimberIO;
+import frc.robot.subsystems.climber.ClimberIO_Real;
+import frc.robot.subsystems.climber.ClimberIO_Sim;
 import frc.robot.subsystems.drivebase.GyroIO;
 import frc.robot.subsystems.drivebase.GyroIO_Real;
 import frc.robot.subsystems.drivebase.ModuleIO;
@@ -51,10 +56,10 @@ public class Robot extends LoggedRobot {
   private CommandGenericHID operator = new CommandGenericHID(1);
 
   private Swerve drivebase;
-
   private Elevator elevator;
   private Outtake outtake;
   private Intake intake;
+  private Climber climber;
 
   private ApriltagCamera[] cameras;
 
@@ -87,6 +92,7 @@ public class Robot extends LoggedRobot {
     intake = new Intake(RobotBase.isReal() ? new IntakeIO_Real() : new IntakeIO_Sim());
     elevator = new Elevator(RobotBase.isReal() ? new ElevatorIO_Real() : new ElevatorIO_Sim());
     outtake = new Outtake(RobotBase.isReal() ? new OuttakeIO_Real() : new OuttakeIO_Sim());
+    climber = new Climber(RobotBase.isReal() ? new ClimberIO_Real() : new ClimberIO_Sim());
 
     // cameras =
     //     new ApriltagCamera[] {
@@ -151,8 +157,11 @@ public class Robot extends LoggedRobot {
     operator.button(2).onTrue(superstructure.selectPiece("Coral"));
     operator.button(5).onTrue(superstructure.selectPiece("Algae"));
 
-    operator.button(3).onTrue(superstructure.selectReef("Left"));
-    operator.button(5).onTrue(superstructure.selectReef("Right"));
+    operator.button(6).onTrue(superstructure.selectReef("Left"));
+    operator.button(3).onTrue(superstructure.selectReef("Right"));
+
+    operator.button(1).onTrue(climber.changeSetpoint(ClimberConstants.maxRotations));
+    operator.button(4).onTrue(climber.changeSetpoint(ClimberConstants.minRotations));
 
     driver
         .y()
