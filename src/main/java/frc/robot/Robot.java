@@ -125,6 +125,8 @@ public class Robot extends LoggedRobot {
     autoChooser.addOption("Test Auto Processor", superstructure.testAuto(autoFactory, true).cmd());
     autoChooser.addOption("One Piece", superstructure.onePiece(autoFactory, false).cmd());
     autoChooser.addOption("One Piece Processor", superstructure.onePiece(autoFactory, true).cmd());
+    autoChooser.addOption("Two Piece Adjacent", superstructure.TwoCoralAdjacent(autoFactory, false).cmd());
+    autoChooser.addOption("Two Piece Adjacent Processor", superstructure.TwoCoralAdjacent(autoFactory, true).cmd());
     autoChooser.addOption("Two Piece 180", superstructure.TwoCoral180(autoFactory, false).cmd());
     autoChooser.addOption("Two Piece 180 Processor", superstructure.TwoCoral180(autoFactory, true).cmd());
   }

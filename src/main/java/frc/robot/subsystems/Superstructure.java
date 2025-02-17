@@ -373,4 +373,40 @@ public class Superstructure {
 
     return routine;
   }
+  public AutoRoutine TwoCoralAdjacent(AutoFactory factory, boolean mirror) {
+
+    final AutoRoutine routine = factory.newRoutine("Two Coral Adjacent");
+
+    String mirrorFlag = mirror ? "mirrored_" : "";
+
+    final AutoTrajectory S_P1 = routine.trajectory(mirrorFlag + "Two Coral Adjacent", 0);
+    final AutoTrajectory P1_I1 = routine.trajectory(mirrorFlag + "Two Coral Adjacent", 1);
+    final AutoTrajectory I1_P2 = routine.trajectory(mirrorFlag + "Two Coral Adjacent", 2);
+
+    S_P1.atTime("Score")
+        .onTrue(
+            Commands.sequence(
+                ReefAlign(mirror ? "Right" : "Left", 4).asProxy(),
+                Score().asProxy(),
+                new ScheduleCommand(P1_I1.cmd())));
+
+    P1_I1
+        .done()
+        .onTrue(
+            Commands.sequence(
+                outtake.changeRollerSetpoint(-0.5).asProxy(),
+                Commands.waitUntil(outtake::coralDetected).withTimeout(3).asProxy(),
+                new ScheduleCommand(I1_P2.cmd())));
+
+    I1_P2
+        .atTime("Score")
+        .onTrue(
+            Commands.sequence(
+                ReefAlign(mirror ? "Right" : "Left", 4).asProxy(),
+                Score().asProxy()));
+
+    routine.active().onTrue(Commands.sequence(S_P1.resetOdometry(), S_P1.cmd()));
+
+    return routine;
+  }
 }
