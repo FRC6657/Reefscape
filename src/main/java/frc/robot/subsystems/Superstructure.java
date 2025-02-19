@@ -302,8 +302,10 @@ public class Superstructure {
     return routine;
   }
 
-  public AutoRoutine taxiMiddleL1(AutoFactory factory){
-    final AutoRoutine routine = factory.newRoutine("Taxi Middle L1"); // no need for mirror since it is allined perfectly in the middle
+  public AutoRoutine taxiMiddleL1(AutoFactory factory) {
+    final AutoRoutine routine =
+        factory.newRoutine(
+            "Taxi Middle L1"); // no need for mirror since it is allined perfectly in the middle
 
     final AutoTrajectory S_P1 = routine.trajectory("Taxi Middle L1", 0);
 
@@ -373,6 +375,7 @@ public class Superstructure {
 
     return routine;
   }
+
   public AutoRoutine TwoCoralAdjacent(AutoFactory factory, boolean mirror) {
 
     final AutoRoutine routine = factory.newRoutine("Two Coral Adjacent");
@@ -402,8 +405,7 @@ public class Superstructure {
         .atTime("Score")
         .onTrue(
             Commands.sequence(
-                ReefAlign(mirror ? "Right" : "Left", 4).asProxy(),
-                Score().asProxy()));
+                ReefAlign(mirror ? "Right" : "Left", 4).asProxy(), Score().asProxy()));
 
     routine.active().onTrue(Commands.sequence(S_P1.resetOdometry(), S_P1.cmd()));
 
