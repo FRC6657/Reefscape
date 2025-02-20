@@ -253,6 +253,8 @@ public class Superstructure {
             Commands.sequence(
                 ReefAlign(mirror ? "Right" : "Left", 4).asProxy(),
                 Score().asProxy(),
+                HomeRobot().asProxy(),
+                Commands.waitUntil(elevator::nearSetpoint),
                 new ScheduleCommand(P1_I1.cmd())));
 
     P1_I1
@@ -269,6 +271,8 @@ public class Superstructure {
             Commands.sequence(
                 ReefAlign(mirror ? "Right" : "Left", 4).asProxy(),
                 Score().asProxy(),
+                HomeRobot().asProxy(),
+                Commands.waitUntil(elevator::nearSetpoint),
                 new ScheduleCommand(P2_I2.cmd())));
 
     P2_I2
@@ -330,6 +334,8 @@ public class Superstructure {
             Commands.sequence(
                 ReefAlign(mirror ? "Right" : "Left", 4).asProxy(),
                 Score().asProxy(),
+                HomeRobot().asProxy(),
+                Commands.waitUntil(elevator::nearSetpoint),
                 new ScheduleCommand(P1_Pos.cmd()))); // ends auto out of the way
 
     routine.active().onTrue(Commands.sequence(S_P1.resetOdometry(), S_P1.cmd()));
@@ -353,6 +359,8 @@ public class Superstructure {
             Commands.sequence(
                 ReefAlign(mirror ? "Right" : "Left", 4).asProxy(),
                 Score().asProxy(),
+                HomeRobot().asProxy(),
+                // Commands.waitUntil(elevator::nearSetpoint),
                 new ScheduleCommand(P1_I1.cmd())));
 
     P1_I1
@@ -369,6 +377,8 @@ public class Superstructure {
             Commands.sequence(
                 ReefAlign(mirror ? "Right" : "Left", 4).asProxy(),
                 Score().asProxy(),
+                HomeRobot().asProxy(),
+                Commands.waitUntil(elevator::nearSetpoint),
                 new ScheduleCommand(P2_Pos.cmd())));
 
     routine.active().onTrue(Commands.sequence(S_P1.resetOdometry(), S_P1.cmd()));
@@ -391,6 +401,8 @@ public class Superstructure {
             Commands.sequence(
                 ReefAlign(mirror ? "Right" : "Left", 4).asProxy(),
                 Score().asProxy(),
+                HomeRobot().asProxy(),
+                Commands.waitUntil(elevator::nearSetpoint),
                 new ScheduleCommand(P1_I1.cmd())));
 
     P1_I1

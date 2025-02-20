@@ -55,6 +55,10 @@ public class Elevator extends SubsystemBase {
     return MathUtil.isNear(inputs.kSetpoint, inputs.kPosition, Units.inchesToMeters(1));
   }
 
+  public boolean nearSetpoint() {
+    return MathUtil.isNear(inputs.kSetpoint, inputs.kPosition, Units.inchesToMeters(30));
+  }
+
   @AutoLogOutput(key = "Elevator/IsDown")
   public boolean isDown() {
     return MathUtil.isNear(0, inputs.kPosition, Units.inchesToMeters(1)) && inputs.kSetpoint == 0;
