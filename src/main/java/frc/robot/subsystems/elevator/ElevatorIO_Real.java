@@ -48,12 +48,11 @@ public class ElevatorIO_Real implements ElevatorIO {
             CAN.Elevetor_Leader.id,
             false)); // Only difference with the follow motor configuration is this line
 
-    //algae motor configure
+    // algae motor configure
     algaeMotor.configFactoryDefault();
     algaeMotor.setNeutralMode(NeutralMode.Brake);
     algaeMotor.setInverted(InvertType.None); // TODO: confirm
-    
-    
+
     // grab important numbers for logging
     var motorPostition = leaderMotor.getPosition();
     var motorVelocity = leaderMotor.getVelocity();
@@ -139,34 +138,35 @@ public class ElevatorIO_Real implements ElevatorIO {
     kSetpoint = setpoint;
   }
 
-  public void changeAlgaeSetpoint(double elevatorPosition){
+  public void changeAlgaeSetpoint(double elevatorPosition) {
 
-    if(elevatorPosition <= 0 && !wasGrounded){
-        wasGrounded = true;
-        algaeTimer = Constants.Elevator.algaeTimerLength;
+    if (elevatorPosition <= 0 && !wasGrounded) {
+      wasGrounded = true;
+      algaeTimer = Constants.Elevator.algaeTimerLength;
     }
-    // these lines check if wasGrounded needs to be updated. When the change happens, we need to start the timer
-    if(elevatorPosition > 0 && wasGrounded){
-        wasGrounded = false;
-        algaeTimer = Constants.Elevator.algaeTimerLength;
-    }
-
-    if(elevatorPosition <= 0 && wasGrounded){
-        if(algaeTimer > 0){
-            algaeSetpoint = -Constants.Elevator.kAlgaeStrength; // backwards
-            algaeTimer--;
-        } else {
-            algaeSetpoint = 0;
-        }
+    // these lines check if wasGrounded needs to be updated. When the change happens, we need to
+    // start the timer
+    if (elevatorPosition > 0 && wasGrounded) {
+      wasGrounded = false;
+      algaeTimer = Constants.Elevator.algaeTimerLength;
     }
 
-    if(elevatorPosition > 0 && !wasGrounded){
-        if(algaeTimer > 0){
-            algaeSetpoint = Constants.Elevator.kAlgaeStrength; // forwards
-            algaeTimer--;
-        } else {
-            algaeSetpoint = 0;
-        }
+    if (elevatorPosition <= 0 && wasGrounded) {
+      if (algaeTimer > 0) {
+        algaeSetpoint = -Constants.Elevator.kAlgaeStrength; // backwards
+        algaeTimer--;
+      } else {
+        algaeSetpoint = 0;
+      }
+    }
+
+    if (elevatorPosition > 0 && !wasGrounded) {
+      if (algaeTimer > 0) {
+        algaeSetpoint = Constants.Elevator.kAlgaeStrength; // forwards
+        algaeTimer--;
+      } else {
+        algaeSetpoint = 0;
+      }
     }
 
     algaeMotor.set(ControlMode.PercentOutput, algaeSetpoint);
