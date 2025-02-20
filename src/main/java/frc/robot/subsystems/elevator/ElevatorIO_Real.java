@@ -9,8 +9,10 @@ import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.Timer;
 import frc.robot.Constants;
 import frc.robot.Constants.CAN;
 import org.littletonrobotics.junction.Logger;
@@ -25,9 +27,9 @@ public class ElevatorIO_Real implements ElevatorIO {
   private double kSetpoint = Constants.Elevator.minHeight;
   private MotionMagicVoltage motionMagicVoltage = new MotionMagicVoltage(0);
 
-  private double algaeSetpoint = 0.0;
-  private boolean wasGrounded = true;
-  private int algaeTimer = 0;
+  private double algaeArmMotorSetpoint = 0.0;
+  private boolean algaeArmOut = false;
+  private Timer algaeArmTimer = new Timer();
 
   public ElevatorIO_Real() {
 
@@ -122,10 +124,10 @@ public class ElevatorIO_Real implements ElevatorIO {
 
     followMotor.setControl(new Follower(CAN.Elevetor_Leader.id, false));
 
-    changeAlgaeSetpoint(inputs.kPosition);
+    runAlgaeArm(inputs.kPosition);
 
     inputs.algaeMotorVoltage = algaeMotor.getBusVoltage();
-    inputs.algaeSetpoint = algaeSetpoint;
+    inputs.algaeSetpoint = algaeArmMotorSetpoint;
 
     // Logging for motion magic internal variables for tuning purposes.
     Logger.recordOutput("Elevator/MotionMagicPosition", motionMagicVoltage.Position);
@@ -138,37 +140,27 @@ public class ElevatorIO_Real implements ElevatorIO {
     kSetpoint = setpoint;
   }
 
-  public void changeAlgaeSetpoint(double elevatorPosition) {
+  // Automatically extends the algae arm when the elevator is up
+  public void runAlgaeArm(double elevatorPosition) {
 
-    if (elevatorPosition <= 0 && !wasGrounded) {
-      wasGrounded = true;
-      algaeTimer = Constants.Elevator.algaeTimerLength;
-    }
-    // these lines check if wasGrounded needs to be updated. When the change happens, we need to
-    // start the timer
-    if (elevatorPosition > 0 && wasGrounded) {
-      wasGrounded = false;
-      algaeTimer = Constants.Elevator.algaeTimerLength;
+    // Stop the motor if it has been running for 0.5 seconds
+    if (algaeArmTimer.hasElapsed(0.5)) {
+      algaeArmMotorSetpoint = 0.0;
+      algaeArmOut = !algaeArmOut;
+      algaeArmTimer.stop();
+      algaeArmTimer.reset();
     }
 
-    if (elevatorPosition <= 0 && wasGrounded) {
-      if (algaeTimer > 0) {
-        algaeSetpoint = -Constants.Elevator.kAlgaeStrength; // backwards
-        algaeTimer--;
-      } else {
-        algaeSetpoint = 0;
-      }
+    if (MathUtil.isNear(0, elevatorPosition, Units.inchesToMeters(0.5)) && algaeArmOut) {
+      //If elevator is down and the arm is out bring the arm in
+      algaeArmMotorSetpoint = -Constants.Elevator.kAlgaeStrength;
+      algaeArmTimer.start();
+    } else if (!algaeArmOut) {
+      // If elevator is up and the arm is not out, bring the arm out
+      algaeArmMotorSetpoint = Constants.Elevator.kAlgaeStrength;
+      algaeArmTimer.start();
     }
 
-    if (elevatorPosition > 0 && !wasGrounded) {
-      if (algaeTimer > 0) {
-        algaeSetpoint = Constants.Elevator.kAlgaeStrength; // forwards
-        algaeTimer--;
-      } else {
-        algaeSetpoint = 0;
-      }
-    }
-
-    algaeMotor.set(ControlMode.PercentOutput, algaeSetpoint);
+    algaeMotor.set(ControlMode.PercentOutput, algaeArmMotorSetpoint);
   }
 }
