@@ -43,7 +43,8 @@ public class Constants {
     IntakePivot(19),
     IntakeRoller(20),
     IntakeEncoder(21),
-    Climber(22);
+    Climber(22),
+    AlgaeMotor(23);
 
     public int id;
 
@@ -295,6 +296,9 @@ public class Constants {
     public static double minHeight = Units.inchesToMeters(0); // Carriage Travel (Meters)
     public static int stages = 3;
     public static double setpointTollerance = Units.inchesToMeters(1);
+
+    public static double kAlgaeStrength = 0.9;
+    public static int algaeTimerLength = 50; // 50 frames per second
 
     public static Slot0Configs motorSlot0 =
         new Slot0Configs()

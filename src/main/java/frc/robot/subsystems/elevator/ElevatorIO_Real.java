@@ -1,5 +1,9 @@
 package frc.robot.subsystems.elevator;
 
+import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.InvertType;
+import com.ctre.phoenix.motorcontrol.NeutralMode;
+import com.ctre.phoenix.motorcontrol.can.VictorSPX;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
@@ -16,8 +20,14 @@ public class ElevatorIO_Real implements ElevatorIO {
   TalonFX leaderMotor = new TalonFX(CAN.Elevetor_Leader.id);
   TalonFX followMotor = new TalonFX(CAN.Elevator_Follower.id);
 
+  VictorSPX algaeMotor = new VictorSPX(CAN.AlgaeMotor.id);
+
   private double kSetpoint = Constants.Elevator.minHeight;
   private MotionMagicVoltage motionMagicVoltage = new MotionMagicVoltage(0);
+
+  private double algaeSetpoint = 0.0;
+  private boolean wasGrounded = true;
+  private int algaeTimer = 0;
 
   public ElevatorIO_Real() {
 
@@ -38,6 +48,12 @@ public class ElevatorIO_Real implements ElevatorIO {
             CAN.Elevetor_Leader.id,
             false)); // Only difference with the follow motor configuration is this line
 
+    //algae motor configure
+    algaeMotor.configFactoryDefault();
+    algaeMotor.setNeutralMode(NeutralMode.Brake);
+    algaeMotor.setInverted(InvertType.None); // TODO: confirm
+    
+    
     // grab important numbers for logging
     var motorPostition = leaderMotor.getPosition();
     var motorVelocity = leaderMotor.getVelocity();
@@ -107,6 +123,11 @@ public class ElevatorIO_Real implements ElevatorIO {
 
     followMotor.setControl(new Follower(CAN.Elevetor_Leader.id, false));
 
+    changeAlgaeSetpoint(inputs.kPosition);
+
+    inputs.algaeMotorVoltage = algaeMotor.getBusVoltage();
+    inputs.algaeSetpoint = algaeSetpoint;
+
     // Logging for motion magic internal variables for tuning purposes.
     Logger.recordOutput("Elevator/MotionMagicPosition", motionMagicVoltage.Position);
     Logger.recordOutput(
@@ -116,5 +137,38 @@ public class ElevatorIO_Real implements ElevatorIO {
   @Override
   public void changeSetpoint(double setpoint) {
     kSetpoint = setpoint;
+  }
+
+  public void changeAlgaeSetpoint(double elevatorPosition){
+
+    if(elevatorPosition <= 0 && !wasGrounded){
+        wasGrounded = true;
+        algaeTimer = Constants.Elevator.algaeTimerLength;
+    }
+    // these lines check if wasGrounded needs to be updated. When the change happens, we need to start the timer
+    if(elevatorPosition > 0 && wasGrounded){
+        wasGrounded = false;
+        algaeTimer = Constants.Elevator.algaeTimerLength;
+    }
+
+    if(elevatorPosition <= 0 && wasGrounded){
+        if(algaeTimer > 0){
+            algaeSetpoint = -Constants.Elevator.kAlgaeStrength; // backwards
+            algaeTimer--;
+        } else {
+            algaeSetpoint = 0;
+        }
+    }
+
+    if(elevatorPosition > 0 && !wasGrounded){
+        if(algaeTimer > 0){
+            algaeSetpoint = Constants.Elevator.kAlgaeStrength; // forwards
+            algaeTimer--;
+        } else {
+            algaeSetpoint = 0;
+        }
+    }
+
+    algaeMotor.set(ControlMode.PercentOutput, algaeSetpoint);
   }
 }
