@@ -146,18 +146,21 @@ public class ElevatorIO_Real implements ElevatorIO {
     // Stop the motor if it has been running for 0.5 seconds
     if (algaeArmTimer.hasElapsed(0.5)) {
       algaeArmMotorSetpoint = 0.0;
-      algaeArmOut = !algaeArmOut;
-      algaeArmTimer.stop();
-      algaeArmTimer.reset();
     }
 
     if (MathUtil.isNear(0, elevatorPosition, Units.inchesToMeters(0.5)) && algaeArmOut) {
       //If elevator is down and the arm is out bring the arm in
+      algaeArmOut = false;
       algaeArmMotorSetpoint = -Constants.Elevator.kAlgaeStrength;
+      algaeArmTimer.stop();
+      algaeArmTimer.reset();
       algaeArmTimer.start();
     } else if (!algaeArmOut) {
       // If elevator is up and the arm is not out, bring the arm out
+      algaeArmOut = true;
       algaeArmMotorSetpoint = Constants.Elevator.kAlgaeStrength;
+      algaeArmTimer.stop();
+      algaeArmTimer.reset();
       algaeArmTimer.start();
     }
 
