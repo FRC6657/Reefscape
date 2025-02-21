@@ -120,18 +120,19 @@ public class Robot extends LoggedRobot {
     autoChooser.addDefaultOption("None", Commands.print("No Auto Selected"));
     autoChooser.addOption("Taxi", superstructure.taxi(autoFactory, false).cmd());
     autoChooser.addOption("Taxi Processor", superstructure.taxi(autoFactory, true).cmd());
-
-    autoChooser.addOption("Test Auto", superstructure.testAuto(autoFactory, false).cmd());
-    autoChooser.addOption("Test Auto Processor", superstructure.testAuto(autoFactory, true).cmd());
     autoChooser.addOption("One Piece", superstructure.onePiece(autoFactory, false).cmd());
     autoChooser.addOption("One Piece Processor", superstructure.onePiece(autoFactory, true).cmd());
+    autoChooser.addOption("3 Piece L4", superstructure.L4_3Piece(autoFactory, false).cmd());
     autoChooser.addOption(
-        "Two Piece Adjacent", superstructure.TwoCoralAdjacent(autoFactory, false).cmd());
-    autoChooser.addOption(
-        "Two Piece Adjacent Processor", superstructure.TwoCoralAdjacent(autoFactory, true).cmd());
-    autoChooser.addOption("Two Piece 180", superstructure.TwoCoral180(autoFactory, false).cmd());
-    autoChooser.addOption(
-        "Two Piece 180 Processor", superstructure.TwoCoral180(autoFactory, true).cmd());
+        "3 Piece L4 Processor", superstructure.L4_3Piece(autoFactory, true).cmd());
+
+    // autoChooser.addOption("Two Piece Adjacent", superstructure.TwoCoralAdjacent(autoFactory,
+    // false).cmd());
+    // autoChooser.addOption("Two Piece Adjacent Processor",
+    // superstructure.TwoCoralAdjacent(autoFactory, true).cmd());
+    // autoChooser.addOption("Two Piece 180", superstructure.TwoCoral180(autoFactory, false).cmd());
+    // autoChooser.addOption("Two Piece 180 Processor", superstructure.TwoCoral180(autoFactory,
+    // true).cmd());
   }
 
   @SuppressWarnings("resource")

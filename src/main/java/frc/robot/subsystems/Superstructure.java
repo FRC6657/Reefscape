@@ -236,17 +236,17 @@ public class Superstructure {
         intake.changeRollerSpeed(0));
   }
 
-  public AutoRoutine testAuto(AutoFactory factory, boolean mirror) {
+  public AutoRoutine L4_3Piece(AutoFactory factory, boolean mirror) {
 
-    final AutoRoutine routine = factory.newRoutine("Test 3 Piece");
+    final AutoRoutine routine = factory.newRoutine("3 Piece");
 
     String mirrorFlag = mirror ? "mirrored_" : "";
 
-    final AutoTrajectory S_P1 = routine.trajectory(mirrorFlag + "Test 3 Piece", 0);
-    final AutoTrajectory P1_I1 = routine.trajectory(mirrorFlag + "Test 3 Piece", 1);
-    final AutoTrajectory I1_P2 = routine.trajectory(mirrorFlag + "Test 3 Piece", 2);
-    final AutoTrajectory P2_I2 = routine.trajectory(mirrorFlag + "Test 3 Piece", 3);
-    final AutoTrajectory I2_P3 = routine.trajectory(mirrorFlag + "Test 3 Piece", 4);
+    final AutoTrajectory S_P1 = routine.trajectory(mirrorFlag + "3 Piece", 0);
+    final AutoTrajectory P1_I1 = routine.trajectory(mirrorFlag + "3 Piece", 1);
+    final AutoTrajectory I1_P2 = routine.trajectory(mirrorFlag + "3 Piece", 2);
+    final AutoTrajectory P2_I2 = routine.trajectory(mirrorFlag + "3 Piece", 3);
+    final AutoTrajectory I2_P3 = routine.trajectory(mirrorFlag + "3 Piece", 4);
 
     S_P1.atTime("Score")
         .onTrue(
