@@ -4,9 +4,9 @@
  "snapshot":{
   "waypoints":[
     {"x":7.093275547027588, "y":1.6574871752982236, "heading":-0.576375164746829, "intervals":26, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
-    {"x":4.94, "y":2.75, "heading":-1.05, "intervals":27, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
+    {"x":4.94, "y":2.75, "heading":-1.05, "intervals":27, "split":true, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
     {"x":3.416060209274292, "y":1.4180686686759092, "heading":0.0, "intervals":32, "split":false, "fixTranslation":true, "fixHeading":false, "overrideIntervals":false},
-    {"x":1.2177079916000366, "y":0.949817917180548, "heading":-2.199591876639267, "intervals":26, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
+    {"x":1.2177079916000366, "y":0.949817917180548, "heading":-2.199591876639267, "intervals":26, "split":true, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
     {"x":3.61, "y":3.01, "heading":-2.09, "intervals":40, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false}],
   "constraints":[
     {"from":"first", "to":null, "data":{"type":"StopPoint", "props":{}}, "enabled":true},
@@ -19,9 +19,9 @@
  "params":{
   "waypoints":[
     {"x":{"exp":"7.093275547027588 m", "val":7.093275547027588}, "y":{"exp":"1.6574871752982236 m", "val":1.6574871752982236}, "heading":{"exp":"-0.576375164746829 rad", "val":-0.576375164746829}, "intervals":26, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
-    {"x":{"exp":"R6L.x", "val":4.94}, "y":{"exp":"R6L.y", "val":2.75}, "heading":{"exp":"R6L.heading", "val":-1.05}, "intervals":27, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
+    {"x":{"exp":"R6L.x", "val":4.94}, "y":{"exp":"R6L.y", "val":2.75}, "heading":{"exp":"R6L.heading", "val":-1.05}, "intervals":27, "split":true, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
     {"x":{"exp":"3.416060209274292 m", "val":3.416060209274292}, "y":{"exp":"1.4180686686759092 m", "val":1.4180686686759092}, "heading":{"exp":"-0 rad", "val":0.0}, "intervals":32, "split":false, "fixTranslation":true, "fixHeading":false, "overrideIntervals":false},
-    {"x":{"exp":"1.2177079916000366 m", "val":1.2177079916000366}, "y":{"exp":"0.9498179171805479 m", "val":0.949817917180548}, "heading":{"exp":"-2.199591876639267 rad", "val":-2.199591876639267}, "intervals":26, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
+    {"x":{"exp":"1.2177079916000366 m", "val":1.2177079916000366}, "y":{"exp":"0.9498179171805479 m", "val":0.949817917180548}, "heading":{"exp":"-2.199591876639267 rad", "val":-2.199591876639267}, "intervals":26, "split":true, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
     {"x":{"exp":"R5L.x", "val":3.61}, "y":{"exp":"R5L.y", "val":3.01}, "heading":{"exp":"R5L.heading", "val":-2.09}, "intervals":40, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false}],
   "constraints":[
     {"from":"first", "to":null, "data":{"type":"StopPoint", "props":{}}, "enabled":true},
@@ -142,7 +142,7 @@
     {"t":3.40263, "x":3.58166, "y":2.98559, "heading":-2.09245, "vx":0.64862, "vy":0.55857, "omega":0.03726, "ax":-7.42214, "ay":-6.39174, "alpha":-0.42273, "fx":[-110.39842,-107.36141,-108.40889,-111.4924], "fy":[-93.10985,-96.59354,-95.40896,-91.78954]},
     {"t":3.44632, "x":3.60291, "y":3.0039, "heading":-2.09082, "vx":0.32432, "vy":0.2793, "omega":0.01879, "ax":-7.42273, "ay":-6.39225, "alpha":-0.43002, "fx":[-110.42046,-107.33288,-108.40364,-111.53894], "fy":[-93.10235,-96.64336,-95.43376,-91.7524]},
     {"t":3.49001, "x":3.61, "y":3.01, "heading":-2.09, "vx":0.0, "vy":0.0, "omega":0.0, "ax":0.0, "ay":0.0, "alpha":0.0, "fx":[0.0,0.0,0.0,0.0], "fy":[0.0,0.0,0.0,0.0]}],
-  "splits":[0]
+  "splits":[0,26,77]
  },
  "events":[
    {"name":"Score", "from":{"target":1, "targetTimestamp":0.99496, "offset":{"exp":"-0.38 s", "val":-0.38}}, "event":null},
