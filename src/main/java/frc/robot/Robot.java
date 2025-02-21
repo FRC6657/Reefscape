@@ -117,7 +117,7 @@ public class Robot extends LoggedRobot {
             true,
             drivebase);
 
-    autoChooser.addDefaultOption("None", Commands.print("No Auto Selected"));
+    autoChooser.addDefaultOption("None", superstructure.logMessage("Autonomous: No Auto Selected"));
     autoChooser.addOption("Taxi", superstructure.taxi(autoFactory, false).cmd());
     autoChooser.addOption("Taxi Processor", superstructure.taxi(autoFactory, true).cmd());
     autoChooser.addOption("One Piece", superstructure.onePiece(autoFactory, false).cmd());
@@ -174,22 +174,21 @@ public class Robot extends LoggedRobot {
                 new Pose2d(
                     drivebase.getPose().getX(), drivebase.getPose().getY(), new Rotation2d())));
 
-    // driver
-    //     .a()
-    //     .whileTrue(
-    //         Commands.sequence(
-    //             Commands.parallel( // Alignment Commands
-    //                 drivebase.goToPose(superstructure::getNearestReef), // Align Drivebase to
-    // Reef
-    //                 superstructure.raiseElevator() // Raise Elevator to selected leel
-    //                 ),
-    //             Commands.waitUntil(elevator::atSetpoint), // Ensure the elevator is fully raised
-    //             superstructure.Score(), // Score the piece
-    //             rumble(0.5, 1), // Rumble the controller
-    //             elevator.changeSetpoint(0) // Lower the elevator
-    //             ));
+    driver
+        .a()
+        .whileTrue(
+            Commands.sequence(
+                Commands.parallel( // Alignment Commands
+                    drivebase.goToPose(superstructure::getNearestReef), // Align Drivebase to Reef
+                    superstructure.raiseElevator() // Raise Elevator to selected leel
+                    ),
+                Commands.waitUntil(elevator::atSetpoint), // Ensure the elevator is fully raised
+                superstructure.Score(), // Score the piece
+                rumble(0.5, 1), // Rumble the controller
+                elevator.changeSetpoint(0) // Lower the elevator
+                ));
 
-    // driver.a().onFalse(superstructure.HomeRobot().andThen(rumble(0, 0)));
+    driver.a().onFalse(superstructure.HomeRobot().andThen(rumble(0, 0)));
 
     // Manual Elevator Controls
     driver.povUp().onTrue(superstructure.raiseElevator());
