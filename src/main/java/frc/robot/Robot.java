@@ -120,11 +120,10 @@ public class Robot extends LoggedRobot {
     autoChooser.addDefaultOption("None", superstructure.logMessage("Autonomous: No Auto Selected"));
     autoChooser.addOption("Taxi", superstructure.taxi(autoFactory, false).cmd());
     autoChooser.addOption("Taxi Processor", superstructure.taxi(autoFactory, true).cmd());
-    autoChooser.addOption("One Piece", superstructure.onePiece(autoFactory, false).cmd());
-    autoChooser.addOption("One Piece Processor", superstructure.onePiece(autoFactory, true).cmd());
-    autoChooser.addOption("3 Piece L4", superstructure.L4_3Piece(autoFactory, false).cmd());
-    autoChooser.addOption(
-        "3 Piece L4 Processor", superstructure.L4_3Piece(autoFactory, true).cmd());
+    autoChooser.addOption("1Piece", superstructure.onePiece(autoFactory, false).cmd());
+    autoChooser.addOption("1Piece Processor", superstructure.onePiece(autoFactory, true).cmd());
+    autoChooser.addOption("3Piece L4", superstructure.L4_3Piece(autoFactory, false).cmd());
+    autoChooser.addOption("3Piece L4 Processor", superstructure.L4_3Piece(autoFactory, true).cmd());
 
     // autoChooser.addOption("Two Piece Adjacent", superstructure.TwoCoralAdjacent(autoFactory,
     // false).cmd());

@@ -134,38 +134,32 @@ public class Superstructure {
 
   // Simple command to change the selected reef level.
   public Command selectElevatorHeight(int height) {
-    return Commands.runOnce(
-      () -> elevatorLevel = height
-    ).andThen(
-      logMessage("Selected Elevator Height: " + height)
-    );
+    return Commands.runOnce(() -> elevatorLevel = height)
+        .andThen(logMessage("Selected Elevator Height: " + height));
   }
 
   // Simple command to change the selected reef pole.
   public Command selectReef(String reef) {
-    return Commands.runOnce(
-      () -> this.selectedReef = reef
-    ).andThen(
-      logMessage("Selected Reef: " + reef)
-    );
+    return Commands.runOnce(() -> this.selectedReef = reef)
+        .andThen(logMessage("Selected Reef: " + reef));
   }
 
   // Select Coral Mode
   public Command selectPiece(String piece) {
-    return Commands.runOnce(
-      () -> selectedPiece = piece
-    ).andThen(
-      logMessage("Selected Piece: " + piece)
-    );
+    return Commands.runOnce(() -> selectedPiece = piece)
+        .andThen(logMessage("Selected Piece: " + piece));
   }
 
   // Change Elevator Setpoint to the selected reef level.
   public Command raiseElevator() {
-    return elevator.changeSetpoint(
-      () -> elevatorSetpoints[elevatorLevel]
-    ).andThen(
-      logMessage("Elevator Setpoint Changed To: " + elevatorSetpoints[elevatorLevel] + " Reef Level: " + elevatorLevel)
-    );
+    return elevator
+        .changeSetpoint(() -> elevatorSetpoints[elevatorLevel])
+        .andThen(
+            logMessage(
+                "Elevator Setpoint Changed To: "
+                    + elevatorSetpoints[elevatorLevel]
+                    + " Reef Level: "
+                    + elevatorLevel));
   }
 
   // Command to algin to the reef and get ready to score a coral.
