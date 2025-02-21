@@ -311,7 +311,9 @@ public class Superstructure {
         .atTime("Score")
         .onTrue(
             Commands.sequence(
-                ReefAlign(mirror ? "Left" : "Right", 4).asProxy(), Score().asProxy()));
+                ReefAlign(mirror ? "Left" : "Right", 4).asProxy(),
+                Score().asProxy(),
+                HomeRobot().asProxy()));
 
     routine.active().onTrue(Commands.sequence(S_P1.resetOdometry(), S_P1.cmd()));
 
