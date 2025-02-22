@@ -187,29 +187,9 @@ public class Swerve extends SubsystemBase {
         ChassisSpeeds.fromFieldRelativeSpeeds(
             xFeedback, yFeedback, rotationFeedback, getPose().getRotation());
 
-    driveChassisSpeeds(out);
-  }
-
-  public void repulsorController(Pose2d currentPose, SwerveSample sample) {
-
-    PIDController xController = AutoConstants.kXController_Repulsor;
-    PIDController yController = AutoConstants.kYController_Repulsor;
-    PIDController thetaController = AutoConstants.kThetaController_Repulsor;
-
-    thetaController.enableContinuousInput(-Math.PI, Math.PI);
-
-    double xFeedback = xController.calculate(currentPose.getX(), sample.x);
-    double yFeedback = yController.calculate(currentPose.getY(), sample.y);
-    double rotationFeedback =
-        thetaController.calculate(currentPose.getRotation().getRadians(), sample.heading);
-
-    Logger.recordOutput("Swerve/Repulsor/DesiredPose", sample.getPose());
-    Logger.recordOutput("Swerve/Repulsor/DesiredXVelocity", xFeedback);
-    Logger.recordOutput("Swerve/Repulsor/DesiredYVelocity", yFeedback);
-
-    ChassisSpeeds out =
-        ChassisSpeeds.fromFieldRelativeSpeeds(
-            xFeedback, yFeedback, rotationFeedback, currentPose.getRotation());
+    Logger.recordOutput("AutoAim/AtSetpointX", xController.atSetpoint());
+    Logger.recordOutput("AutoAim/AtSetpointY", yController.atSetpoint());
+    Logger.recordOutput("AutoAim/AtSetpointTheta", thetaController.atSetpoint());
 
     driveChassisSpeeds(out);
   }

@@ -11,7 +11,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
 import edu.wpi.first.wpilibj.RobotBase;
@@ -123,9 +123,20 @@ public class Robot extends LoggedRobot {
             true,
             drivebase);
 
-    autoChooser.addDefaultOption("None", Commands.print("No Auto Selected"));
-    autoChooser.addOption("Test Auto", superstructure.testAuto(autoFactory, false).cmd());
-    autoChooser.addOption("Test Auto Mirror", superstructure.testAuto(autoFactory, true).cmd());
+    autoChooser.addDefaultOption("None", superstructure.logMessage("Autonomous: No Auto Selected"));
+    autoChooser.addOption("1Piece L1", superstructure.taxiMiddleL1(autoFactory).cmd());
+    autoChooser.addOption("Taxi", superstructure.taxi(autoFactory, false).cmd());
+    autoChooser.addOption("Taxi Processor", superstructure.taxi(autoFactory, true).cmd());
+    autoChooser.addOption("3Piece L4", superstructure.L4_3Piece(autoFactory, false).cmd());
+    autoChooser.addOption("3Piece L4 Processor", superstructure.L4_3Piece(autoFactory, true).cmd());
+
+    // autoChooser.addOption("Two Piece Adjacent", superstructure.TwoCoralAdjacent(autoFactory,
+    // false).cmd());
+    // autoChooser.addOption("Two Piece Adjacent Processor",
+    // superstructure.TwoCoralAdjacent(autoFactory, true).cmd());
+    // autoChooser.addOption("Two Piece 180", superstructure.TwoCoral180(autoFactory, false).cmd());
+    // autoChooser.addOption("Two Piece 180 Processor", superstructure.TwoCoral180(autoFactory,
+    // true).cmd());
   }
 
   @SuppressWarnings("resource")
@@ -169,6 +180,22 @@ public class Robot extends LoggedRobot {
             drivebase.resetOdometry(
                 new Pose2d(
                     drivebase.getPose().getX(), drivebase.getPose().getY(), new Rotation2d())));
+
+    driver
+        .a()
+        .whileTrue(
+            Commands.sequence(
+                Commands.parallel( // Alignment Commands
+                    drivebase.goToPose(superstructure::getNearestReef), // Align Drivebase to Reef
+                    superstructure.raiseElevator() // Raise Elevator to selected leel
+                    ),
+                Commands.waitUntil(elevator::atSetpoint), // Ensure the elevator is fully raised
+                superstructure.Score(), // Score the piece
+                rumble(0.5, 1), // Rumble the controller
+                elevator.changeSetpoint(0) // Lower the elevator
+                ));
+
+    driver.a().onFalse(superstructure.HomeRobot().andThen(rumble(0, 0)));
 
     // Manual Elevator Controls
     driver.povUp().onTrue(superstructure.raiseElevator());
@@ -236,5 +263,12 @@ public class Robot extends LoggedRobot {
   @Override
   public void autonomousInit() {
     autoChooser.get().schedule();
+  }
+
+  private Command rumble(double duration, double intensity) {
+    return Commands.sequence(
+        Commands.runOnce(() -> driver.setRumble(RumbleType.kRightRumble, intensity)),
+        Commands.waitSeconds(duration),
+        Commands.runOnce(() -> driver.setRumble(RumbleType.kRightRumble, 0)));
   }
 }
