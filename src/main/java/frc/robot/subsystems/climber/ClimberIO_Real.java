@@ -1,6 +1,5 @@
 package frc.robot.subsystems.climber;
 
-import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
@@ -50,11 +49,17 @@ public class ClimberIO_Real implements ClimberIO {
 
     double pidOutput = pid.calculate(inputs.position, setpoint);
     Logger.recordOutput("Climber/PIDOutputVoltage", pidOutput);
-    motor.setVoltage(pidOutput);
+    //motor.setVoltage(pidOutput);
   }
 
   @Override
   public void changeSetpoint(double setpoint) {
     this.setpoint = setpoint;
   }
+
+  @Override
+  public void setVoltage(double volts) {
+    motor.setVoltage(volts);
+  }
+
 }

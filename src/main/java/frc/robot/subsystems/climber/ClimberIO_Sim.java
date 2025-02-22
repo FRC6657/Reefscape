@@ -22,7 +22,8 @@ public class ClimberIO_Sim implements ClimberIO {
 
   private DCMotorSim climberSim =
       new DCMotorSim(
-          LinearSystemId.createDCMotorSystem(DCMotor.getNEO(1), 0.0001, Constants.ClimberConstants.gearing),
+          LinearSystemId.createDCMotorSystem(
+              DCMotor.getNEO(1), 0.0001, Constants.ClimberConstants.gearing),
           DCMotor.getNEO(1));
 
   private PIDController climberPID = new PIDController(96d / 360, 0, 0);

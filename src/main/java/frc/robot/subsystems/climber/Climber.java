@@ -36,8 +36,20 @@ public class Climber extends SubsystemBase {
         () -> {
           io.changeSetpoint(
               MathUtil.clamp(
-                  setpoint, Constants.ClimberConstants.minRotations, Constants.ClimberConstants.maxRotations));
+                  setpoint,
+                  Constants.ClimberConstants.minRotations,
+                  Constants.ClimberConstants.maxRotations));
         });
+  }
+
+  /**
+   * Set the voltage of the climber
+   *
+   * @param volts Volts
+   * @return
+   */
+  public Command setVoltage(double volts) {
+    return this.runOnce(() -> io.setVoltage(volts));
   }
 
   public boolean atSetpoint() {

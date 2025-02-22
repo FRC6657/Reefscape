@@ -19,4 +19,6 @@ public interface ClimberIO {
   public default void updateInputs(ClimberIOInputs inputs) {}
 
   public default void changeSetpoint(double angleDegrees) {}
+
+  public default void setVoltage(double volts){}
 }

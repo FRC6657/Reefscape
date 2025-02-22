@@ -11,6 +11,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
@@ -20,12 +21,11 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import frc.robot.Constants.Swerve.ModuleInformation;
 import frc.robot.Constants.ClimberConstants;
+import frc.robot.Constants.Swerve.ModuleInformation;
 import frc.robot.Constants.VisionConstants;
 import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.climber.Climber;
-import frc.robot.subsystems.climber.ClimberIO;
 import frc.robot.subsystems.climber.ClimberIO_Real;
 import frc.robot.subsystems.climber.ClimberIO_Sim;
 import frc.robot.subsystems.drivebase.GyroIO;
@@ -171,8 +171,15 @@ public class Robot extends LoggedRobot {
     operator.button(6).onTrue(superstructure.selectReef("Left"));
     operator.button(3).onTrue(superstructure.selectReef("Right"));
 
-    operator.button(1).onTrue(climber.changeSetpoint(ClimberConstants.maxRotations));
-    operator.button(4).onTrue(climber.changeSetpoint(ClimberConstants.minRotations));
+    operator.button(1).onTrue(climber.setVoltage(5)).onFalse(climber.setVoltage(0));
+    operator.button(4).onTrue(climber.setVoltage(-5)).onFalse(climber.setVoltage(0));
+
+    driver.b().onTrue( //Prep for climb
+      Commands.sequence(
+        elevator.changeSetpoint(Units.inchesToMeters(12)),
+        intake.changePivotSetpoint(Units.degreesToRadians(2))
+      )
+    );
 
     driver
         .y()
@@ -181,21 +188,21 @@ public class Robot extends LoggedRobot {
                 new Pose2d(
                     drivebase.getPose().getX(), drivebase.getPose().getY(), new Rotation2d())));
 
-    driver
-        .a()
-        .whileTrue(
-            Commands.sequence(
-                Commands.parallel( // Alignment Commands
-                    drivebase.goToPose(superstructure::getNearestReef), // Align Drivebase to Reef
-                    superstructure.raiseElevator() // Raise Elevator to selected leel
-                    ),
-                Commands.waitUntil(elevator::atSetpoint), // Ensure the elevator is fully raised
-                superstructure.Score(), // Score the piece
-                rumble(0.5, 1), // Rumble the controller
-                elevator.changeSetpoint(0) // Lower the elevator
-                ));
+    // driver
+    //     .a()
+    //     .whileTrue(
+    //         Commands.sequence(
+    //             Commands.parallel( // Alignment Commands
+    //                 drivebase.goToPose(superstructure::getNearestReef), // Align Drivebase to Reef
+    //                 superstructure.raiseElevator() // Raise Elevator to selected leel
+    //                 ),
+    //             Commands.waitUntil(elevator::atSetpoint), // Ensure the elevator is fully raised
+    //             superstructure.Score(), // Score the piece
+    //             rumble(0.5, 1), // Rumble the controller
+    //             elevator.changeSetpoint(0) // Lower the elevator
+    //             ));
 
-    driver.a().onFalse(superstructure.HomeRobot().andThen(rumble(0, 0)));
+    // driver.a().onFalse(superstructure.HomeRobot().andThen(rumble(0, 0)));
 
     // Manual Elevator Controls
     driver.povUp().onTrue(superstructure.raiseElevator());
