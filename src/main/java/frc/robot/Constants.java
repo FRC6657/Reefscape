@@ -297,8 +297,7 @@ public class Constants {
     public static int stages = 3;
     public static double setpointTollerance = Units.inchesToMeters(1);
 
-    public static double kAlgaeStrength = 0.9;
-    public static int algaeTimerLength = 50; // 50 frames per second
+    public static double kAlgaeStrength = 0.2;
 
     public static Slot0Configs motorSlot0 =
         new Slot0Configs()

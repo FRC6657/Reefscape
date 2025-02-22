@@ -41,7 +41,7 @@ public class ElevatorIO_Real implements ElevatorIO {
         Constants.Elevator.gearing; // Sets default output to rotations
     motorConfigs.Slot0 = Constants.Elevator.motorSlot0; // PID Constants
     motorConfigs.CurrentLimits = Constants.Elevator.currentConfigs; // Current Limits
-    motorConfigs.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    motorConfigs.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     motorConfigs.MotionMagic = Constants.Elevator.kMotionMagicConfig;
     leaderConfigurator.apply(motorConfigs); // Configure leader motor
     followConfigurator.apply(motorConfigs); // Configure follow motor to the same thing
@@ -117,12 +117,12 @@ public class ElevatorIO_Real implements ElevatorIO {
     inputs.leaderMotorVoltage = leaderMotor.get() * RobotController.getBatteryVoltage();
     inputs.followMotorVoltage = followMotor.getMotorVoltage().getValueAsDouble();
 
-    leaderMotor.setControl(
-        motionMagicVoltage.withPosition(
-            Units.metersToInches(kSetpoint / Constants.Elevator.stages)
-                / (Constants.Elevator.sprocketPD * Math.PI)));
+    // leaderMotor.setControl(
+    //     motionMagicVoltage.withPosition(
+    //         Units.metersToInches(kSetpoint / Constants.Elevator.stages)
+    //             / (Constants.Elevator.sprocketPD * Math.PI)));
 
-    followMotor.setControl(new Follower(CAN.Elevetor_Leader.id, false));
+    // followMotor.setControl(new Follower(CAN.Elevetor_Leader.id, false));
 
     runAlgaeArm(inputs.kPosition);
 
@@ -144,12 +144,12 @@ public class ElevatorIO_Real implements ElevatorIO {
   public void runAlgaeArm(double elevatorPosition) {
 
     // Stop the motor if it has been running for 0.5 seconds
-    if (algaeArmTimer.hasElapsed(0.5)) {
+    if (algaeArmTimer.hasElapsed(0.25)) {
       algaeArmMotorSetpoint = 0.0;
     }
 
     if (MathUtil.isNear(0, elevatorPosition, Units.inchesToMeters(0.5)) && algaeArmOut) {
-      //If elevator is down and the arm is out bring the arm in
+      // If elevator is down and the arm is out bring the arm in
       algaeArmOut = false;
       algaeArmMotorSetpoint = -Constants.Elevator.kAlgaeStrength;
       algaeArmTimer.stop();
