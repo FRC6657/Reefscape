@@ -27,7 +27,7 @@ public class ElevatorIO_Real implements ElevatorIO {
   private double kSetpoint = Constants.Elevator.minHeight;
   private MotionMagicVoltage motionMagicVoltage = new MotionMagicVoltage(0);
 
-  private double algaeArmMotorSetpoint = 0.0;
+  private double algaeArmMotorSetpoint = Constants.Elevator.kAlgaeStrength / 3;
   private boolean algaeArmOut = false;
   private Timer algaeArmTimer = new Timer();
 
@@ -41,7 +41,7 @@ public class ElevatorIO_Real implements ElevatorIO {
         Constants.Elevator.gearing; // Sets default output to rotations
     motorConfigs.Slot0 = Constants.Elevator.motorSlot0; // PID Constants
     motorConfigs.CurrentLimits = Constants.Elevator.currentConfigs; // Current Limits
-    motorConfigs.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+    motorConfigs.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     motorConfigs.MotionMagic = Constants.Elevator.kMotionMagicConfig;
     leaderConfigurator.apply(motorConfigs); // Configure leader motor
     followConfigurator.apply(motorConfigs); // Configure follow motor to the same thing
@@ -53,7 +53,7 @@ public class ElevatorIO_Real implements ElevatorIO {
     // algae motor configure
     algaeMotor.configFactoryDefault();
     algaeMotor.setNeutralMode(NeutralMode.Brake);
-    algaeMotor.setInverted(InvertType.None); // TODO: confirm
+    algaeMotor.setInverted(InvertType.None);
 
     // grab important numbers for logging
     var motorPostition = leaderMotor.getPosition();
@@ -117,12 +117,12 @@ public class ElevatorIO_Real implements ElevatorIO {
     inputs.leaderMotorVoltage = leaderMotor.get() * RobotController.getBatteryVoltage();
     inputs.followMotorVoltage = followMotor.getMotorVoltage().getValueAsDouble();
 
-    // leaderMotor.setControl(
-    //     motionMagicVoltage.withPosition(
-    //         Units.metersToInches(kSetpoint / Constants.Elevator.stages)
-    //             / (Constants.Elevator.sprocketPD * Math.PI)));
+    leaderMotor.setControl(
+        motionMagicVoltage.withPosition(
+            Units.metersToInches(kSetpoint / Constants.Elevator.stages)
+                / (Constants.Elevator.sprocketPD * Math.PI)));
 
-    // followMotor.setControl(new Follower(CAN.Elevetor_Leader.id, false));
+    followMotor.setControl(new Follower(CAN.Elevetor_Leader.id, false));
 
     runAlgaeArm(inputs.kPosition);
 
@@ -143,25 +143,31 @@ public class ElevatorIO_Real implements ElevatorIO {
   // Automatically extends the algae arm when the elevator is up
   public void runAlgaeArm(double elevatorPosition) {
 
-    // Stop the motor if it has been running for 0.5 seconds
+    // Stop the motor if it has been running for 0.25 seconds
     if (algaeArmTimer.hasElapsed(0.25)) {
-      algaeArmMotorSetpoint = 0.0;
+      if (algaeArmOut) {
+        algaeArmMotorSetpoint = Constants.Elevator.kAlgaeStrength / -3;
+      } else {
+        algaeArmMotorSetpoint = Constants.Elevator.kAlgaeStrength / 1.5;
+      }
     }
 
-    if (MathUtil.isNear(0, elevatorPosition, Units.inchesToMeters(0.5)) && algaeArmOut) {
+    if (MathUtil.isNear(0, elevatorPosition, Units.inchesToMeters(1.0)) && algaeArmOut) {
       // If elevator is down and the arm is out bring the arm in
       algaeArmOut = false;
+      algaeArmMotorSetpoint = Constants.Elevator.kAlgaeStrength / 1.5;
+      algaeArmTimer.stop();
+      algaeArmTimer.reset();
+      algaeArmTimer.start();
+      Logger.recordOutput("Algae arm move not out", algaeArmOut);
+    } else if (!MathUtil.isNear(0, elevatorPosition, Units.inchesToMeters(1.0)) && !algaeArmOut) {
+      // If elevator is up and the arm is not out, bring the arm out
+      algaeArmOut = true;
       algaeArmMotorSetpoint = -Constants.Elevator.kAlgaeStrength;
       algaeArmTimer.stop();
       algaeArmTimer.reset();
       algaeArmTimer.start();
-    } else if (!algaeArmOut) {
-      // If elevator is up and the arm is not out, bring the arm out
-      algaeArmOut = true;
-      algaeArmMotorSetpoint = Constants.Elevator.kAlgaeStrength;
-      algaeArmTimer.stop();
-      algaeArmTimer.reset();
-      algaeArmTimer.start();
+      Logger.recordOutput("algae arm move out", algaeArmOut);
     }
 
     algaeMotor.set(ControlMode.PercentOutput, algaeArmMotorSetpoint);

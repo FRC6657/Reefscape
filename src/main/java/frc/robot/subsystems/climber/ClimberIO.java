@@ -20,5 +20,5 @@ public interface ClimberIO {
 
   public default void changeSetpoint(double angleDegrees) {}
 
-  public default void setVoltage(double volts){}
+  public default void setVoltage(double volts) {}
 }

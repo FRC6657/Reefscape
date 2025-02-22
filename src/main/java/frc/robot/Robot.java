@@ -21,7 +21,6 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import frc.robot.Constants.ClimberConstants;
 import frc.robot.Constants.Swerve.ModuleInformation;
 import frc.robot.Constants.VisionConstants;
 import frc.robot.subsystems.Superstructure;
@@ -44,6 +43,8 @@ import frc.robot.subsystems.outtake.Outtake;
 import frc.robot.subsystems.outtake.OuttakeIO_Real;
 import frc.robot.subsystems.outtake.OuttakeIO_Sim;
 import frc.robot.subsystems.vision.ApriltagCamera;
+import frc.robot.subsystems.vision.ApriltagCameraIO_Real;
+import frc.robot.subsystems.vision.ApriltagCameraIO_Sim;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
@@ -94,24 +95,24 @@ public class Robot extends LoggedRobot {
     outtake = new Outtake(RobotBase.isReal() ? new OuttakeIO_Real() : new OuttakeIO_Sim());
     climber = new Climber(RobotBase.isReal() ? new ClimberIO_Real() : new ClimberIO_Sim());
 
-    // cameras =
-    //     new ApriltagCamera[] {
-    //       new ApriltagCamera(
-    //           RobotBase.isReal()
-    //               ? new ApriltagCameraIO_Real(VisionConstants.camera1Info)
-    //               : new ApriltagCameraIO_Sim(VisionConstants.camera1Info),
-    //           VisionConstants.camera1Info),
-    //       new ApriltagCamera(
-    //           RobotBase.isReal()
-    //               ? new ApriltagCameraIO_Real(VisionConstants.camera2Info)
-    //               : new ApriltagCameraIO_Sim(VisionConstants.camera2Info),
-    //           VisionConstants.camera2Info),
-    //       new ApriltagCamera(
-    //           RobotBase.isReal()
-    //               ? new ApriltagCameraIO_Real(VisionConstants.camera3Info)
-    //               : new ApriltagCameraIO_Sim(VisionConstants.camera3Info),
-    //           VisionConstants.camera3Info)
-    //     };
+    cameras =
+        new ApriltagCamera[] {
+          // new ApriltagCamera(
+          //     RobotBase.isReal()
+          //         ? new ApriltagCameraIO_Real(VisionConstants.camera1Info)
+          //         : new ApriltagCameraIO_Sim(VisionConstants.camera1Info),
+          //     VisionConstants.camera1Info),
+          new ApriltagCamera(
+              RobotBase.isReal()
+                  ? new ApriltagCameraIO_Real(VisionConstants.camera2Info)
+                  : new ApriltagCameraIO_Sim(VisionConstants.camera2Info),
+              VisionConstants.camera2Info),
+          new ApriltagCamera(
+              RobotBase.isReal()
+                  ? new ApriltagCameraIO_Real(VisionConstants.camera3Info)
+                  : new ApriltagCameraIO_Sim(VisionConstants.camera3Info),
+              VisionConstants.camera3Info)
+        };
 
     superstructure = new Superstructure(drivebase, elevator, outtake, intake);
 
@@ -157,7 +158,7 @@ public class Robot extends LoggedRobot {
         drivebase.drive(
             () ->
                 new ChassisSpeeds(
-                    MathUtil.applyDeadband(-driver.getLeftY(), 0.1) * 2,
+                    MathUtil.applyDeadband(driver.getLeftY(), 0.1) * 2,
                     MathUtil.applyDeadband(-driver.getLeftX(), 0.1) * 2,
                     MathUtil.applyDeadband(-driver.getRightX(), 0.1) * 2)));
 
@@ -174,12 +175,12 @@ public class Robot extends LoggedRobot {
     operator.button(1).onTrue(climber.setVoltage(5)).onFalse(climber.setVoltage(0));
     operator.button(4).onTrue(climber.setVoltage(-5)).onFalse(climber.setVoltage(0));
 
-    driver.b().onTrue( //Prep for climb
-      Commands.sequence(
-        elevator.changeSetpoint(Units.inchesToMeters(12)),
-        intake.changePivotSetpoint(Units.degreesToRadians(2))
-      )
-    );
+    driver
+        .b()
+        .onTrue( // Prep for climb
+            Commands.sequence(
+                elevator.changeSetpoint(Units.inchesToMeters(12)),
+                intake.changePivotSetpoint(Units.degreesToRadians(2))));
 
     driver
         .y()
@@ -193,7 +194,7 @@ public class Robot extends LoggedRobot {
     //     .whileTrue(
     //         Commands.sequence(
     //             Commands.parallel( // Alignment Commands
-    //                 drivebase.goToPose(superstructure::getNearestReef), // Align Drivebase to Reef
+    //                 drivebase.goToPose(superstructure::getNearestReef), // Align Drivebase to
     //                 superstructure.raiseElevator() // Raise Elevator to selected leel
     //                 ),
     //             Commands.waitUntil(elevator::atSetpoint), // Ensure the elevator is fully raised
@@ -202,7 +203,7 @@ public class Robot extends LoggedRobot {
     //             elevator.changeSetpoint(0) // Lower the elevator
     //             ));
 
-    // driver.a().onFalse(superstructure.HomeRobot().andThen(rumble(0, 0)));
+    driver.a().onFalse(superstructure.HomeRobot().andThen(rumble(0, 0)));
 
     // Manual Elevator Controls
     driver.povUp().onTrue(superstructure.raiseElevator());
@@ -222,6 +223,8 @@ public class Robot extends LoggedRobot {
 
     // General Score
     driver.leftTrigger().onTrue(superstructure.Score()).onFalse(superstructure.HomeRobot());
+
+    driver.x().onTrue(outtake.changeRollerSetpoint(-0.8)).onFalse(outtake.changeRollerSetpoint(0));
 
     Logger.start();
   }

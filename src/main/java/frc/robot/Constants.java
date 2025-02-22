@@ -40,11 +40,11 @@ public class Constants {
     OuttakeMotor(14),
     Elevetor_Leader(15),
     Elevator_Follower(16),
+    AlgaeMotor(17),
     IntakePivot(19),
     IntakeRoller(20),
     IntakeEncoder(21),
-    Climber(22),
-    AlgaeMotor(23);
+    Climber(22);
 
     public int id;
 
@@ -165,7 +165,8 @@ public class Constants {
             new Transform3d(
                 new Translation3d(
                     Units.inchesToMeters(3), Units.inchesToMeters(4), Units.inchesToMeters(9)),
-                new Rotation3d(0, Units.degreesToRadians(0), Math.PI + Units.degreesToRadians(20))),
+                new Rotation3d(
+                    Math.PI, Units.degreesToRadians(0), Math.PI + Units.degreesToRadians(20))),
             Rotation2d.fromDegrees(94.9),
             new int[] {1600, 1200});
 
@@ -179,9 +180,8 @@ public class Constants {
             Rotation2d.fromDegrees(79.76),
             new int[] {1280, 800});
 
-    public static final Matrix<N3, N1> singleTagStdDev =
-        VecBuilder.fill(0.4, 0.4, Double.MAX_VALUE);
-    public static final Matrix<N3, N1> multiTagStdDev = VecBuilder.fill(0.2, 0.2, Double.MAX_VALUE);
+    public static final Matrix<N3, N1> singleTagStdDev = VecBuilder.fill(0.4, 0.4, 0.4);
+    public static final Matrix<N3, N1> multiTagStdDev = VecBuilder.fill(0.2, 0.2, 0.2);
   }
 
   public static class Motors {
@@ -297,7 +297,7 @@ public class Constants {
     public static int stages = 3;
     public static double setpointTollerance = Units.inchesToMeters(1);
 
-    public static double kAlgaeStrength = 0.2;
+    public static double kAlgaeStrength = 0.4;
 
     public static Slot0Configs motorSlot0 =
         new Slot0Configs()

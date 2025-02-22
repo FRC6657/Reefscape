@@ -49,7 +49,7 @@ public class ClimberIO_Real implements ClimberIO {
 
     double pidOutput = pid.calculate(inputs.position, setpoint);
     Logger.recordOutput("Climber/PIDOutputVoltage", pidOutput);
-    //motor.setVoltage(pidOutput);
+    // motor.setVoltage(pidOutput);
   }
 
   @Override
@@ -61,5 +61,4 @@ public class ClimberIO_Real implements ClimberIO {
   public void setVoltage(double volts) {
     motor.setVoltage(volts);
   }
-
 }

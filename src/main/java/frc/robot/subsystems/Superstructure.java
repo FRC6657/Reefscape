@@ -43,7 +43,7 @@ public class Superstructure {
   private double[] elevatorSetpoints = {
     0,
     0,
-    Units.inchesToMeters(14),
+    Units.inchesToMeters(19), // should be 14
     Units.inchesToMeters(30),
     Units.inchesToMeters(55) // Array for easily grabbing setpoint heights.
   };
@@ -229,6 +229,7 @@ public class Superstructure {
             () -> selectedPiece == "Coral")
         .andThen(
             Commands.sequence(
+                Commands.waitSeconds(1.0),
                 logMessage("Ground Intake Score | Retract"),
                 intake.changePivotSetpoint(Constants.Intake.maxAngle),
                 intake.changeRollerSpeed(0)));
