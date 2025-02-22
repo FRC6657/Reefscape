@@ -1,12 +1,12 @@
 {
- "name":"Two Coral Adjacent",
+ "name":"2 Piece",
  "version":1,
  "snapshot":{
   "waypoints":[
     {"x":7.093275547027588, "y":6.394021511077881, "heading":0.576375164746829, "intervals":26, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
-    {"x":5.11, "y":5.21, "heading":1.05, "intervals":28, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
+    {"x":5.11, "y":5.21, "heading":1.05, "intervals":28, "split":true, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
     {"x":3.416060209274292, "y":6.633440017700195, "heading":0.0, "intervals":32, "split":false, "fixTranslation":true, "fixHeading":false, "overrideIntervals":false},
-    {"x":1.2177079916000366, "y":7.101690769195557, "heading":2.199591876639267, "intervals":26, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
+    {"x":1.2177079916000366, "y":7.101690769195557, "heading":2.199591876639267, "intervals":26, "split":true, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
     {"x":3.79, "y":5.15, "heading":2.09, "intervals":40, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false}],
   "constraints":[
     {"from":"first", "to":null, "data":{"type":"StopPoint", "props":{}}, "enabled":true},
@@ -19,9 +19,9 @@
  "params":{
   "waypoints":[
     {"x":{"exp":"7.093275547027588 m", "val":7.093275547027588}, "y":{"exp":"6.394021511077881 m", "val":6.394021511077881}, "heading":{"exp":"0.576375164746829 rad", "val":0.576375164746829}, "intervals":26, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
-    {"x":{"exp":"R2R.x", "val":5.11}, "y":{"exp":"R2R.y", "val":5.21}, "heading":{"exp":"R2R.heading", "val":1.05}, "intervals":28, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
+    {"x":{"exp":"R2R.x", "val":5.11}, "y":{"exp":"R2R.y", "val":5.21}, "heading":{"exp":"R2R.heading", "val":1.05}, "intervals":28, "split":true, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
     {"x":{"exp":"3.416060209274292 m", "val":3.416060209274292}, "y":{"exp":"6.633440017700195 m", "val":6.633440017700195}, "heading":{"exp":"0 deg", "val":0.0}, "intervals":32, "split":false, "fixTranslation":true, "fixHeading":false, "overrideIntervals":false},
-    {"x":{"exp":"1.2177079916000366 m", "val":1.2177079916000366}, "y":{"exp":"7.101690769195557 m", "val":7.101690769195557}, "heading":{"exp":"2.199591876639267 rad", "val":2.199591876639267}, "intervals":26, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
+    {"x":{"exp":"1.2177079916000366 m", "val":1.2177079916000366}, "y":{"exp":"7.101690769195557 m", "val":7.101690769195557}, "heading":{"exp":"2.199591876639267 rad", "val":2.199591876639267}, "intervals":26, "split":true, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
     {"x":{"exp":"R3R.x", "val":3.79}, "y":{"exp":"R3R.y", "val":5.15}, "heading":{"exp":"R3R.heading", "val":2.09}, "intervals":40, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false}],
   "constraints":[
     {"from":"first", "to":null, "data":{"type":"StopPoint", "props":{}}, "enabled":true},
@@ -143,9 +143,9 @@
     {"t":3.42333, "x":3.7595, "y":5.17314, "heading":2.09223, "vx":0.68994, "vy":-0.52348, "omega":-0.03352, "ax":-7.80349, "ay":5.92078, "alpha":0.37804, "fx":[-116.8007,-114.31612,-113.28286,-115.74892], "fy":[84.93526,88.24791,89.57733,86.37003]},
     {"t":3.46753, "x":3.78237, "y":5.15579, "heading":2.09074, "vx":0.34498, "vy":-0.26175, "omega":-0.01681, "ax":-7.80415, "ay":5.92127, "alpha":0.38035, "fx":[-116.82237,-114.32415,-113.28044,-115.7602], "fy":[84.92658,88.25804,89.60008,86.37514]},
     {"t":3.51174, "x":3.79, "y":5.15, "heading":2.09, "vx":0.0, "vy":0.0, "omega":0.0, "ax":0.0, "ay":0.0, "alpha":0.0, "fx":[0.0,0.0,0.0,0.0], "fy":[0.0,0.0,0.0,0.0]}],
-  "splits":[0]
+  "splits":[0,26,78]
  },
  "events":[
    {"name":"Score", "from":{"target":1, "targetTimestamp":0.9733, "offset":{"exp":"-0.38 s", "val":-0.38}}, "event":null},
-   {"name":"Score", "from":{"target":4, "targetTimestamp":null, "offset":{"exp":"-0.38 s", "val":-0.38}}, "event":null}]
+   {"name":"Score", "from":{"target":4, "targetTimestamp":3.51174, "offset":{"exp":"-0.38 s", "val":-0.38}}, "event":null}]
 }

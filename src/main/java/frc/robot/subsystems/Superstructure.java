@@ -69,6 +69,10 @@ public class Superstructure {
     Logger.recordOutput("3D Poses", mechanismPoses);
   }
 
+  public Command logMessage(String message) {
+    return Commands.runOnce(() -> Logger.recordOutput("Command Log", message));
+  }
+
   // Gets the closest reef sector to the robot.
   @AutoLogOutput(key = "AutoAim/TargetPose")
   public Pose2d getNearestReef() {
@@ -130,22 +134,32 @@ public class Superstructure {
 
   // Simple command to change the selected reef level.
   public Command selectElevatorHeight(int height) {
-    return Commands.runOnce(() -> elevatorLevel = height);
+    return Commands.runOnce(() -> elevatorLevel = height)
+        .andThen(logMessage("Selected Elevator Height: " + height));
   }
 
   // Simple command to change the selected reef pole.
   public Command selectReef(String reef) {
-    return Commands.runOnce(() -> this.selectedReef = reef);
+    return Commands.runOnce(() -> this.selectedReef = reef)
+        .andThen(logMessage("Selected Reef: " + reef));
   }
 
   // Select Coral Mode
   public Command selectPiece(String piece) {
-    return Commands.runOnce(() -> selectedPiece = piece);
+    return Commands.runOnce(() -> selectedPiece = piece)
+        .andThen(logMessage("Selected Piece: " + piece));
   }
 
   // Change Elevator Setpoint to the selected reef level.
   public Command raiseElevator() {
-    return elevator.changeSetpoint(() -> elevatorSetpoints[elevatorLevel]);
+    return elevator
+        .changeSetpoint(() -> elevatorSetpoints[elevatorLevel])
+        .andThen(
+            logMessage(
+                "Elevator Setpoint Changed To: "
+                    + elevatorSetpoints[elevatorLevel]
+                    + " Reef Level: "
+                    + elevatorLevel));
   }
 
   // Command to algin to the reef and get ready to score a coral.
@@ -154,6 +168,7 @@ public class Superstructure {
   // Command will end when the drivebase is aligned and the elevator is at the selected reef level.
   public Command ReefAlign(String side, int level) {
     return Commands.sequence(
+        logMessage("Autonomous Reef Align | Side: " + side + " | Level:" + level),
         selectReef(side),
         selectElevatorHeight(level),
         Commands.parallel(
@@ -166,6 +181,7 @@ public class Superstructure {
   // Command for intaking coral from the human player station
   public Command ElevatorIntake() {
     return Commands.sequence(
+        logMessage("Elevator Intake"),
         outtake.changeRollerSetpoint(-0.5),
         Commands.waitUntil(outtake::coralDetected),
         outtake.changeRollerSetpoint(0));
@@ -175,9 +191,11 @@ public class Superstructure {
   public Command GroundIntake() {
     return Commands.either(
         Commands.sequence( // Coral
+            logMessage("Ground Intake | Coral"),
             intake.changePivotSetpoint(Units.degreesToRadians(2)),
             intake.changeRollerSpeed(-Constants.Intake.kGroundIntakeSpeed)),
         Commands.sequence( // Algae
+            logMessage("Ground Intake | Algae"),
             intake.changePivotSetpoint(Units.degreesToRadians(60)),
             intake.changeRollerSpeed(Constants.Intake.kGroundIntakeSpeed)),
         () -> selectedPiece == "Coral");
@@ -187,9 +205,11 @@ public class Superstructure {
   public Command RetractIntake() {
     return Commands.either(
         Commands.sequence(
+            logMessage("Retract Intake | Coral"),
             intake.changePivotSetpoint(Constants.Intake.maxAngle),
             intake.changeRollerSpeed(-Constants.Intake.kFeedSpeed / 1.5)),
         Commands.sequence(
+            logMessage("Retract Intake | Algae"),
             intake.changePivotSetpoint(Constants.Intake.maxAngle),
             intake.changeRollerSpeed(Constants.Intake.kFeedSpeed)),
         () -> selectedPiece == "Coral");
@@ -199,14 +219,17 @@ public class Superstructure {
   public Command GroundIntakeScore() {
     return Commands.either(
             Commands.sequence(
+                logMessage("Ground Intake Score | Coral"),
                 intake.changePivotSetpoint(Constants.Intake.coralScoreAngle),
                 intake.changeRollerSpeed(Constants.Intake.kFeedSpeed)),
             Commands.sequence(
+                logMessage("Ground Intake Score | Algae"),
                 intake.changePivotSetpoint(Constants.Intake.algaeScoreAngle),
                 intake.changeRollerSpeed(-Constants.Intake.kGroundIntakeSpeed)),
             () -> selectedPiece == "Coral")
         .andThen(
             Commands.sequence(
+                logMessage("Ground Intake Score | Retract"),
                 intake.changePivotSetpoint(Constants.Intake.maxAngle),
                 intake.changeRollerSpeed(0)));
   }
@@ -214,8 +237,8 @@ public class Superstructure {
   // Scores a coral from the elevator
   public Command ElevatorScore() {
     return Commands.sequence(
+        logMessage("Elevator Score"),
         outtake.changeRollerSetpoint(-0.4),
-        Commands.print("ElevatorScore"),
         Commands.waitUntil(() -> !outtake.coralDetected()).unless(RobotBase::isSimulation),
         outtake.changeRollerSetpoint(0));
   }
@@ -230,29 +253,32 @@ public class Superstructure {
   // Stows all mechanisms, and stops all rollers.
   public Command HomeRobot() {
     return Commands.sequence(
+        logMessage("Home Robot"),
         outtake.changeRollerSetpoint(0),
         elevator.changeSetpoint(0),
         intake.changePivotSetpoint(Constants.Intake.maxAngle),
         intake.changeRollerSpeed(0));
   }
 
-  public AutoRoutine testAuto(AutoFactory factory, boolean mirror) {
+  public AutoRoutine L4_3Piece(AutoFactory factory, boolean mirror) {
 
-    final AutoRoutine routine = factory.newRoutine("Test 3 Piece");
+    final AutoRoutine routine = factory.newRoutine("3 Piece");
 
     String mirrorFlag = mirror ? "mirrored_" : "";
 
-    final AutoTrajectory S_P1 = routine.trajectory(mirrorFlag + "Test 3 Piece", 0);
-    final AutoTrajectory P1_I1 = routine.trajectory(mirrorFlag + "Test 3 Piece", 1);
-    final AutoTrajectory I1_P2 = routine.trajectory(mirrorFlag + "Test 3 Piece", 2);
-    final AutoTrajectory P2_I2 = routine.trajectory(mirrorFlag + "Test 3 Piece", 3);
-    final AutoTrajectory I2_P3 = routine.trajectory(mirrorFlag + "Test 3 Piece", 4);
+    final AutoTrajectory S_P1 = routine.trajectory(mirrorFlag + "3 Piece", 0);
+    final AutoTrajectory P1_I1 = routine.trajectory(mirrorFlag + "3 Piece", 1);
+    final AutoTrajectory I1_P2 = routine.trajectory(mirrorFlag + "3 Piece", 2);
+    final AutoTrajectory P2_I2 = routine.trajectory(mirrorFlag + "3 Piece", 3);
+    final AutoTrajectory I2_P3 = routine.trajectory(mirrorFlag + "3 Piece", 4);
 
     S_P1.atTime("Score")
         .onTrue(
             Commands.sequence(
                 ReefAlign(mirror ? "Right" : "Left", 4).asProxy(),
                 Score().asProxy(),
+                HomeRobot().asProxy(),
+                Commands.waitUntil(elevator::nearSetpoint),
                 new ScheduleCommand(P1_I1.cmd())));
 
     P1_I1
@@ -269,6 +295,8 @@ public class Superstructure {
             Commands.sequence(
                 ReefAlign(mirror ? "Right" : "Left", 4).asProxy(),
                 Score().asProxy(),
+                HomeRobot().asProxy(),
+                Commands.waitUntil(elevator::nearSetpoint),
                 new ScheduleCommand(P2_I2.cmd())));
 
     P2_I2
@@ -283,7 +311,9 @@ public class Superstructure {
         .atTime("Score")
         .onTrue(
             Commands.sequence(
-                ReefAlign(mirror ? "Left" : "Right", 4).asProxy(), Score().asProxy()));
+                ReefAlign(mirror ? "Left" : "Right", 4).asProxy(),
+                Score().asProxy(),
+                HomeRobot().asProxy()));
 
     routine.active().onTrue(Commands.sequence(S_P1.resetOdometry(), S_P1.cmd()));
 
@@ -330,6 +360,8 @@ public class Superstructure {
             Commands.sequence(
                 ReefAlign(mirror ? "Right" : "Left", 4).asProxy(),
                 Score().asProxy(),
+                HomeRobot().asProxy(),
+                Commands.waitUntil(elevator::nearSetpoint),
                 new ScheduleCommand(P1_Pos.cmd()))); // ends auto out of the way
 
     routine.active().onTrue(Commands.sequence(S_P1.resetOdometry(), S_P1.cmd()));
@@ -353,6 +385,8 @@ public class Superstructure {
             Commands.sequence(
                 ReefAlign(mirror ? "Right" : "Left", 4).asProxy(),
                 Score().asProxy(),
+                HomeRobot().asProxy(),
+                // Commands.waitUntil(elevator::nearSetpoint),
                 new ScheduleCommand(P1_I1.cmd())));
 
     P1_I1
@@ -369,6 +403,8 @@ public class Superstructure {
             Commands.sequence(
                 ReefAlign(mirror ? "Right" : "Left", 4).asProxy(),
                 Score().asProxy(),
+                HomeRobot().asProxy(),
+                Commands.waitUntil(elevator::nearSetpoint),
                 new ScheduleCommand(P2_Pos.cmd())));
 
     routine.active().onTrue(Commands.sequence(S_P1.resetOdometry(), S_P1.cmd()));
@@ -391,6 +427,8 @@ public class Superstructure {
             Commands.sequence(
                 ReefAlign(mirror ? "Right" : "Left", 4).asProxy(),
                 Score().asProxy(),
+                HomeRobot().asProxy(),
+                Commands.waitUntil(elevator::nearSetpoint),
                 new ScheduleCommand(P1_I1.cmd())));
 
     P1_I1
