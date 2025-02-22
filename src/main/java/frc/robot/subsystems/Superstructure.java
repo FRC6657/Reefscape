@@ -43,9 +43,9 @@ public class Superstructure {
   private double[] elevatorSetpoints = {
     0,
     0,
-    Units.inchesToMeters(19), // should be 14
+    Units.inchesToMeters(14), // should be 14
     Units.inchesToMeters(30),
-    Units.inchesToMeters(55) // Array for easily grabbing setpoint heights.
+    Units.inchesToMeters(57) // Array for easily grabbing setpoint heights.
   };
 
   // Constructor
@@ -241,6 +241,7 @@ public class Superstructure {
         logMessage("Elevator Score"),
         outtake.changeRollerSetpoint(-0.4),
         Commands.waitUntil(() -> !outtake.coralDetected()).unless(RobotBase::isSimulation),
+        Commands.waitSeconds(0.3),
         outtake.changeRollerSetpoint(0));
   }
 

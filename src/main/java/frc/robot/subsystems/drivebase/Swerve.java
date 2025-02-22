@@ -72,7 +72,7 @@ public class Swerve extends SubsystemBase {
           if (alliance == Alliance.Red) {
             // fieldRelativeSpeeds.get().vxMetersPerSecond *= -1;
             // fieldRelativeSpeeds.get().vyMetersPerSecond *= -1;
-            // rotation = rotation.rotateBy(Rotation2d.fromDegrees(180));
+            // rotation = rotation.plus(Rotation2d.fromDegrees(180));
           }
 
           this.driveChassisSpeeds(
@@ -217,12 +217,16 @@ public class Swerve extends SubsystemBase {
     double rotationFeedback =
         choreoThetaController.calculate(currentPose.getRotation().getRadians(), sample.heading);
 
+    Alliance alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
+
     ChassisSpeeds out =
         ChassisSpeeds.fromFieldRelativeSpeeds(
             xFF + xFeedback,
             yFF + yFeedback,
             rotationFF + rotationFeedback,
-            currentPose.getRotation());
+            currentPose
+                .getRotation()
+                .plus(alliance == Alliance.Blue ? new Rotation2d() : new Rotation2d(Math.PI)));
 
     driveChassisSpeeds(out);
   }

@@ -109,11 +109,11 @@ public class Constants {
 
     // Choreo
     public static final PIDController kXController_Choreo =
-        new PIDController(8, 0, 0); // TODO: Tune
+        new PIDController(0.25, 0, 0); // TODO: Tune
     public static final PIDController kYController_Choreo =
-        new PIDController(8, 0, 0); // TODO: Tune
+        new PIDController(0.25, 0, 0); // TODO: Tune
     public static final PIDController kThetaController_Choreo =
-        new PIDController(6, 0, 0); // TODO: Tune
+        new PIDController(0.25, 0, 0); // TODO: Tune
 
     // Repulsor
     public static final PIDController kXController_Repulsor =
@@ -320,8 +320,8 @@ public class Constants {
             .withSupplyCurrentLowerLimit(kSupplyLimit)
             .withSupplyCurrentLowerTime(0);
 
-    public static double kMaxVelocity = 80; // Inches/s of Carriage Travel
-    public static double kMaxAcceleration = 100; // Inches/s/s of Carriage Travel
+    public static double kMaxVelocity = 360; // Inches/s of Carriage Travel
+    public static double kMaxAcceleration = 360; // Inches/s/s of Carriage Travel
 
     public static MotionMagicConfigs kMotionMagicConfig =
         new MotionMagicConfigs()

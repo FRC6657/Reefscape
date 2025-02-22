@@ -158,9 +158,9 @@ public class Robot extends LoggedRobot {
         drivebase.drive(
             () ->
                 new ChassisSpeeds(
-                    MathUtil.applyDeadband(driver.getLeftY(), 0.1) * 2,
-                    MathUtil.applyDeadband(-driver.getLeftX(), 0.1) * 2,
-                    MathUtil.applyDeadband(-driver.getRightX(), 0.1) * 2)));
+                    MathUtil.applyDeadband(driver.getLeftY(), 0.1) * 3,
+                    MathUtil.applyDeadband(-driver.getLeftX(), 0.1) * 3,
+                    MathUtil.applyDeadband(-driver.getRightX(), 0.1) * 3)));
 
     operator.button(9).onTrue(superstructure.selectElevatorHeight(2));
     operator.button(8).onTrue(superstructure.selectElevatorHeight(3));
