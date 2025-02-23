@@ -40,6 +40,7 @@ public class Constants {
     OuttakeMotor(14),
     Elevetor_Leader(15),
     Elevator_Follower(16),
+    AlgaeMotor(17),
     IntakePivot(19),
     IntakeRoller(20),
     IntakeEncoder(21),
@@ -108,11 +109,11 @@ public class Constants {
 
     // Choreo
     public static final PIDController kXController_Choreo =
-        new PIDController(8, 0, 0); // TODO: Tune
+        new PIDController(0.25, 0, 0); // TODO: Tune
     public static final PIDController kYController_Choreo =
-        new PIDController(8, 0, 0); // TODO: Tune
+        new PIDController(0.25, 0, 0); // TODO: Tune
     public static final PIDController kThetaController_Choreo =
-        new PIDController(6, 0, 0); // TODO: Tune
+        new PIDController(0.25, 0, 0); // TODO: Tune
 
     // Repulsor
     public static final PIDController kXController_Repulsor =
@@ -164,7 +165,8 @@ public class Constants {
             new Transform3d(
                 new Translation3d(
                     Units.inchesToMeters(3), Units.inchesToMeters(4), Units.inchesToMeters(9)),
-                new Rotation3d(0, Units.degreesToRadians(0), Math.PI + Units.degreesToRadians(20))),
+                new Rotation3d(
+                    Math.PI, Units.degreesToRadians(0), Math.PI + Units.degreesToRadians(20))),
             Rotation2d.fromDegrees(94.9),
             new int[] {1600, 1200});
 
@@ -178,9 +180,8 @@ public class Constants {
             Rotation2d.fromDegrees(79.76),
             new int[] {1280, 800});
 
-    public static final Matrix<N3, N1> singleTagStdDev =
-        VecBuilder.fill(0.4, 0.4, Double.MAX_VALUE);
-    public static final Matrix<N3, N1> multiTagStdDev = VecBuilder.fill(0.2, 0.2, Double.MAX_VALUE);
+    public static final Matrix<N3, N1> singleTagStdDev = VecBuilder.fill(0.4, 0.4, 0.4);
+    public static final Matrix<N3, N1> multiTagStdDev = VecBuilder.fill(0.2, 0.2, 0.2);
   }
 
   public static class Motors {
@@ -296,6 +297,8 @@ public class Constants {
     public static int stages = 3;
     public static double setpointTollerance = Units.inchesToMeters(1);
 
+    public static double kAlgaeStrength = 0.4;
+
     public static Slot0Configs motorSlot0 =
         new Slot0Configs()
             .withKS(0) // Volts
@@ -317,8 +320,8 @@ public class Constants {
             .withSupplyCurrentLowerLimit(kSupplyLimit)
             .withSupplyCurrentLowerTime(0);
 
-    public static double kMaxVelocity = 80; // Inches/s of Carriage Travel
-    public static double kMaxAcceleration = 100; // Inches/s/s of Carriage Travel
+    public static double kMaxVelocity = 360; // Inches/s of Carriage Travel
+    public static double kMaxAcceleration = 360; // Inches/s/s of Carriage Travel
 
     public static MotionMagicConfigs kMotionMagicConfig =
         new MotionMagicConfigs()
@@ -326,40 +329,10 @@ public class Constants {
             .withMotionMagicAcceleration((kMaxAcceleration / stages) / (sprocketPD * Math.PI));
   }
 
-  public static final class Climber {
-    public static double maxAngle = Units.degreesToRadians(90); // TODO: Verify
-    public static double minAngle = Units.degreesToRadians(0); // This should be good, right?
-    public static double gearing =
-        (20d / 1) * (72d / 28); // TODO: Make sure the intake doesn't go inside the robot
+  public static final class ClimberConstants {
+    public static double maxRotations = 90;
+    public static double minRotations = 0;
+    public static double gearing = 60d;
     public static int currentLimit = 40;
-    public static final double kSupplyLimit = 40;
-    public static final double kStatorLimit = 60;
-
-    public static final CurrentLimitsConfigs currentConfigs =
-        new CurrentLimitsConfigs()
-            .withStatorCurrentLimit(kStatorLimit)
-            .withSupplyCurrentLimit(kSupplyLimit)
-            .withStatorCurrentLimitEnable(true)
-            .withSupplyCurrentLimitEnable(true)
-            .withSupplyCurrentLowerLimit(kSupplyLimit)
-            .withSupplyCurrentLowerTime(0);
-
-    /**
-     * TODO: this code is a carbon copy from intake so make sure this actually makes the motor work
-     * as intended
-     */
-    public static Slot0Configs kPivotSlot0 =
-        new Slot0Configs()
-            .withKS(0)
-            .withKV(12d / ((6380d / 60) * gearing))
-            .withKP(70)
-            .withKI(0)
-            .withKD(0);
-
-    // TODO: same here
-    public static MotionMagicConfigs kPivotMotionMagicConfig =
-        new MotionMagicConfigs()
-            .withMotionMagicCruiseVelocity(Units.degreesToRotations(400))
-            .withMotionMagicAcceleration(Units.degreesToRotations(1200));
   }
 }

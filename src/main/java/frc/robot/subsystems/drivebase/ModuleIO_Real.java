@@ -64,8 +64,8 @@ public class ModuleIO_Real implements ModuleIO {
     var driveConfig = new TalonFXConfiguration();
     driveConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     driveConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
-    driveConfig.CurrentLimits.StatorCurrentLimit = 80;
-    driveConfig.CurrentLimits.SupplyCurrentLimit = 65;
+    driveConfig.CurrentLimits.StatorCurrentLimit = 40; // reduced from 80
+    driveConfig.CurrentLimits.SupplyCurrentLimit = 40; // reduced from 65 to 40 for testing
     driveConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     driveConfig.Feedback.SensorToMechanismRatio = Swerve.DriveGearing.L3.reduction;
     driveConfig.Slot0.kS = 1;

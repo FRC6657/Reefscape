@@ -112,8 +112,7 @@ public class ApriltagCamera {
     // Decrease std devs if multiple targets are visible
     if (numTags > 1) estStdDevs = VisionConstants.multiTagStdDev;
     // Increase std devs based on (average) distance
-    if (numTags == 1 && avgDist > 4)
-      estStdDevs = VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
+    if (numTags == 1 && avgDist > 4) estStdDevs = VisionConstants.singleTagStdDev;
     else estStdDevs = estStdDevs.times(1 + (avgDist * avgDist / 30));
 
     return estStdDevs;

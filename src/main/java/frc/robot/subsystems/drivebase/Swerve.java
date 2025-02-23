@@ -70,9 +70,9 @@ public class Swerve extends SubsystemBase {
           Alliance alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
           Rotation2d rotation = new Rotation2d(getPose().getRotation().getRadians());
           if (alliance == Alliance.Red) {
-            fieldRelativeSpeeds.get().vxMetersPerSecond *= -1;
-            fieldRelativeSpeeds.get().vyMetersPerSecond *= -1;
-            rotation = rotation.rotateBy(Rotation2d.fromDegrees(180));
+            // fieldRelativeSpeeds.get().vxMetersPerSecond *= -1;
+            // fieldRelativeSpeeds.get().vyMetersPerSecond *= -1;
+            // rotation = rotation.plus(Rotation2d.fromDegrees(180));
           }
 
           this.driveChassisSpeeds(
@@ -143,7 +143,7 @@ public class Swerve extends SubsystemBase {
 
   public void addVisionMeasurement(Pose3d visionPose, double timestamp, Matrix<N3, N1> stdDevs) {
     if (RobotBase.isReal()) {
-      poseEstimator.addVisionMeasurement(getPose(), timestamp, stdDevs);
+      poseEstimator.addVisionMeasurement(visionPose.toPose2d(), timestamp, stdDevs);
     }
   }
 
@@ -217,12 +217,16 @@ public class Swerve extends SubsystemBase {
     double rotationFeedback =
         choreoThetaController.calculate(currentPose.getRotation().getRadians(), sample.heading);
 
+    Alliance alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
+
     ChassisSpeeds out =
         ChassisSpeeds.fromFieldRelativeSpeeds(
             xFF + xFeedback,
             yFF + yFeedback,
             rotationFF + rotationFeedback,
-            currentPose.getRotation());
+            currentPose
+                .getRotation()
+                .plus(alliance == Alliance.Blue ? new Rotation2d() : new Rotation2d(Math.PI)));
 
     driveChassisSpeeds(out);
   }
