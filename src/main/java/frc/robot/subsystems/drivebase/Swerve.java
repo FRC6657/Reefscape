@@ -52,6 +52,9 @@ public class Swerve extends SubsystemBase {
       new SwerveDrivePoseEstimator(
           kinematics, new Rotation2d(gyroInputs.yaw), getModulePositions(), new Pose2d());
 
+  double translationTolerance = Units.inchesToMeters(1);
+  double rotationTolerance = Units.degreesToRadians(3);
+
   public Swerve(ModuleIO[] moduleIOs, GyroIO gyroIO) {
 
     String[] moduleNames = new String[] {"Front Left", "Front Right", "Back Left", "Back Right"};
@@ -61,32 +64,26 @@ public class Swerve extends SubsystemBase {
     }
 
     this.gyroIO = gyroIO;
+
+    thetaController.enableContinuousInput(-Math.PI, Math.PI);
+    choreoThetaController.enableContinuousInput(-Math.PI, Math.PI);
+
+    xController.setTolerance(translationTolerance);
+    yController.setTolerance(translationTolerance);
+    thetaController.setTolerance(rotationTolerance);
   }
 
+  /** Used for only teleop */
   public Command drive(Supplier<ChassisSpeeds> fieldRelativeSpeeds) {
-
     return Commands.run(
         () -> {
           Alliance alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
-          Rotation2d rotation = new Rotation2d(getPose().getRotation().getRadians());
-          if (alliance == Alliance.Red) {
-            // fieldRelativeSpeeds.get().vxMetersPerSecond *= -1;
-            // fieldRelativeSpeeds.get().vyMetersPerSecond *= -1;
-            // rotation = rotation.plus(Rotation2d.fromDegrees(180));
-          }
-
+          Rotation2d rotation =
+              getPose().getRotation().plus(new Rotation2d(alliance == Alliance.Blue ? 0 : Math.PI));
           this.driveChassisSpeeds(
               ChassisSpeeds.fromFieldRelativeSpeeds(fieldRelativeSpeeds.get(), rotation));
-
-          // this.driveChassisSpeeds(ChassisSpeeds.fromFieldRelativeSpeeds(fieldRelativeSpeeds.get(), getPose().getRotation()));
         },
         this);
-  }
-
-  @AutoLogOutput(key = "Swerve/FieldRelativeChassisSpeed")
-  public ChassisSpeeds getCurrentFieldRelativeSpeeds() {
-    return ChassisSpeeds.fromRobotRelativeSpeeds(
-        kinematics.toChassisSpeeds(getModuleStates()), getPose().getRotation());
   }
 
   public void driveChassisSpeeds(ChassisSpeeds desiredSpeeds) {
@@ -97,9 +94,6 @@ public class Swerve extends SubsystemBase {
       modules[i].changeState(states[i]);
     }
 
-    Logger.recordOutput(
-        "Swerve/Field Relative Chassis Speed Setpoint",
-        ChassisSpeeds.fromRobotRelativeSpeeds(newSpeeds, getPose().getRotation()));
     Logger.recordOutput("Swerve/Setpoints", states);
   }
 
@@ -148,34 +142,32 @@ public class Swerve extends SubsystemBase {
   }
 
   public boolean atPose(Pose2d desiredPose) {
-    double translationTolerance = Units.inchesToMeters(1);
-    double rotationTolerance = Units.degreesToRadians(3);
 
-    Pose2d currentPose = getPose();
+    double xError = xController.getError();
+    double yError = yController.getError();
+    double thetaError = thetaController.getError();
 
-    return currentPose.getTranslation().getDistance(desiredPose.getTranslation())
-            < translationTolerance
-        && Math.abs(currentPose.getRotation().getRadians() - desiredPose.getRotation().getRadians())
-            < rotationTolerance;
+    Logger.recordOutput("AutoAim/XError", xError);
+    Logger.recordOutput("AutoAim/YError", yError);
+    Logger.recordOutput("AutoAim/ThetaError", thetaError);
+
+    return xController.atSetpoint() && yController.atSetpoint() && thetaController.atSetpoint();
   }
 
   public Command goToPose(Supplier<Pose2d> target) {
     return this.run(
             () -> {
-              Logger.recordOutput("Swerve/PositioningMode", "PID");
               positionController(target.get());
             })
         .until(() -> atPose(target.get()))
         .andThen(Commands.runOnce(() -> this.driveChassisSpeeds(new ChassisSpeeds())));
   }
 
+  PIDController xController = AutoConstants.kXController_Position;
+  PIDController yController = AutoConstants.kYController_Position;
+  PIDController thetaController = AutoConstants.kThetaController_Position;
+
   public void positionController(Pose2d targetPose) {
-
-    PIDController xController = AutoConstants.kXController_Position;
-    PIDController yController = AutoConstants.kYController_Position;
-    PIDController thetaController = AutoConstants.kThetaController_Position;
-
-    thetaController.enableContinuousInput(-Math.PI, Math.PI);
 
     double xFeedback = xController.calculate(getPose().getX(), targetPose.getX());
     double yFeedback = yController.calculate(getPose().getY(), targetPose.getY());
@@ -202,11 +194,7 @@ public class Swerve extends SubsystemBase {
 
     Pose2d currentPose = getPose();
 
-    choreoThetaController.enableContinuousInput(-Math.PI, Math.PI);
-
     Logger.recordOutput("Swerve/Auto/DesiredPose", sample.getPose());
-    Logger.recordOutput("Swerve/Auto/DesiredXVelocity", sample.vx);
-    Logger.recordOutput("Swerve/Auto/DesiredYVelocity", sample.vx);
 
     double xFF = sample.vx;
     double yFF = sample.vy;
@@ -217,16 +205,12 @@ public class Swerve extends SubsystemBase {
     double rotationFeedback =
         choreoThetaController.calculate(currentPose.getRotation().getRadians(), sample.heading);
 
-    Alliance alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
-
     ChassisSpeeds out =
         ChassisSpeeds.fromFieldRelativeSpeeds(
             xFF + xFeedback,
             yFF + yFeedback,
             rotationFF + rotationFeedback,
-            currentPose
-                .getRotation()
-                .plus(alliance == Alliance.Blue ? new Rotation2d() : new Rotation2d(Math.PI)));
+            currentPose.getRotation());
 
     driveChassisSpeeds(out);
   }

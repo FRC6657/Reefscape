@@ -8,10 +8,8 @@ import choreo.auto.AutoFactory;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
@@ -21,12 +19,10 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.Swerve.ModuleInformation;
 import frc.robot.Constants.VisionConstants;
 import frc.robot.subsystems.Superstructure;
-import frc.robot.subsystems.climber.Climber;
-import frc.robot.subsystems.climber.ClimberIO_Real;
-import frc.robot.subsystems.climber.ClimberIO_Sim;
 import frc.robot.subsystems.drivebase.GyroIO;
 import frc.robot.subsystems.drivebase.GyroIO_Real;
 import frc.robot.subsystems.drivebase.ModuleIO;
@@ -60,7 +56,6 @@ public class Robot extends LoggedRobot {
   private Elevator elevator;
   private Outtake outtake;
   private Intake intake;
-  private Climber climber;
 
   private ApriltagCamera[] cameras;
 
@@ -68,8 +63,9 @@ public class Robot extends LoggedRobot {
 
   private final AutoFactory autoFactory;
 
-  private LoggedDashboardChooser<Command> autoChooser =
-      new LoggedDashboardChooser<>("Auto Chooser");
+  private LoggedDashboardChooser<Command> autoChooser = new LoggedDashboardChooser<>("Auto Chooser");
+
+  Trigger elevatorRumble;
 
   public Robot() {
 
@@ -93,7 +89,8 @@ public class Robot extends LoggedRobot {
     intake = new Intake(RobotBase.isReal() ? new IntakeIO_Real() : new IntakeIO_Sim());
     elevator = new Elevator(RobotBase.isReal() ? new ElevatorIO_Real() : new ElevatorIO_Sim());
     outtake = new Outtake(RobotBase.isReal() ? new OuttakeIO_Real() : new OuttakeIO_Sim());
-    climber = new Climber(RobotBase.isReal() ? new ClimberIO_Real() : new ClimberIO_Sim());
+
+    elevatorRumble = new Trigger(() -> elevator.atSetpoint() && !elevator.isDown()).onTrue(rumble(0.25, 1));
 
     cameras =
         new ApriltagCamera[] {
@@ -131,13 +128,6 @@ public class Robot extends LoggedRobot {
     autoChooser.addOption("3Piece L4", superstructure.L4_3Piece(autoFactory, false).cmd());
     autoChooser.addOption("3Piece L4 Processor", superstructure.L4_3Piece(autoFactory, true).cmd());
 
-    // autoChooser.addOption("Two Piece Adjacent", superstructure.TwoCoralAdjacent(autoFactory,
-    // false).cmd());
-    // autoChooser.addOption("Two Piece Adjacent Processor",
-    // superstructure.TwoCoralAdjacent(autoFactory, true).cmd());
-    // autoChooser.addOption("Two Piece 180", superstructure.TwoCoral180(autoFactory, false).cmd());
-    // autoChooser.addOption("Two Piece 180 Processor", superstructure.TwoCoral180(autoFactory,
-    // true).cmd());
   }
 
   @SuppressWarnings("resource")
@@ -158,9 +148,15 @@ public class Robot extends LoggedRobot {
         drivebase.drive(
             () ->
                 new ChassisSpeeds(
-                    MathUtil.applyDeadband(driver.getLeftY(), 0.1) * 3,
-                    MathUtil.applyDeadband(-driver.getLeftX(), 0.1) * 3,
-                    MathUtil.applyDeadband(-driver.getRightX(), 0.1) * 3)));
+                    MathUtil.applyDeadband(-driver.getLeftY(), 0.1)
+                        * 3
+                        * (!elevator.isDown() ? 0.25 : 1),
+                    MathUtil.applyDeadband(-driver.getLeftX(), 0.1)
+                        * 3
+                        * (!elevator.isDown() ? 0.25 : 1),
+                    MathUtil.applyDeadband(-driver.getRightX(), 0.1)
+                        * 3
+                        * (!elevator.isDown() ? 0.25 : 1))));
 
     operator.button(9).onTrue(superstructure.selectElevatorHeight(2));
     operator.button(8).onTrue(superstructure.selectElevatorHeight(3));
@@ -172,16 +168,6 @@ public class Robot extends LoggedRobot {
     operator.button(6).onTrue(superstructure.selectReef("Left"));
     operator.button(3).onTrue(superstructure.selectReef("Right"));
 
-    operator.button(1).onTrue(climber.setVoltage(5)).onFalse(climber.setVoltage(0));
-    operator.button(4).onTrue(climber.setVoltage(-5)).onFalse(climber.setVoltage(0));
-
-    driver
-        .b()
-        .onTrue( // Prep for climb
-            Commands.sequence(
-                elevator.changeSetpoint(Units.inchesToMeters(12)),
-                intake.changePivotSetpoint(Units.degreesToRadians(2))));
-
     driver
         .y()
         .onTrue(
@@ -189,19 +175,19 @@ public class Robot extends LoggedRobot {
                 new Pose2d(
                     drivebase.getPose().getX(), drivebase.getPose().getY(), new Rotation2d())));
 
-    // driver
-    //     .a()
-    //     .whileTrue(
-    //         Commands.sequence(
-    //             Commands.parallel( // Alignment Commands
-    //                 drivebase.goToPose(superstructure::getNearestReef), // Align Drivebase to
-    //                 superstructure.raiseElevator() // Raise Elevator to selected leel
-    //                 ),
-    //             Commands.waitUntil(elevator::atSetpoint), // Ensure the elevator is fully raised
-    //             superstructure.Score(), // Score the piece
-    //             rumble(0.5, 1), // Rumble the controller
-    //             elevator.changeSetpoint(0) // Lower the elevator
-    //             ));
+    driver
+        .a()
+        .whileTrue(
+            Commands.sequence(
+                Commands.parallel( // Alignment Commands
+                    drivebase.goToPose(superstructure::getNearestReef), // Align Drivebase to
+                    superstructure.raiseElevator() // Raise Elevator to selected leel
+                    ),
+                Commands.waitUntil(elevator::atSetpoint), // Ensure the elevator is fully raised
+                superstructure.Score(), // Score the piece
+                rumble(0.5, 1), // Rumble the controller
+                elevator.changeSetpoint(0) // Lower the elevator
+                ));
 
     driver.a().onFalse(superstructure.HomeRobot().andThen(rumble(0, 0)));
 
@@ -232,33 +218,18 @@ public class Robot extends LoggedRobot {
   @Override
   public void robotPeriodic() {
 
-    // for (var camera : cameras) {
-    //   if (RobotBase.isSimulation()) {
-    //     camera.updateSimPose(drivebase.getPose());
-    //   }
-    //   camera.updateInputs();
-    //   drivebase.addVisionMeasurement(
-    //       camera.getEstimatedPose(), camera.getLatestTimestamp(), camera.getLatestStdDevs());
-    // }
+    for (var camera : cameras) {
+      if (RobotBase.isSimulation()) {
+        camera.updateSimPose(drivebase.getPose());
+      }
+      camera.updateInputs();
+      // drivebase.addVisionMeasurement(camera.getEstimatedPose(), camera.getLatestTimestamp(), camera.getLatestStdDevs());
+    }
 
     superstructure.update3DPose();
 
-    Logger.recordOutput(
-        "ReefCam Pose1",
-        new Pose3d(drivebase.getPose()).transformBy(VisionConstants.camera1Info.robotToCamera));
-
-    Logger.recordOutput(
-        "ReefCam Pose2",
-        new Pose3d(drivebase.getPose()).transformBy(VisionConstants.camera2Info.robotToCamera));
-    Logger.recordOutput(
-        "ReefCam Pose3",
-        new Pose3d(drivebase.getPose()).transformBy(VisionConstants.camera3Info.robotToCamera));
-
     CommandScheduler.getInstance().run();
   }
-
-  @Override
-  public void teleopPeriodic() {}
 
   @Override
   public void disabledInit() {
