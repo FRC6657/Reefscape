@@ -126,12 +126,11 @@ public class Robot extends LoggedRobot {
     autoChooser.addDefaultOption("None", superstructure.logMessage("Autonomous: No Auto Selected"));
     autoChooser.addOption("TimedL1", superstructure.TimedL1());
 
-    // autoChooser.addOption("1Piece L1", superstructure.taxiMiddleL1(autoFactory).cmd());
-    // autoChooser.addOption("Taxi", superstructure.taxi(autoFactory, false).cmd());
-    // autoChooser.addOption("Taxi Processor", superstructure.taxi(autoFactory, true).cmd());
-    // autoChooser.addOption("3Piece L4", superstructure.L4_3Piece(autoFactory, false).cmd());
-    // autoChooser.addOption("3Piece L4 Processor", superstructure.L4_3Piece(autoFactory,
-    // true).cmd());
+    autoChooser.addOption("1Piece L1", superstructure.taxiMiddleL1(autoFactory).cmd());
+    autoChooser.addOption("Taxi", superstructure.taxi(autoFactory, false).cmd());
+    autoChooser.addOption("Taxi Processor", superstructure.taxi(autoFactory, true).cmd());
+    autoChooser.addOption("3Piece L4", superstructure.L4_3Piece(autoFactory, false).cmd());
+    autoChooser.addOption("3Piece L4 Processor", superstructure.L4_3Piece(autoFactory, true).cmd());
   }
 
   @SuppressWarnings("resource")

@@ -152,7 +152,7 @@ public class Constants {
 
     public static CameraInfo camera1Info =
         new CameraInfo(
-            "White_Reef",
+            "Black_Reef",
             new Transform3d(
                 new Translation3d(-0.320048, -0.300306, 0.299816),
                 new Rotation3d(0, Units.degreesToRadians(0), Math.PI - Units.degreesToRadians(55))),
@@ -161,7 +161,7 @@ public class Constants {
 
     public static CameraInfo camera2Info =
         new CameraInfo(
-            "Black_Reef",
+            "White_Reef",
             new Transform3d(
                 new Translation3d(
                     Units.inchesToMeters(3), Units.inchesToMeters(4), Units.inchesToMeters(9)),
