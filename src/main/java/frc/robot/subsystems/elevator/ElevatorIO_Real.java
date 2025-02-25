@@ -130,9 +130,14 @@ public class ElevatorIO_Real implements ElevatorIO {
     inputs.algaeSetpoint = algaeArmMotorSetpoint;
 
     // Logging for motion magic internal variables for tuning purposes.
+    Logger.recordOutput("Elevator/RawPosition", leaderMotor.getPosition().getValueAsDouble());
+    Logger.recordOutput("Elevator/RawVelocity", leaderMotor.getVelocity().getValueAsDouble());
+    Logger.recordOutput("Elevator/RawAccleration", leaderMotor.getPosition().getValueAsDouble());
     Logger.recordOutput("Elevator/MotionMagicPosition", motionMagicVoltage.Position);
-    Logger.recordOutput(
-        "Elevator/MotionMagicSetpoint", leaderMotor.getClosedLoopReference().getValueAsDouble());
+    Logger.recordOutput("Elevator/MotionMagicSetpoint", leaderMotor.getClosedLoopReference().getValueAsDouble());
+    Logger.recordOutput("Elevator/MotionMagicCruiseVelocity", Constants.Elevator.kMotionMagicConfig.MotionMagicCruiseVelocity);
+    Logger.recordOutput("Elevator/MotionMagicAcceleration", Constants.Elevator.kMotionMagicConfig.MotionMagicAcceleration);
+
   }
 
   @Override
@@ -159,7 +164,7 @@ public class ElevatorIO_Real implements ElevatorIO {
       algaeArmTimer.stop();
       algaeArmTimer.reset();
       algaeArmTimer.start();
-      Logger.recordOutput("Algae arm move not out", algaeArmOut);
+      Logger.recordOutput("Command Log", "Algae Arm Out");
     } else if (!MathUtil.isNear(0, elevatorPosition, Units.inchesToMeters(1.0)) && !algaeArmOut) {
       // If elevator is up and the arm is not out, bring the arm out
       algaeArmOut = true;
@@ -167,7 +172,7 @@ public class ElevatorIO_Real implements ElevatorIO {
       algaeArmTimer.stop();
       algaeArmTimer.reset();
       algaeArmTimer.start();
-      Logger.recordOutput("algae arm move out", algaeArmOut);
+      Logger.recordOutput("Command Log", "Algae Arm In");
     }
 
     algaeMotor.set(ControlMode.PercentOutput, algaeArmMotorSetpoint);
