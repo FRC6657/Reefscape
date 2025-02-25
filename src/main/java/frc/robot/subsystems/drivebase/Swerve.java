@@ -4,6 +4,8 @@
 
 package frc.robot.subsystems.drivebase;
 
+import static edu.wpi.first.units.Units.*;
+
 import choreo.trajectory.SwerveSample;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
@@ -138,6 +140,21 @@ public class Swerve extends SubsystemBase {
 
   public void addVisionMeasurement(Pose3d visionPose, double timestamp, Matrix<N3, N1> stdDevs) {
     if (RobotBase.isReal()) {
+
+      // Reject poses tilted too far
+      if (Math.abs(visionPose.getRotation().getMeasureX().in(Degrees)) > 10
+          || Math.abs(visionPose.getRotation().getMeasureY().in(Degrees)) > 10) {
+        Logger.recordOutput("Errors/RejectedPoses", visionPose);
+        return;
+      }
+      // Reject poses too far off the floor
+      if (Math.abs(visionPose.getTranslation().getZ()) > Units.inchesToMeters(12)) {
+        Logger.recordOutput("Errors/RejectedPoses", visionPose);
+        return;
+      }
+
+      Logger.recordOutput("Vision/VisionPoseConverged", Math.abs(visionPose.toPose2d().minus(getPose()).getTranslation().getNorm()) < Units.inchesToMeters(2));
+
       poseEstimator.addVisionMeasurement(visionPose.toPose2d(), timestamp, stdDevs);
     }
   }
