@@ -5,6 +5,7 @@
 package frc.robot.subsystems.drivebase;
 
 import choreo.trajectory.SwerveSample;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
@@ -177,7 +178,10 @@ public class Swerve extends SubsystemBase {
 
     ChassisSpeeds out =
         ChassisSpeeds.fromFieldRelativeSpeeds(
-            xFeedback, yFeedback, rotationFeedback, getPose().getRotation());
+            MathUtil.clamp(xFeedback, -1, 1),
+            MathUtil.clamp(yFeedback, -1, 1),
+            MathUtil.clamp(rotationFeedback, -1, 1),
+            getPose().getRotation());
 
     Logger.recordOutput("AutoAim/AtSetpointX", xController.atSetpoint());
     Logger.recordOutput("AutoAim/AtSetpointY", yController.atSetpoint());

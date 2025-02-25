@@ -5,6 +5,7 @@ import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -260,6 +261,13 @@ public class Superstructure {
         elevator.changeSetpoint(0),
         intake.changePivotSetpoint(Constants.Intake.maxAngle),
         intake.changeRollerSpeed(0));
+  }
+
+  public Command TimedL1() {
+    return Commands.sequence(
+        drivebase.drive(() -> new ChassisSpeeds(1, 0, 0)).withTimeout(3),
+        drivebase.drive(() -> new ChassisSpeeds(0, 0, 0)).withTimeout(1),
+        Score());
   }
 
   public AutoRoutine L4_3Piece(AutoFactory factory, boolean mirror) {

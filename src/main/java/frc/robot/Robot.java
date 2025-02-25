@@ -63,7 +63,8 @@ public class Robot extends LoggedRobot {
 
   private final AutoFactory autoFactory;
 
-  private LoggedDashboardChooser<Command> autoChooser = new LoggedDashboardChooser<>("Auto Chooser");
+  private LoggedDashboardChooser<Command> autoChooser =
+      new LoggedDashboardChooser<>("Auto Chooser");
 
   Trigger elevatorRumble;
 
@@ -90,25 +91,26 @@ public class Robot extends LoggedRobot {
     elevator = new Elevator(RobotBase.isReal() ? new ElevatorIO_Real() : new ElevatorIO_Sim());
     outtake = new Outtake(RobotBase.isReal() ? new OuttakeIO_Real() : new OuttakeIO_Sim());
 
-    elevatorRumble = new Trigger(() -> elevator.atSetpoint() && !elevator.isDown()).onTrue(rumble(0.25, 1));
+    elevatorRumble =
+        new Trigger(() -> elevator.atSetpoint() && !elevator.isDown()).onTrue(rumble(0.25, 1));
 
     cameras =
         new ApriltagCamera[] {
-          // new ApriltagCamera(
-          //     RobotBase.isReal()
-          //         ? new ApriltagCameraIO_Real(VisionConstants.camera1Info)
-          //         : new ApriltagCameraIO_Sim(VisionConstants.camera1Info),
-          //     VisionConstants.camera1Info),
+          new ApriltagCamera(
+              RobotBase.isReal()
+                  ? new ApriltagCameraIO_Real(VisionConstants.camera1Info)
+                  : new ApriltagCameraIO_Sim(VisionConstants.camera1Info),
+              VisionConstants.camera1Info),
           new ApriltagCamera(
               RobotBase.isReal()
                   ? new ApriltagCameraIO_Real(VisionConstants.camera2Info)
                   : new ApriltagCameraIO_Sim(VisionConstants.camera2Info),
               VisionConstants.camera2Info),
-          new ApriltagCamera(
-              RobotBase.isReal()
-                  ? new ApriltagCameraIO_Real(VisionConstants.camera3Info)
-                  : new ApriltagCameraIO_Sim(VisionConstants.camera3Info),
-              VisionConstants.camera3Info)
+          // new ApriltagCamera(
+          //     RobotBase.isReal()
+          //         ? new ApriltagCameraIO_Real(VisionConstants.camera3Info)
+          //         : new ApriltagCameraIO_Sim(VisionConstants.camera3Info),
+          //     VisionConstants.camera3Info)
         };
 
     superstructure = new Superstructure(drivebase, elevator, outtake, intake);
@@ -122,12 +124,14 @@ public class Robot extends LoggedRobot {
             drivebase);
 
     autoChooser.addDefaultOption("None", superstructure.logMessage("Autonomous: No Auto Selected"));
-    autoChooser.addOption("1Piece L1", superstructure.taxiMiddleL1(autoFactory).cmd());
-    autoChooser.addOption("Taxi", superstructure.taxi(autoFactory, false).cmd());
-    autoChooser.addOption("Taxi Processor", superstructure.taxi(autoFactory, true).cmd());
-    autoChooser.addOption("3Piece L4", superstructure.L4_3Piece(autoFactory, false).cmd());
-    autoChooser.addOption("3Piece L4 Processor", superstructure.L4_3Piece(autoFactory, true).cmd());
+    autoChooser.addOption("TimedL1", superstructure.TimedL1());
 
+    // autoChooser.addOption("1Piece L1", superstructure.taxiMiddleL1(autoFactory).cmd());
+    // autoChooser.addOption("Taxi", superstructure.taxi(autoFactory, false).cmd());
+    // autoChooser.addOption("Taxi Processor", superstructure.taxi(autoFactory, true).cmd());
+    // autoChooser.addOption("3Piece L4", superstructure.L4_3Piece(autoFactory, false).cmd());
+    // autoChooser.addOption("3Piece L4 Processor", superstructure.L4_3Piece(autoFactory,
+    // true).cmd());
   }
 
   @SuppressWarnings("resource")
@@ -223,7 +227,8 @@ public class Robot extends LoggedRobot {
         camera.updateSimPose(drivebase.getPose());
       }
       camera.updateInputs();
-      // drivebase.addVisionMeasurement(camera.getEstimatedPose(), camera.getLatestTimestamp(), camera.getLatestStdDevs());
+      // drivebase.addVisionMeasurement(camera.getEstimatedPose(), camera.getLatestTimestamp(),
+      // camera.getLatestStdDevs());
     }
 
     superstructure.update3DPose();
