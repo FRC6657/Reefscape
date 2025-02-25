@@ -19,6 +19,7 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.RobotBase;
@@ -30,6 +31,7 @@ import frc.robot.Constants.AutoConstants;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
+import static edu.wpi.first.units.Units.*;
 
 public class Swerve extends SubsystemBase {
 
@@ -138,6 +140,18 @@ public class Swerve extends SubsystemBase {
 
   public void addVisionMeasurement(Pose3d visionPose, double timestamp, Matrix<N3, N1> stdDevs) {
     if (RobotBase.isReal()) {
+      
+      //Reject poses tilted too far
+      if(Math.abs(visionPose.getRotation().getMeasureX().in(Degrees)) > 10 || Math.abs(visionPose.getRotation().getMeasureY().in(Degrees)) > 10) {
+        Logger.recordOutput("Errors/RejectedPoses", visionPose);
+        return;
+      }
+      //Reject poses too far off the floor
+      if(Math.abs(visionPose.getTranslation().getZ()) > Units.inchesToMeters(12)) {
+        Logger.recordOutput("Errors/RejectedPoses", visionPose);
+        return;
+      }
+
       poseEstimator.addVisionMeasurement(visionPose.toPose2d(), timestamp, stdDevs);
     }
   }
