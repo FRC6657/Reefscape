@@ -152,13 +152,13 @@ public class Robot extends LoggedRobot {
             () ->
                 new ChassisSpeeds(
                     MathUtil.applyDeadband(-driver.getLeftY(), 0.1)
-                        * 3
+                        * 1
                         * (!elevator.isDown() ? 0.25 : 1),
                     MathUtil.applyDeadband(-driver.getLeftX(), 0.1)
-                        * 3
+                        * 1
                         * (!elevator.isDown() ? 0.25 : 1),
                     MathUtil.applyDeadband(-driver.getRightX(), 0.1)
-                        * 3
+                        * 1
                         * (!elevator.isDown() ? 0.25 : 1))));
 
     operator.button(9).onTrue(superstructure.selectElevatorHeight(2));
@@ -226,8 +226,8 @@ public class Robot extends LoggedRobot {
         camera.updateSimPose(drivebase.getPose());
       }
       camera.updateInputs();
-      // drivebase.addVisionMeasurement(camera.getEstimatedPose(), camera.getLatestTimestamp(),
-      // camera.getLatestStdDevs());
+      drivebase.addVisionMeasurement(
+          camera.getEstimatedPose(), camera.getLatestTimestamp(), camera.getLatestStdDevs());
     }
 
     superstructure.update3DPose();

@@ -134,10 +134,14 @@ public class ElevatorIO_Real implements ElevatorIO {
     Logger.recordOutput("Elevator/RawVelocity", leaderMotor.getVelocity().getValueAsDouble());
     Logger.recordOutput("Elevator/RawAccleration", leaderMotor.getPosition().getValueAsDouble());
     Logger.recordOutput("Elevator/MotionMagicPosition", motionMagicVoltage.Position);
-    Logger.recordOutput("Elevator/MotionMagicSetpoint", leaderMotor.getClosedLoopReference().getValueAsDouble());
-    Logger.recordOutput("Elevator/MotionMagicCruiseVelocity", Constants.Elevator.kMotionMagicConfig.MotionMagicCruiseVelocity);
-    Logger.recordOutput("Elevator/MotionMagicAcceleration", Constants.Elevator.kMotionMagicConfig.MotionMagicAcceleration);
-
+    Logger.recordOutput(
+        "Elevator/MotionMagicSetpoint", leaderMotor.getClosedLoopReference().getValueAsDouble());
+    Logger.recordOutput(
+        "Elevator/MotionMagicCruiseVelocity",
+        Constants.Elevator.kMotionMagicConfig.MotionMagicCruiseVelocity);
+    Logger.recordOutput(
+        "Elevator/MotionMagicAcceleration",
+        Constants.Elevator.kMotionMagicConfig.MotionMagicAcceleration);
   }
 
   @Override

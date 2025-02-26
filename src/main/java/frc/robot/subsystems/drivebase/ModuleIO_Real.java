@@ -5,6 +5,7 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.reduxrobotics.sensors.canandmag.Canandmag;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -73,7 +74,7 @@ public class ModuleIO_Real implements ModuleIO {
     driveConfig.Slot0.kV = (12d / (Motors.FalconRPS * Swerve.DriveGearing.L3.reduction));
     driveConfig.Slot0.kP = 2.25;
     driveConfig.Slot0.kD = 0;
-
+    driveConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
     drive.getConfigurator().apply(driveConfig);
 
     // Drive Motor Status Signals

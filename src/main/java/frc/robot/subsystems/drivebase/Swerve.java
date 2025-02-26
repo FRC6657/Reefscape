@@ -153,7 +153,10 @@ public class Swerve extends SubsystemBase {
         return;
       }
 
-      Logger.recordOutput("Vision/VisionPoseConverged", Math.abs(visionPose.toPose2d().minus(getPose()).getTranslation().getNorm()) < Units.inchesToMeters(2));
+      Logger.recordOutput(
+          "Vision/VisionPoseConverged",
+          Math.abs(visionPose.toPose2d().minus(getPose()).getTranslation().getNorm())
+              < Units.inchesToMeters(2));
 
       poseEstimator.addVisionMeasurement(visionPose.toPose2d(), timestamp, stdDevs);
     }
