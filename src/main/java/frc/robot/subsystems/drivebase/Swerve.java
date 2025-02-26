@@ -89,6 +89,14 @@ public class Swerve extends SubsystemBase {
         this);
   }
 
+  public Command driveRR(Supplier<ChassisSpeeds> robotRelativeSpeeds) {
+    return Commands.run(
+        () -> {
+          this.driveChassisSpeeds(robotRelativeSpeeds.get());
+        },
+        this);
+  }
+
   public void driveChassisSpeeds(ChassisSpeeds desiredSpeeds) {
     var newSpeeds = ChassisSpeeds.discretize(desiredSpeeds, 1 / Constants.mainLoopFrequency);
     var states = kinematics.toSwerveModuleStates(newSpeeds);
