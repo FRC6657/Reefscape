@@ -148,18 +148,26 @@ public class Robot extends LoggedRobot {
     }
 
     drivebase.setDefaultCommand(
-        drivebase.driveRR(
+        drivebase.drive(
             () ->
                 new ChassisSpeeds(
-                    MathUtil.applyDeadband(-driver.getLeftY(), 0.1)
-                        * 1
+                    MathUtil.applyDeadband(driver.getLeftY(), 0.1)
+                        * 3
                         * (!elevator.isDown() ? 0.25 : 1),
                     MathUtil.applyDeadband(-driver.getLeftX(), 0.1)
-                        * 1
+                        * 3
                         * (!elevator.isDown() ? 0.25 : 1),
                     MathUtil.applyDeadband(-driver.getRightX(), 0.1)
-                        * 1
+                        * 3
                         * (!elevator.isDown() ? 0.25 : 1))));
+
+    // drivebase.setDefaultCommand(
+    //     drivebase.driveRR(
+    //         () ->
+    //             new ChassisSpeeds(
+    //                 MathUtil.applyDeadband(0.6, 0.1) * 1 * (!elevator.isDown() ? 0.25 : 1),
+    //                 MathUtil.applyDeadband(0.0, 0.1) * 1 * (!elevator.isDown() ? 0.25 : 1),
+    //                 MathUtil.applyDeadband(0, 0.1) * 1 * (!elevator.isDown() ? 0.25 : 1))));
 
     operator.button(9).onTrue(superstructure.selectElevatorHeight(2));
     operator.button(8).onTrue(superstructure.selectElevatorHeight(3));
@@ -171,6 +179,11 @@ public class Robot extends LoggedRobot {
     operator.button(6).onTrue(superstructure.selectReef("Left"));
     operator.button(3).onTrue(superstructure.selectReef("Right"));
 
+    operator
+        .button(1)
+        .onTrue(outtake.changeRollerSetpoint(-0.8))
+        .onFalse(outtake.changeRollerSetpoint(0));
+
     driver
         .y()
         .onTrue(
@@ -178,19 +191,19 @@ public class Robot extends LoggedRobot {
                 new Pose2d(
                     drivebase.getPose().getX(), drivebase.getPose().getY(), new Rotation2d())));
 
-    driver
-        .a()
-        .whileTrue(
-            Commands.sequence(
-                Commands.parallel( // Alignment Commands
-                    drivebase.goToPose(superstructure::getNearestReef), // Align Drivebase to
-                    superstructure.raiseElevator() // Raise Elevator to selected leel
-                    ),
-                Commands.waitUntil(elevator::atSetpoint), // Ensure the elevator is fully raised
-                superstructure.Score(), // Score the piece
-                rumble(0.5, 1), // Rumble the controller
-                elevator.changeSetpoint(0) // Lower the elevator
-                ));
+    // driver
+    //     .a()
+    //     .whileTrue(
+    //         Commands.sequence(
+    //             Commands.parallel( // Alignment Commands
+    //                 drivebase.goToPose(superstructure::getNearestReef), // Align Drivebase to
+    //                 superstructure.raiseElevator() // Raise Elevator to selected leel
+    //                 ),
+    //             Commands.waitUntil(elevator::atSetpoint), // Ensure the elevator is fully raised
+    //             superstructure.Score(), // Score the piece
+    //             rumble(0.5, 1), // Rumble the controller
+    //             elevator.changeSetpoint(0) // Lower the elevator
+    //             ));
 
     driver.a().onFalse(superstructure.HomeRobot().andThen(rumble(0, 0)));
 
@@ -213,8 +226,6 @@ public class Robot extends LoggedRobot {
     // General Score
     driver.leftTrigger().onTrue(superstructure.Score()).onFalse(superstructure.HomeRobot());
 
-    driver.x().onTrue(outtake.changeRollerSetpoint(-0.8)).onFalse(outtake.changeRollerSetpoint(0));
-
     Logger.start();
   }
 
@@ -226,8 +237,8 @@ public class Robot extends LoggedRobot {
         camera.updateSimPose(drivebase.getPose());
       }
       camera.updateInputs();
-      drivebase.addVisionMeasurement(
-          camera.getEstimatedPose(), camera.getLatestTimestamp(), camera.getLatestStdDevs());
+      // drivebase.addVisionMeasurement(
+      //     camera.getEstimatedPose(), camera.getLatestTimestamp(), camera.getLatestStdDevs());
     }
 
     superstructure.update3DPose();

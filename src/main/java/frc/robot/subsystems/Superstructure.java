@@ -41,12 +41,17 @@ public class Superstructure {
   @AutoLogOutput(key = "States/Selected Piece")
   private String selectedPiece = "Coral";
 
+  // Array for easily grabbing setpoint heights.
   private double[] elevatorSetpoints = {
     0,
     0,
-    Units.inchesToMeters(14), // should be 14
-    Units.inchesToMeters(30),
-    Units.inchesToMeters(57) // Array for easily grabbing setpoint heights.
+    Units.inchesToMeters(14), // L2
+    Units.inchesToMeters(30), // L3
+    Units.inchesToMeters(57), // L4
+    // Here on out is for algae
+    Units.inchesToMeters(5), // L2
+    Units.inchesToMeters(20), // L3
+    Units.inchesToMeters(57)
   };
 
   // Constructor
@@ -154,7 +159,7 @@ public class Superstructure {
   // Change Elevator Setpoint to the selected reef level.
   public Command raiseElevator() {
     return elevator
-        .changeSetpoint(() -> elevatorSetpoints[elevatorLevel])
+        .changeSetpoint(() -> elevatorSetpoints[elevatorLevel + (selectedPiece == "Coral" ? 0 : 3)])
         .andThen(
             logMessage(
                 "Elevator Setpoint Changed To: "

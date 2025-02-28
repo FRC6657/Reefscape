@@ -40,7 +40,7 @@ public class IntakeIO_Real implements IntakeIO {
 
   private ProfiledPIDController pivotPID =
       new ProfiledPIDController(
-          9, 0, 0, new Constraints(Units.degreesToRadians(700), Units.degreesToRadians(700)));
+          13.5, 0, 0, new Constraints(Units.degreesToRadians(2200), Units.degreesToRadians(1000)));
 
   public IntakeIO_Real() {
 

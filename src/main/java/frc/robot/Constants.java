@@ -304,7 +304,7 @@ public class Constants {
             .withKS(0) // Volts
             .withKG(0.35) // Volts
             .withGravityType(GravityTypeValue.Elevator_Static)
-            .withKP(4.5)
+            .withKP(9.5)
             .withKI(0)
             .withKD(0);
 

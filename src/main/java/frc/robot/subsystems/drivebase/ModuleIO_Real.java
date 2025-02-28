@@ -65,8 +65,8 @@ public class ModuleIO_Real implements ModuleIO {
     var driveConfig = new TalonFXConfiguration();
     driveConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     driveConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
-    driveConfig.CurrentLimits.StatorCurrentLimit = 40; // reduced from 80
-    driveConfig.CurrentLimits.SupplyCurrentLimit = 40; // reduced from 65 to 40 for testing
+    driveConfig.CurrentLimits.StatorCurrentLimit = 80; // reduced from 80
+    driveConfig.CurrentLimits.SupplyCurrentLimit = 65; // reduced from 65 to 40 for testing
     driveConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     driveConfig.Feedback.SensorToMechanismRatio = Swerve.DriveGearing.L3.reduction;
     driveConfig.Slot0.kS = 1;
@@ -74,7 +74,7 @@ public class ModuleIO_Real implements ModuleIO {
     driveConfig.Slot0.kV = (12d / (Motors.FalconRPS * Swerve.DriveGearing.L3.reduction));
     driveConfig.Slot0.kP = 2.25;
     driveConfig.Slot0.kD = 0;
-    driveConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+    driveConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     drive.getConfigurator().apply(driveConfig);
 
     // Drive Motor Status Signals
@@ -102,7 +102,7 @@ public class ModuleIO_Real implements ModuleIO {
     turnConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
     turnConfig.CurrentLimits.StatorCurrentLimit = 40;
     turnConfig.CurrentLimits.SupplyCurrentLimit = 30;
-    turnConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    turnConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     turnConfig.Feedback.SensorToMechanismRatio = Swerve.TurnGearing;
     turnConfig.Slot0.kS = 0;
     turnConfig.Slot0.kA = 0;
