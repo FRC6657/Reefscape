@@ -147,9 +147,8 @@ public class Robot extends LoggedRobot {
       Logger.addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables
     }
 
-    //Test 2
     drivebase.setDefaultCommand(
-        drivebase.drive(
+        drivebase.driveRR(
             () ->
                 new ChassisSpeeds(
                     MathUtil.applyDeadband(-driver.getLeftY(), 0.1)
