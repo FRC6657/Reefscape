@@ -92,7 +92,10 @@ public class Swerve extends SubsystemBase {
   public Command driveRR(Supplier<ChassisSpeeds> robotRelativeSpeeds) {
     return Commands.run(
         () -> {
-          this.driveChassisSpeeds(robotRelativeSpeeds.get());
+          var newSpeeds = robotRelativeSpeeds.get();
+          newSpeeds.vyMetersPerSecond *= -1;
+
+          this.driveChassisSpeeds(newSpeeds);
         },
         this);
   }
@@ -142,8 +145,10 @@ public class Swerve extends SubsystemBase {
     };
   }
 
-  public Pose2d getPose() {
-    return poseEstimator.getEstimatedPosition();
+  public Pose2d getPose() 
+    var pose = poseEstimator.getEstimatedPosition();
+    var newY = pose.getY() * -1;
+    return new Pose2d(pose.getX(), newY, pose.getRotation());
   }
 
   public void addVisionMeasurement(Pose3d visionPose, double timestamp, Matrix<N3, N1> stdDevs) {
@@ -246,6 +251,9 @@ public class Swerve extends SubsystemBase {
 
     driveChassisSpeeds(out);
   }
+
+  double odometryYVelocity = 0;
+  double odometryYPoseOffset = 0;
 
   public void periodic() {
 
