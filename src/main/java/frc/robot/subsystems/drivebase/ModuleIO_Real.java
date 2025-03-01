@@ -11,6 +11,7 @@ import com.reduxrobotics.sensors.canandmag.Canandmag;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -133,7 +134,9 @@ public class ModuleIO_Real implements ModuleIO {
 
     turn.optimizeBusUtilization();
 
-    turn.setPosition(encoder.getAbsPosition()); // Sync the Turn Motor Encoder with the ABS Encoder.
+    double encoderOffset = Units.degreesToRotations(0);
+
+    turn.setPosition(encoder.getAbsPosition() + encoderOffset); // Sync the Turn Motor Encoder with the ABS Encoder.
   }
 
   @Override
