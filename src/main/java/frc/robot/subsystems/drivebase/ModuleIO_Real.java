@@ -75,7 +75,7 @@ public class ModuleIO_Real implements ModuleIO {
     driveConfig.Slot0.kV = (12d / (Motors.FalconRPS * Swerve.DriveGearing.L3.reduction));
     driveConfig.Slot0.kP = 2.25;
     driveConfig.Slot0.kD = 0;
-    //if (moduleInformation.name != "Back Right ") {
+    // if (moduleInformation.name != "Back Right ") {
     driveConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     drive.getConfigurator().apply(driveConfig);
 
@@ -136,7 +136,9 @@ public class ModuleIO_Real implements ModuleIO {
 
     double encoderOffset = Units.degreesToRotations(0);
 
-    turn.setPosition(encoder.getAbsPosition() + encoderOffset); // Sync the Turn Motor Encoder with the ABS Encoder.
+    turn.setPosition(
+        encoder.getAbsPosition()
+            + encoderOffset); // Sync the Turn Motor Encoder with the ABS Encoder.
   }
 
   @Override
@@ -147,7 +149,8 @@ public class ModuleIO_Real implements ModuleIO {
     inputs.driveSupplyCurrent = driveSupplyCurrent.getValueAsDouble();
     inputs.drivePosition = drivePosition.getValueAsDouble() * Swerve.WheelDiameter * Math.PI;
     inputs.driveVelocity = driveVelocity.getValueAsDouble() * Swerve.WheelDiameter * Math.PI;
-    inputs.driveAcceleration = driveAcceleration.getValueAsDouble() * Swerve.WheelDiameter * Math.PI;
+    inputs.driveAcceleration =
+        driveAcceleration.getValueAsDouble() * Swerve.WheelDiameter * Math.PI;
     inputs.driveTemp = driveTemp.getValueAsDouble();
 
     inputs.turnApplied = turnApplied.getValueAsDouble();

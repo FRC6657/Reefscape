@@ -111,7 +111,8 @@ public class Swerve extends SubsystemBase {
   public Command resetOdometry(Pose2d newPose) {
     return Commands.runOnce(
             () -> {
-              var yaw = RobotBase.isSimulation() ? newPose.getRotation() : new Rotation2d(gyroInputs.yaw);
+              var yaw =
+                  RobotBase.isSimulation() ? newPose.getRotation() : new Rotation2d(gyroInputs.yaw);
               poseEstimator.resetPosition(yaw, getModulePositions(), newPose);
             })
         .andThen(Commands.print("Pose Reset"));
