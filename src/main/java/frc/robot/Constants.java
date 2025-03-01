@@ -125,9 +125,9 @@ public class Constants {
 
     // Position PID
     public static final PIDController kXController_Position =
-        new PIDController(3.8, 0, 0); // TODO: Tune
+        new PIDController(2.0, 0, 0); // TODO: Tune
     public static final PIDController kYController_Position =
-        new PIDController(3.8, 0, 0); // TODO: Tune
+        new PIDController(2.0, 0, 0); // TODO: Tune
     public static final PIDController kThetaController_Position =
         new PIDController(8, 0, 0); // TODO: Tune
   }

@@ -55,7 +55,7 @@ public class Swerve extends SubsystemBase {
       new SwerveDrivePoseEstimator(
           kinematics, new Rotation2d(gyroInputs.yaw), getModulePositions(), new Pose2d());
 
-  double translationTolerance = Units.inchesToMeters(1);
+  double translationTolerance = Units.inchesToMeters(0.7);
   double rotationTolerance = Units.degreesToRadians(3);
 
   public Swerve(ModuleIO[] moduleIOs, GyroIO gyroIO) {
@@ -82,7 +82,7 @@ public class Swerve extends SubsystemBase {
         () -> {
           Alliance alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
           Rotation2d rotation =
-              getPose().getRotation().plus(new Rotation2d(alliance == Alliance.Blue ? 0 : 0));
+              getPose().getRotation().plus(new Rotation2d(alliance == Alliance.Blue ? 0 : Math.PI));
           this.driveChassisSpeeds(
               ChassisSpeeds.fromFieldRelativeSpeeds(fieldRelativeSpeeds.get(), rotation));
         },
@@ -92,9 +92,7 @@ public class Swerve extends SubsystemBase {
   public Command driveRR(Supplier<ChassisSpeeds> robotRelativeSpeeds) {
     return Commands.run(
         () -> {
-          var newSpeeds = robotRelativeSpeeds.get();
-          newSpeeds.vyMetersPerSecond *= -1;
-          this.driveChassisSpeeds(newSpeeds);
+          this.driveChassisSpeeds(robotRelativeSpeeds.get());
         },
         this);
   }
@@ -200,7 +198,10 @@ public class Swerve extends SubsystemBase {
               positionController(target.get());
             })
         .until(() -> atPose(target.get()))
-        .andThen(Commands.runOnce(() -> this.driveChassisSpeeds(new ChassisSpeeds())));
+        .andThen(
+            Commands.sequence(
+                Commands.runOnce(() -> this.driveChassisSpeeds(new ChassisSpeeds())),
+                Commands.waitSeconds(0.25)));
   }
 
   PIDController xController = AutoConstants.kXController_Position;
@@ -217,9 +218,9 @@ public class Swerve extends SubsystemBase {
 
     ChassisSpeeds out =
         ChassisSpeeds.fromFieldRelativeSpeeds(
-            MathUtil.clamp(xFeedback, -1, 1),
-            MathUtil.clamp(yFeedback, -1, 1),
-            MathUtil.clamp(rotationFeedback, -1, 1),
+            MathUtil.clamp(xFeedback, -0.5, 0.5),
+            MathUtil.clamp(yFeedback, -0.5, 0.5),
+            MathUtil.clamp(-rotationFeedback, -0.5, 0.5),
             getPose().getRotation());
 
     Logger.recordOutput("AutoAim/AtSetpointX", xController.atSetpoint());
