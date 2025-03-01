@@ -271,7 +271,7 @@ public class Superstructure {
   public Command TimedL1() {
     return Commands.sequence(
         drivebase.driveRR(() -> new ChassisSpeeds(-1, 0, 0)).withTimeout(3.5),
-        drivebase.driveRR(() -> new ChassisSpeeds(0, 0, 0)).withTimeout(0.2),
+        drivebase.driveRR(() -> new ChassisSpeeds(0.5, 0, 0)).withTimeout(0.3),
         Score());
   }
 

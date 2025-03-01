@@ -148,10 +148,10 @@ public class Robot extends LoggedRobot {
     }
 
     drivebase.setDefaultCommand(
-        drivebase.drive(
+        drivebase.driveRR(
             () ->
                 new ChassisSpeeds(
-                    MathUtil.applyDeadband(driver.getLeftY(), 0.1)
+                    MathUtil.applyDeadband(-driver.getLeftY(), 0.1)
                         * 3
                         * (!elevator.isDown() ? 0.33 : 1),
                     MathUtil.applyDeadband(-driver.getLeftX(), 0.1)
