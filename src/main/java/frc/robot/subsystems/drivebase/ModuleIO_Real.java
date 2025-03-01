@@ -74,11 +74,8 @@ public class ModuleIO_Real implements ModuleIO {
     driveConfig.Slot0.kV = (12d / (Motors.FalconRPS * Swerve.DriveGearing.L3.reduction));
     driveConfig.Slot0.kP = 2.25;
     driveConfig.Slot0.kD = 0;
-    if (moduleInformation.name != "Back Right ") {
-      driveConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-    } else {
-      driveConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-    }
+    //if (moduleInformation.name != "Back Right ") {
+    driveConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     drive.getConfigurator().apply(driveConfig);
 
     // Drive Motor Status Signals
@@ -147,8 +144,7 @@ public class ModuleIO_Real implements ModuleIO {
     inputs.driveSupplyCurrent = driveSupplyCurrent.getValueAsDouble();
     inputs.drivePosition = drivePosition.getValueAsDouble() * Swerve.WheelDiameter * Math.PI;
     inputs.driveVelocity = driveVelocity.getValueAsDouble() * Swerve.WheelDiameter * Math.PI;
-    inputs.driveAcceleration =
-        driveAcceleration.getValueAsDouble() * Swerve.WheelDiameter * Math.PI;
+    inputs.driveAcceleration = driveAcceleration.getValueAsDouble() * Swerve.WheelDiameter * Math.PI;
     inputs.driveTemp = driveTemp.getValueAsDouble();
 
     inputs.turnApplied = turnApplied.getValueAsDouble();
