@@ -125,6 +125,7 @@ public class Robot extends LoggedRobot {
 
     autoChooser.addDefaultOption("None", superstructure.logMessage("Autonomous: No Auto Selected"));
     autoChooser.addOption("TimedL1", superstructure.TimedL1());
+    autoChooser.addOption("Extended TimedL1", superstructure.ExtendedTimedL1());
 
     autoChooser.addOption("1Piece L1", superstructure.taxiMiddleL1(autoFactory).cmd());
     autoChooser.addOption("Taxi", superstructure.taxi(autoFactory, false).cmd());

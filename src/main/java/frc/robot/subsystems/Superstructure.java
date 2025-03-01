@@ -245,7 +245,7 @@ public class Superstructure {
   public Command ElevatorScore() {
     return Commands.sequence(
         logMessage("Elevator Score"),
-        outtake.changeRollerSetpoint(-0.4),
+        outtake.changeRollerSetpoint(-0.3),
         Commands.waitUntil(() -> !outtake.coralDetected()).unless(RobotBase::isSimulation),
         Commands.waitSeconds(0.3),
         outtake.changeRollerSetpoint(0));
@@ -271,7 +271,14 @@ public class Superstructure {
   public Command TimedL1() {
     return Commands.sequence(
         drivebase.driveRR(() -> new ChassisSpeeds(-1, 0, 0)).withTimeout(3.5),
-        drivebase.driveRR(() -> new ChassisSpeeds(0.5, 0, 0)).withTimeout(0.3),
+        drivebase.driveRR(() -> new ChassisSpeeds(0.25, 0, 0)).withTimeout(0.1),
+        Score());
+  }
+
+  public Command ExtendedTimedL1() {
+    return Commands.sequence(
+        drivebase.driveRR(() -> new ChassisSpeeds(-1, 0, 0)).withTimeout(6.5),
+        drivebase.driveRR(() -> new ChassisSpeeds(0.25, 0, 0)).withTimeout(0.1),
         Score());
   }
 
