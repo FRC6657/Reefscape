@@ -74,7 +74,11 @@ public class ModuleIO_Real implements ModuleIO {
     driveConfig.Slot0.kV = (12d / (Motors.FalconRPS * Swerve.DriveGearing.L3.reduction));
     driveConfig.Slot0.kP = 2.25;
     driveConfig.Slot0.kD = 0;
-    driveConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+    if (moduleInformation.name == "Back Left ") {
+      driveConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+    } else {
+      driveConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+    }
     drive.getConfigurator().apply(driveConfig);
 
     // Drive Motor Status Signals
@@ -102,7 +106,7 @@ public class ModuleIO_Real implements ModuleIO {
     turnConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
     turnConfig.CurrentLimits.StatorCurrentLimit = 40;
     turnConfig.CurrentLimits.SupplyCurrentLimit = 30;
-    turnConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+    turnConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     turnConfig.Feedback.SensorToMechanismRatio = Swerve.TurnGearing;
     turnConfig.Slot0.kS = 0;
     turnConfig.Slot0.kA = 0;
