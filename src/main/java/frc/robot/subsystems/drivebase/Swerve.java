@@ -145,7 +145,8 @@ public class Swerve extends SubsystemBase {
     };
   }
 
-  public Pose2d getPose() 
+  @AutoLogOutput(key = "Swerve/Pose")
+  public Pose2d getPose() {
     var pose = poseEstimator.getEstimatedPosition();
     var newY = pose.getY() * -1;
     return new Pose2d(pose.getX(), newY, pose.getRotation());
@@ -276,6 +277,5 @@ public class Swerve extends SubsystemBase {
       poseEstimator.update(simHeading, getModulePositions());
     }
 
-    Logger.recordOutput("Swerve/Pose", poseEstimator.getEstimatedPosition());
   }
 }
