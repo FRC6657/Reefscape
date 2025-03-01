@@ -94,14 +94,15 @@ public class Swerve extends SubsystemBase {
         () -> {
           var newSpeeds = robotRelativeSpeeds.get();
           newSpeeds.vyMetersPerSecond *= -1;
-
           this.driveChassisSpeeds(newSpeeds);
         },
         this);
   }
 
   public void driveChassisSpeeds(ChassisSpeeds desiredSpeeds) {
+
     var newSpeeds = ChassisSpeeds.discretize(desiredSpeeds, 1 / Constants.mainLoopFrequency);
+    newSpeeds.vyMetersPerSecond *= -1;
     var states = kinematics.toSwerveModuleStates(newSpeeds);
     for (int i = 0; i < 4; i++) {
       states[i].optimize(getModulePositions()[i].angle);
@@ -167,12 +168,16 @@ public class Swerve extends SubsystemBase {
         return;
       }
 
+      var newPose =
+          new Pose3d(
+              visionPose.getX(), -visionPose.getY(), visionPose.getZ(), visionPose.getRotation());
+
       Logger.recordOutput(
           "Vision/VisionPoseConverged",
-          Math.abs(visionPose.toPose2d().minus(getPose()).getTranslation().getNorm())
+          Math.abs(newPose.toPose2d().minus(getPose()).getTranslation().getNorm())
               < Units.inchesToMeters(2));
 
-      poseEstimator.addVisionMeasurement(visionPose.toPose2d(), timestamp, stdDevs);
+      poseEstimator.addVisionMeasurement(newPose.toPose2d(), timestamp, stdDevs);
     }
   }
 
@@ -276,6 +281,5 @@ public class Swerve extends SubsystemBase {
       simHeading = simHeading.plus(gyroDelta);
       poseEstimator.update(simHeading, getModulePositions());
     }
-
   }
 }
