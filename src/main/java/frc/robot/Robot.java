@@ -181,7 +181,10 @@ public class Robot extends LoggedRobot {
     operator.button(3).onTrue(superstructure.selectReef("Right"));
 
     operator.button(4).onTrue(superstructure.HomeRobot());
-    operator.button(1).onTrue(outtake.changeRollerSetpoint(-0.8)).onFalse(outtake.changeRollerSetpoint(0));
+    operator
+        .button(1)
+        .onTrue(outtake.changeRollerSetpoint(-0.8))
+        .onFalse(outtake.changeRollerSetpoint(0));
 
     operator
         .button(1)
