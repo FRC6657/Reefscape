@@ -113,9 +113,11 @@ public class Swerve extends SubsystemBase {
   public Command resetOdometry(Pose2d newPose) {
     return Commands.runOnce(
             () -> {
+              var adjusted = new Pose2d(newPose.getX(), -newPose.getY(), newPose.getRotation());
+
               var yaw =
                   RobotBase.isSimulation() ? newPose.getRotation() : new Rotation2d(gyroInputs.yaw);
-              poseEstimator.resetPosition(yaw, getModulePositions(), newPose);
+              poseEstimator.resetPosition(yaw, getModulePositions(), adjusted);
             })
         .andThen(Commands.print("Pose Reset"));
   }
@@ -253,7 +255,7 @@ public class Swerve extends SubsystemBase {
         ChassisSpeeds.fromFieldRelativeSpeeds(
             xFF + xFeedback,
             yFF + yFeedback,
-            rotationFF + rotationFeedback,
+            -(rotationFF + rotationFeedback),
             currentPose.getRotation());
 
     driveChassisSpeeds(out);
