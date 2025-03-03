@@ -1,9 +1,15 @@
 package frc.robot;
 
+import com.ctre.phoenix6.configs.ClosedLoopGeneralConfigs;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
+import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
+import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.signals.GravityTypeValue;
+import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.PIDController;
@@ -12,7 +18,6 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
@@ -191,59 +196,67 @@ public class Constants {
 
   public static class Swerve {
 
-    public enum DriveGearing {
-      L1(19d / 25d),
-      L2(17d / 27d),
-      L3(16d / 28d);
+    public record ModuleConstants(int id, String prefix, int driveID, int turnID, int encoderID) {}
 
-      public double reduction;
+    public static final double maxLinearSpeed = Units.feetToMeters(17.3);
+    public static final double maxLinearAcceleration = 10.0;
+    public static final double trackWidthX = Units.inchesToMeters(23.75);
+    public static final double trackWidthY = Units.inchesToMeters(23.75);
+    public static final ModuleConstants frontLeftModule =
+        new ModuleConstants(
+            0, "Front Left", CAN.Swerve_FL_D.id, CAN.Swerve_FL_T.id, CAN.Swerve_FL_E.id);
+    public static final ModuleConstants frontRightModule =
+        new ModuleConstants(
+            0, "Front Right", CAN.Swerve_FR_D.id, CAN.Swerve_FR_T.id, CAN.Swerve_FR_E.id);
+    public static final ModuleConstants backLeftModule =
+        new ModuleConstants(
+            0, "Back Left", CAN.Swerve_BL_D.id, CAN.Swerve_BL_T.id, CAN.Swerve_BL_E.id);
+    public static final ModuleConstants backRightModule =
+        new ModuleConstants(
+            0, "Back Right", CAN.Swerve_BR_D.id, CAN.Swerve_BR_T.id, CAN.Swerve_BR_E.id);
+    public static final double wheelRadiusMeters = Units.inchesToMeters(2);
+    public static final double driveRatio = (45.0 / 15.0) * (16.0 / 28.0) * (50.0 / 14.0);
+    public static final double turnRatio = (150.0 / 7.0);
+    public static final double driveRotorToMeters = driveRatio / (wheelRadiusMeters * 2 * Math.PI);
 
-      DriveGearing(double reduction) {
-        this.reduction = reduction * (50d / 14d) * (45d / 15d);
-      }
-    }
+    public static TalonFXConfiguration driveConfig =
+        new TalonFXConfiguration()
+            .withCurrentLimits(
+                new CurrentLimitsConfigs()
+                    .withSupplyCurrentLimit(40)
+                    .withSupplyCurrentLimitEnable(true)
+                    .withStatorCurrentLimit(80)
+                    .withStatorCurrentLimitEnable(true))
+            .withMotorOutput(
+                new MotorOutputConfigs()
+                    .withInverted(InvertedValue.Clockwise_Positive)
+                    .withNeutralMode(NeutralModeValue.Brake))
+            .withFeedback(new FeedbackConfigs().withSensorToMechanismRatio(driveRotorToMeters))
+            .withSlot0(new Slot0Configs().withKS(1).withKP(2.25))
+            .withMotionMagic(
+                new MotionMagicConfigs()
+                    .withMotionMagicCruiseVelocity(maxLinearSpeed)
+                    .withMotionMagicAcceleration(maxLinearAcceleration));
 
-    public static double WheelDiameter = Units.inchesToMeters(4);
-    public static double TrackWidth = Units.inchesToMeters(29 - 5.25);
-    public static double TrackLength = Units.inchesToMeters(29 - 5.25);
-
-    public static Translation2d[] ModulePositions =
-        new Translation2d[] {
-          new Translation2d(TrackWidth / 2, TrackLength / 2), // FL
-          new Translation2d(TrackWidth / 2, -TrackLength / 2), // FR
-          new Translation2d(-TrackWidth / 2, TrackLength / 2), // BL
-          new Translation2d(-TrackWidth / 2, -TrackLength / 2) // BR
-        };
-
-    public static double TurnGearing = 150d / 7d;
-
-    public static class ModuleInformation {
-
-      public String name;
-      public int driveID;
-      public int turnID;
-      public int encoderID;
-
-      public ModuleInformation(String name, int driveID, int turnID, int encoderID) {
-        this.name = name;
-        this.driveID = driveID;
-        this.turnID = turnID;
-        this.encoderID = encoderID;
-      }
-
-      public static ModuleInformation frontLeft =
-          new ModuleInformation(
-              "Front Left ", CAN.Swerve_FL_D.id, CAN.Swerve_FL_T.id, CAN.Swerve_FL_E.id);
-      public static ModuleInformation frontRight =
-          new ModuleInformation(
-              "Front Right ", CAN.Swerve_FR_D.id, CAN.Swerve_FR_T.id, CAN.Swerve_FR_E.id);
-      public static ModuleInformation backLeft =
-          new ModuleInformation(
-              "Back Left ", CAN.Swerve_BL_D.id, CAN.Swerve_BL_T.id, CAN.Swerve_BL_E.id);
-      public static ModuleInformation backRight =
-          new ModuleInformation(
-              "Back Right ", CAN.Swerve_BR_D.id, CAN.Swerve_BR_T.id, CAN.Swerve_BR_E.id);
-    }
+    public static TalonFXConfiguration turnConfig =
+        new TalonFXConfiguration()
+            .withCurrentLimits(
+                new CurrentLimitsConfigs()
+                    .withSupplyCurrentLimit(20)
+                    .withSupplyCurrentLimitEnable(true)
+                    .withStatorCurrentLimit(40)
+                    .withStatorCurrentLimitEnable(true))
+            .withMotorOutput(
+                new MotorOutputConfigs()
+                    .withInverted(InvertedValue.Clockwise_Positive)
+                    .withNeutralMode(NeutralModeValue.Brake))
+            .withFeedback(new FeedbackConfigs().withSensorToMechanismRatio(turnRatio))
+            .withSlot0(new Slot0Configs().withKS(0.27).withKP(20).withKD(0.6))
+            .withMotionMagic(
+                new MotionMagicConfigs()
+                    .withMotionMagicCruiseVelocity((5800 / 60) / turnRatio)
+                    .withMotionMagicAcceleration((5800 / 60) / (turnRatio * 0.005)))
+            .withClosedLoopGeneral(new ClosedLoopGeneralConfigs().withContinuousWrap(true));
   }
 
   public static class Intake {
