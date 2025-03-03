@@ -125,9 +125,9 @@ public class Constants {
 
     // Position PID
     public static final PIDController kXController_Position =
-        new PIDController(2.0, 0, 0); // TODO: Tune
+        new PIDController(8, 0, 0); // TODO: Tune
     public static final PIDController kYController_Position =
-        new PIDController(2.0, 0, 0); // TODO: Tune
+        new PIDController(8, 0, 0); // TODO: Tune
     public static final PIDController kThetaController_Position =
         new PIDController(8, 0, 0); // TODO: Tune
   }
@@ -249,11 +249,11 @@ public class Constants {
   public static class Intake {
 
     public static double pivotGearing = (60d / 1) * (72d / 28);
-    public static double maxAngle = Units.degreesToRadians(124);
-    public static double minAngle = Units.degreesToRadians(10);
+    public static double maxAngle = Units.degreesToRadians(116);
+    public static double minAngle = Units.degreesToRadians(5);
 
-    public static double coralScoreAngle = Units.degreesToRadians(100);
-    public static double algaeScoreAngle = Units.degreesToRadians(124);
+    public static double coralScoreAngle = Units.degreesToRadians(15);
+    public static double algaeScoreAngle = Units.degreesToRadians(5);
 
     public static final double kPivotSupplyLimit = 40;
     public static final double kRollersCurrentLimit = 30;

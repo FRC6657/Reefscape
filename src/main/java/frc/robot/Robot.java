@@ -127,6 +127,8 @@ public class Robot extends LoggedRobot {
     autoChooser.addOption("TimedL1", superstructure.TimedL1());
     autoChooser.addOption("Extended TimedL1", superstructure.ExtendedTimedL1());
 
+    autoChooser.addOption("TimedL4", superstructure.TimedL4());
+
     autoChooser.addOption(
         "(TESTING ONLY) DirectionTest", superstructure.DirectionTest(autoFactory, false).cmd());
     autoChooser.addOption(

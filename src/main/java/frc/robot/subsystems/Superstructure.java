@@ -198,11 +198,11 @@ public class Superstructure {
     return Commands.either(
         Commands.sequence( // Coral
             logMessage("Ground Intake | Coral"),
-            intake.changePivotSetpoint(Units.degreesToRadians(2)),
+            intake.changePivotSetpoint(Constants.Intake.maxAngle),
             intake.changeRollerSpeed(-Constants.Intake.kGroundIntakeSpeed)),
         Commands.sequence( // Algae
             logMessage("Ground Intake | Algae"),
-            intake.changePivotSetpoint(Units.degreesToRadians(60)),
+            intake.changePivotSetpoint(Units.degreesToRadians(65)),
             intake.changeRollerSpeed(Constants.Intake.kGroundIntakeSpeed)),
         () -> selectedPiece == "Coral");
   }
@@ -212,11 +212,11 @@ public class Superstructure {
     return Commands.either(
         Commands.sequence(
             logMessage("Retract Intake | Coral"),
-            intake.changePivotSetpoint(Constants.Intake.maxAngle),
+            intake.changePivotSetpoint(Constants.Intake.minAngle),
             intake.changeRollerSpeed(-Constants.Intake.kFeedSpeed / 1.5)),
         Commands.sequence(
             logMessage("Retract Intake | Algae"),
-            intake.changePivotSetpoint(Constants.Intake.maxAngle),
+            intake.changePivotSetpoint(Constants.Intake.minAngle),
             intake.changeRollerSpeed(Constants.Intake.kFeedSpeed)),
         () -> selectedPiece == "Coral");
   }
@@ -237,7 +237,7 @@ public class Superstructure {
             Commands.sequence(
                 Commands.waitSeconds(1.0),
                 logMessage("Ground Intake Score | Retract"),
-                intake.changePivotSetpoint(Constants.Intake.maxAngle),
+                intake.changePivotSetpoint(Constants.Intake.minAngle),
                 intake.changeRollerSpeed(0)));
   }
 
@@ -247,7 +247,7 @@ public class Superstructure {
         logMessage("Elevator Score"),
         outtake.changeRollerSetpoint(-0.3),
         Commands.waitUntil(() -> !outtake.coralDetected()).unless(RobotBase::isSimulation),
-        Commands.waitSeconds(0.3),
+        Commands.waitSeconds(2),
         outtake.changeRollerSetpoint(0));
   }
 
@@ -264,7 +264,7 @@ public class Superstructure {
         logMessage("Home Robot"),
         outtake.changeRollerSetpoint(0),
         elevator.changeSetpoint(0),
-        intake.changePivotSetpoint(Constants.Intake.maxAngle),
+        intake.changePivotSetpoint(Constants.Intake.minAngle),
         intake.changeRollerSpeed(0));
   }
 
@@ -272,6 +272,7 @@ public class Superstructure {
     return Commands.sequence(
         drivebase.driveRR(() -> new ChassisSpeeds(1, 0, 0)).withTimeout(3.5),
         drivebase.driveRR(() -> new ChassisSpeeds(-0.25, 0, 0)).withTimeout(0.1),
+        drivebase.driveRR(() -> new ChassisSpeeds(0., 0, 0)).withTimeout(0.01),
         Score());
   }
 
@@ -279,7 +280,29 @@ public class Superstructure {
     return Commands.sequence(
         drivebase.driveRR(() -> new ChassisSpeeds(1, 0, 0)).withTimeout(6.5),
         drivebase.driveRR(() -> new ChassisSpeeds(-0.25, 0, 0)).withTimeout(0.1),
+        drivebase.driveRR(() -> new ChassisSpeeds(0, 0, 0)).withTimeout(0.01),
         Score());
+  }
+
+  public Command TimedL4() {
+    return Commands.sequence(
+        // Commands.waitSeconds(0.5),
+        // drivebase.driveRR(() -> new ChassisSpeeds(-2, 0, 0)).withTimeout(0.75),
+        Commands.sequence(
+            Commands.sequence(
+                    selectPiece("Coral"),
+                    Commands.parallel( // Alignment Commands
+                        drivebase.goToPose(this::getNearestReef), // Align Drivebase to
+                        raiseElevator() // Raise Elevator to selected leel
+                        ),
+                    Commands.waitUntil(elevator::atSetpoint), // Ensure the elevator is fully raised
+                    Score(), // Score the piece
+                    elevator.changeSetpoint(0) // Lower the elevator
+                    )
+                .asProxy(),
+            drivebase.driveRR(() -> new ChassisSpeeds(0.5, 0, 0)).withTimeout(1),
+            drivebase.driveRR(() -> new ChassisSpeeds(0.0, 0, 0)).withTimeout(0.1),
+            HomeRobot().asProxy()));
   }
 
   public AutoRoutine DirectionTest(AutoFactory factory, boolean mirror) {
@@ -297,26 +320,26 @@ public class Superstructure {
     one.done()
         .onTrue(
             Commands.sequence(
-                    selectPiece("Coral"),
-                    selectElevatorHeight(2),
-                    raiseElevator(),
-                    Commands.waitUntil(elevator::atSetpoint),
-                    Score(),
-                    HomeRobot(),
-                    Commands.waitUntil(elevator::atSetpoint),
+                    // selectPiece("Coral"),
+                    // selectElevatorHeight(2),
+                    // raiseElevator(),
+                    // Commands.waitUntil(elevator::atSetpoint),
+                    // Score(),
+                    // HomeRobot(),
+                    // Commands.waitUntil(elevator::atSetpoint),
                     two.cmd())
                 .asProxy());
 
     two.done()
         .onTrue(
             Commands.sequence(
-                    selectPiece("Coral"),
-                    selectElevatorHeight(3),
-                    raiseElevator(),
-                    Commands.waitUntil(elevator::atSetpoint),
-                    Score(),
-                    HomeRobot(),
-                    Commands.waitUntil(elevator::atSetpoint),
+                    // selectPiece("Coral"),
+                    // selectElevatorHeight(3),
+                    // raiseElevator(),
+                    // Commands.waitUntil(elevator::atSetpoint),
+                    // Score(),
+                    // HomeRobot(),
+                    // Commands.waitUntil(elevator::atSetpoint),
                     three.cmd())
                 .asProxy());
 
@@ -324,12 +347,14 @@ public class Superstructure {
         .done()
         .onTrue(
             Commands.sequence(
-                    selectPiece("Coral"),
-                    selectElevatorHeight(4),
-                    raiseElevator(),
-                    Commands.waitUntil(elevator::atSetpoint),
-                    Score(),
-                    HomeRobot())
+                    Commands.none()
+                    // selectPiece("Coral"),
+                    // selectElevatorHeight(4),
+                    // raiseElevator(),
+                    // Commands.waitUntil(elevator::atSetpoint),
+                    // Score(),
+                    // HomeRobot()
+                    )
                 .asProxy());
 
     // routine.active().onTrue(Commands.sequence(one.resetOdometry()));

@@ -77,8 +77,10 @@ public class IntakeIO_Real implements IntakeIO {
 
     rollerMotor.optimizeBusUtilization(); // Reduces CAN bus usage
 
+    pivotPID.enableContinuousInput(0, 2 * Math.PI);
+
     // Feed the PID with default values
-    changePivotSetpoint(Constants.Intake.maxAngle);
+    changePivotSetpoint(Constants.Intake.minAngle);
     changeRollerSpeed(0);
     // pivotPID.setGoal(angleSetpoint);
   }
@@ -103,7 +105,7 @@ public class IntakeIO_Real implements IntakeIO {
     inputs.rollerMotorCurrent = rollerMotor.getSupplyCurrent().getValueAsDouble();
     inputs.rollerMotorSetpoint = speedSetpoint;
 
-    double pidOutput = -pivotPID.calculate(inputs.encoderAbsPosition, angleSetpoint);
+    double pidOutput = pivotPID.calculate(inputs.encoderAbsPosition, angleSetpoint);
     pivotMotor.setVoltage(pidOutput);
 
     rollerMotor.set(speedSetpoint);
