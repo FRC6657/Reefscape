@@ -55,7 +55,7 @@ public class Swerve extends SubsystemBase {
       new SwerveDrivePoseEstimator(
           kinematics, new Rotation2d(gyroInputs.yaw), getModulePositions(), new Pose2d());
 
-  double translationTolerance = Units.inchesToMeters(1);
+  double translationTolerance = Units.inchesToMeters(0.7);
   double rotationTolerance = Units.degreesToRadians(3);
 
   public Swerve(ModuleIO[] moduleIOs, GyroIO gyroIO) {
@@ -98,7 +98,9 @@ public class Swerve extends SubsystemBase {
   }
 
   public void driveChassisSpeeds(ChassisSpeeds desiredSpeeds) {
+
     var newSpeeds = ChassisSpeeds.discretize(desiredSpeeds, 1 / Constants.mainLoopFrequency);
+    newSpeeds.vyMetersPerSecond *= -1;
     var states = kinematics.toSwerveModuleStates(newSpeeds);
     for (int i = 0; i < 4; i++) {
       states[i].optimize(getModulePositions()[i].angle);
@@ -111,9 +113,11 @@ public class Swerve extends SubsystemBase {
   public Command resetOdometry(Pose2d newPose) {
     return Commands.runOnce(
             () -> {
+              var adjusted = new Pose2d(newPose.getX(), -newPose.getY(), newPose.getRotation());
+
               var yaw =
                   RobotBase.isSimulation() ? newPose.getRotation() : new Rotation2d(gyroInputs.yaw);
-              poseEstimator.resetPosition(yaw, getModulePositions(), newPose);
+              poseEstimator.resetPosition(yaw, getModulePositions(), adjusted);
             })
         .andThen(Commands.print("Pose Reset"));
   }
@@ -142,8 +146,11 @@ public class Swerve extends SubsystemBase {
     };
   }
 
+  @AutoLogOutput(key = "Swerve/Pose")
   public Pose2d getPose() {
-    return poseEstimator.getEstimatedPosition();
+    var pose = poseEstimator.getEstimatedPosition();
+    var newY = pose.getY() * -1;
+    return new Pose2d(pose.getX(), newY, pose.getRotation());
   }
 
   public void addVisionMeasurement(Pose3d visionPose, double timestamp, Matrix<N3, N1> stdDevs) {
@@ -161,12 +168,16 @@ public class Swerve extends SubsystemBase {
         return;
       }
 
+      var newPose =
+          new Pose3d(
+              visionPose.getX(), -visionPose.getY(), visionPose.getZ(), visionPose.getRotation());
+
       Logger.recordOutput(
           "Vision/VisionPoseConverged",
-          Math.abs(visionPose.toPose2d().minus(getPose()).getTranslation().getNorm())
+          Math.abs(newPose.toPose2d().minus(getPose()).getTranslation().getNorm())
               < Units.inchesToMeters(2));
 
-      poseEstimator.addVisionMeasurement(visionPose.toPose2d(), timestamp, stdDevs);
+      poseEstimator.addVisionMeasurement(newPose.toPose2d(), timestamp, stdDevs);
     }
   }
 
@@ -189,7 +200,10 @@ public class Swerve extends SubsystemBase {
               positionController(target.get());
             })
         .until(() -> atPose(target.get()))
-        .andThen(Commands.runOnce(() -> this.driveChassisSpeeds(new ChassisSpeeds())));
+        .andThen(
+            Commands.sequence(
+                Commands.runOnce(() -> this.driveChassisSpeeds(new ChassisSpeeds())),
+                Commands.waitSeconds(0.25)));
   }
 
   PIDController xController = AutoConstants.kXController_Position;
@@ -206,9 +220,9 @@ public class Swerve extends SubsystemBase {
 
     ChassisSpeeds out =
         ChassisSpeeds.fromFieldRelativeSpeeds(
-            MathUtil.clamp(xFeedback, -1, 1),
-            MathUtil.clamp(yFeedback, -1, 1),
-            MathUtil.clamp(rotationFeedback, -1, 1),
+            MathUtil.clamp(xFeedback, -0.5, 0.5),
+            MathUtil.clamp(yFeedback, -0.5, 0.5),
+            MathUtil.clamp(-rotationFeedback, -0.5, 0.5),
             getPose().getRotation());
 
     Logger.recordOutput("AutoAim/AtSetpointX", xController.atSetpoint());
@@ -241,11 +255,14 @@ public class Swerve extends SubsystemBase {
         ChassisSpeeds.fromFieldRelativeSpeeds(
             xFF + xFeedback,
             yFF + yFeedback,
-            rotationFF + rotationFeedback,
+            -(rotationFF + rotationFeedback),
             currentPose.getRotation());
 
     driveChassisSpeeds(out);
   }
+
+  double odometryYVelocity = 0;
+  double odometryYPoseOffset = 0;
 
   public void periodic() {
 
@@ -267,7 +284,5 @@ public class Swerve extends SubsystemBase {
       simHeading = simHeading.plus(gyroDelta);
       poseEstimator.update(simHeading, getModulePositions());
     }
-
-    Logger.recordOutput("Swerve/Pose", poseEstimator.getEstimatedPosition());
   }
 }

@@ -41,12 +41,17 @@ public class Superstructure {
   @AutoLogOutput(key = "States/Selected Piece")
   private String selectedPiece = "Coral";
 
+  // Array for easily grabbing setpoint heights.
   private double[] elevatorSetpoints = {
     0,
     0,
-    Units.inchesToMeters(14), // should be 14
-    Units.inchesToMeters(30),
-    Units.inchesToMeters(57) // Array for easily grabbing setpoint heights.
+    Units.inchesToMeters(14), // L2
+    Units.inchesToMeters(30), // L3
+    Units.inchesToMeters(57), // L4
+    // Here on out is for algae
+    Units.inchesToMeters(5), // L2
+    Units.inchesToMeters(20), // L3
+    Units.inchesToMeters(57)
   };
 
   // Constructor
@@ -154,7 +159,7 @@ public class Superstructure {
   // Change Elevator Setpoint to the selected reef level.
   public Command raiseElevator() {
     return elevator
-        .changeSetpoint(() -> elevatorSetpoints[elevatorLevel])
+        .changeSetpoint(() -> elevatorSetpoints[elevatorLevel + (selectedPiece == "Coral" ? 0 : 3)])
         .andThen(
             logMessage(
                 "Elevator Setpoint Changed To: "
@@ -193,11 +198,11 @@ public class Superstructure {
     return Commands.either(
         Commands.sequence( // Coral
             logMessage("Ground Intake | Coral"),
-            intake.changePivotSetpoint(Units.degreesToRadians(2)),
+            intake.changePivotSetpoint(Constants.Intake.maxAngle),
             intake.changeRollerSpeed(-Constants.Intake.kGroundIntakeSpeed)),
         Commands.sequence( // Algae
             logMessage("Ground Intake | Algae"),
-            intake.changePivotSetpoint(Units.degreesToRadians(60)),
+            intake.changePivotSetpoint(Units.degreesToRadians(65)),
             intake.changeRollerSpeed(Constants.Intake.kGroundIntakeSpeed)),
         () -> selectedPiece == "Coral");
   }
@@ -207,11 +212,11 @@ public class Superstructure {
     return Commands.either(
         Commands.sequence(
             logMessage("Retract Intake | Coral"),
-            intake.changePivotSetpoint(Constants.Intake.maxAngle),
+            intake.changePivotSetpoint(Constants.Intake.minAngle),
             intake.changeRollerSpeed(-Constants.Intake.kFeedSpeed / 1.5)),
         Commands.sequence(
             logMessage("Retract Intake | Algae"),
-            intake.changePivotSetpoint(Constants.Intake.maxAngle),
+            intake.changePivotSetpoint(Constants.Intake.minAngle),
             intake.changeRollerSpeed(Constants.Intake.kFeedSpeed)),
         () -> selectedPiece == "Coral");
   }
@@ -232,7 +237,7 @@ public class Superstructure {
             Commands.sequence(
                 Commands.waitSeconds(1.0),
                 logMessage("Ground Intake Score | Retract"),
-                intake.changePivotSetpoint(Constants.Intake.maxAngle),
+                intake.changePivotSetpoint(Constants.Intake.minAngle),
                 intake.changeRollerSpeed(0)));
   }
 
@@ -240,9 +245,9 @@ public class Superstructure {
   public Command ElevatorScore() {
     return Commands.sequence(
         logMessage("Elevator Score"),
-        outtake.changeRollerSetpoint(-0.4),
+        outtake.changeRollerSetpoint(-0.3),
         Commands.waitUntil(() -> !outtake.coralDetected()).unless(RobotBase::isSimulation),
-        Commands.waitSeconds(0.3),
+        Commands.waitSeconds(2),
         outtake.changeRollerSetpoint(0));
   }
 
@@ -259,15 +264,103 @@ public class Superstructure {
         logMessage("Home Robot"),
         outtake.changeRollerSetpoint(0),
         elevator.changeSetpoint(0),
-        intake.changePivotSetpoint(Constants.Intake.maxAngle),
+        intake.changePivotSetpoint(Constants.Intake.minAngle),
         intake.changeRollerSpeed(0));
   }
 
   public Command TimedL1() {
     return Commands.sequence(
-        drivebase.drive(() -> new ChassisSpeeds(1, 0, 0)).withTimeout(3),
-        drivebase.drive(() -> new ChassisSpeeds(0, 0, 0)).withTimeout(1),
+        drivebase.driveRR(() -> new ChassisSpeeds(1, 0, 0)).withTimeout(3.5),
+        drivebase.driveRR(() -> new ChassisSpeeds(-0.25, 0, 0)).withTimeout(0.1),
+        drivebase.driveRR(() -> new ChassisSpeeds(0., 0, 0)).withTimeout(0.01),
         Score());
+  }
+
+  public Command ExtendedTimedL1() {
+    return Commands.sequence(
+        drivebase.driveRR(() -> new ChassisSpeeds(1, 0, 0)).withTimeout(6.5),
+        drivebase.driveRR(() -> new ChassisSpeeds(-0.25, 0, 0)).withTimeout(0.1),
+        drivebase.driveRR(() -> new ChassisSpeeds(0, 0, 0)).withTimeout(0.01),
+        Score());
+  }
+
+  public Command TimedL4() {
+    return Commands.sequence(
+        // Commands.waitSeconds(0.5),
+        // drivebase.driveRR(() -> new ChassisSpeeds(-2, 0, 0)).withTimeout(0.75),
+        Commands.sequence(
+            Commands.sequence(
+                    selectPiece("Coral"),
+                    Commands.parallel( // Alignment Commands
+                        drivebase.goToPose(this::getNearestReef), // Align Drivebase to
+                        raiseElevator() // Raise Elevator to selected leel
+                        ),
+                    Commands.waitUntil(elevator::atSetpoint), // Ensure the elevator is fully raised
+                    Score(), // Score the piece
+                    elevator.changeSetpoint(0) // Lower the elevator
+                    )
+                .asProxy(),
+            drivebase.driveRR(() -> new ChassisSpeeds(0.5, 0, 0)).withTimeout(1),
+            drivebase.driveRR(() -> new ChassisSpeeds(0.0, 0, 0)).withTimeout(0.1),
+            HomeRobot().asProxy()));
+  }
+
+  public AutoRoutine DirectionTest(AutoFactory factory, boolean mirror) {
+
+    String name = "DirectionTest";
+
+    final AutoRoutine routine = factory.newRoutine(name);
+
+    String mirrorFlag = mirror ? "mirrored_" : "";
+
+    final AutoTrajectory one = routine.trajectory(mirrorFlag + name, 0);
+    final AutoTrajectory two = routine.trajectory(mirrorFlag + name, 1);
+    final AutoTrajectory three = routine.trajectory(mirrorFlag + name, 2);
+
+    one.done()
+        .onTrue(
+            Commands.sequence(
+                    // selectPiece("Coral"),
+                    // selectElevatorHeight(2),
+                    // raiseElevator(),
+                    // Commands.waitUntil(elevator::atSetpoint),
+                    // Score(),
+                    // HomeRobot(),
+                    // Commands.waitUntil(elevator::atSetpoint),
+                    two.cmd())
+                .asProxy());
+
+    two.done()
+        .onTrue(
+            Commands.sequence(
+                    // selectPiece("Coral"),
+                    // selectElevatorHeight(3),
+                    // raiseElevator(),
+                    // Commands.waitUntil(elevator::atSetpoint),
+                    // Score(),
+                    // HomeRobot(),
+                    // Commands.waitUntil(elevator::atSetpoint),
+                    three.cmd())
+                .asProxy());
+
+    three
+        .done()
+        .onTrue(
+            Commands.sequence(
+                    Commands.none()
+                    // selectPiece("Coral"),
+                    // selectElevatorHeight(4),
+                    // raiseElevator(),
+                    // Commands.waitUntil(elevator::atSetpoint),
+                    // Score(),
+                    // HomeRobot()
+                    )
+                .asProxy());
+
+    // routine.active().onTrue(Commands.sequence(one.resetOdometry()));
+    routine.active().onTrue(Commands.sequence(one.resetOdometry(), one.cmd()));
+
+    return routine;
   }
 
   public AutoRoutine L4_3Piece(AutoFactory factory, boolean mirror) {
@@ -324,136 +417,6 @@ public class Superstructure {
                 ReefAlign(mirror ? "Left" : "Right", 4).asProxy(),
                 Score().asProxy(),
                 HomeRobot().asProxy()));
-
-    routine.active().onTrue(Commands.sequence(S_P1.resetOdometry(), S_P1.cmd()));
-
-    return routine;
-  }
-
-  public AutoRoutine taxi(AutoFactory factory, boolean mirror) {
-    final AutoRoutine routine = factory.newRoutine("Taxi");
-
-    String mirrorFlag = mirror ? "mirrored_" : "";
-
-    final AutoTrajectory S_Pos = routine.trajectory(mirrorFlag + "Taxi", 0);
-
-    routine.active().onTrue(Commands.sequence(S_Pos.resetOdometry(), S_Pos.cmd()));
-
-    return routine;
-  }
-
-  public AutoRoutine taxiMiddleL1(AutoFactory factory) {
-    final AutoRoutine routine =
-        factory.newRoutine(
-            "Taxi Middle L1"); // no need for mirror since it is allined perfectly in the middle
-
-    final AutoTrajectory S_P1 = routine.trajectory("Taxi Middle L1", 0);
-
-    S_P1.done().onTrue(GroundIntakeScore().asProxy());
-
-    routine.active().onTrue(Commands.sequence(S_P1.resetOdometry(), S_P1.cmd()));
-
-    return routine;
-  }
-
-  public AutoRoutine onePiece(AutoFactory factory, boolean mirror) {
-
-    final AutoRoutine routine = factory.newRoutine("One Piece");
-
-    String mirrorFlag = mirror ? "mirrored_" : "";
-
-    final AutoTrajectory S_P1 = routine.trajectory(mirrorFlag + "One Piece", 0);
-    final AutoTrajectory P1_Pos = routine.trajectory(mirrorFlag + "One Piece", 1);
-
-    S_P1.atTime("Score")
-        .onTrue(
-            Commands.sequence(
-                ReefAlign(mirror ? "Right" : "Left", 4).asProxy(),
-                Score().asProxy(),
-                HomeRobot().asProxy(),
-                Commands.waitUntil(elevator::nearSetpoint),
-                new ScheduleCommand(P1_Pos.cmd()))); // ends auto out of the way
-
-    routine.active().onTrue(Commands.sequence(S_P1.resetOdometry(), S_P1.cmd()));
-
-    return routine;
-  }
-
-  public AutoRoutine TwoCoral180(AutoFactory factory, boolean mirror) {
-
-    final AutoRoutine routine = factory.newRoutine("Two Coral 180 degree turn");
-
-    String mirrorFlag = mirror ? "mirrored_" : "";
-
-    final AutoTrajectory S_P1 = routine.trajectory(mirrorFlag + "Two Coral 180 degree turn", 0);
-    final AutoTrajectory P1_I1 = routine.trajectory(mirrorFlag + "Two Coral 180 degree turn", 1);
-    final AutoTrajectory I1_P2 = routine.trajectory(mirrorFlag + "Two Coral 180 degree turn", 2);
-    final AutoTrajectory P2_Pos = routine.trajectory(mirrorFlag + "Two Coral 180 degree turn", 3);
-
-    S_P1.atTime("Score")
-        .onTrue(
-            Commands.sequence(
-                ReefAlign(mirror ? "Right" : "Left", 4).asProxy(),
-                Score().asProxy(),
-                HomeRobot().asProxy(),
-                // Commands.waitUntil(elevator::nearSetpoint),
-                new ScheduleCommand(P1_I1.cmd())));
-
-    P1_I1
-        .done()
-        .onTrue(
-            Commands.sequence(
-                outtake.changeRollerSetpoint(-0.5).asProxy(),
-                Commands.waitUntil(outtake::coralDetected).withTimeout(3).asProxy(),
-                new ScheduleCommand(I1_P2.cmd())));
-
-    I1_P2
-        .atTime("Score")
-        .onTrue(
-            Commands.sequence(
-                ReefAlign(mirror ? "Right" : "Left", 4).asProxy(),
-                Score().asProxy(),
-                HomeRobot().asProxy(),
-                Commands.waitUntil(elevator::nearSetpoint),
-                new ScheduleCommand(P2_Pos.cmd())));
-
-    routine.active().onTrue(Commands.sequence(S_P1.resetOdometry(), S_P1.cmd()));
-
-    return routine;
-  }
-
-  public AutoRoutine TwoCoralAdjacent(AutoFactory factory, boolean mirror) {
-
-    final AutoRoutine routine = factory.newRoutine("Two Coral Adjacent");
-
-    String mirrorFlag = mirror ? "mirrored_" : "";
-
-    final AutoTrajectory S_P1 = routine.trajectory(mirrorFlag + "Two Coral Adjacent", 0);
-    final AutoTrajectory P1_I1 = routine.trajectory(mirrorFlag + "Two Coral Adjacent", 1);
-    final AutoTrajectory I1_P2 = routine.trajectory(mirrorFlag + "Two Coral Adjacent", 2);
-
-    S_P1.atTime("Score")
-        .onTrue(
-            Commands.sequence(
-                ReefAlign(mirror ? "Right" : "Left", 4).asProxy(),
-                Score().asProxy(),
-                HomeRobot().asProxy(),
-                Commands.waitUntil(elevator::nearSetpoint),
-                new ScheduleCommand(P1_I1.cmd())));
-
-    P1_I1
-        .done()
-        .onTrue(
-            Commands.sequence(
-                outtake.changeRollerSetpoint(-0.5).asProxy(),
-                Commands.waitUntil(outtake::coralDetected).withTimeout(3).asProxy(),
-                new ScheduleCommand(I1_P2.cmd())));
-
-    I1_P2
-        .atTime("Score")
-        .onTrue(
-            Commands.sequence(
-                ReefAlign(mirror ? "Right" : "Left", 4).asProxy(), Score().asProxy()));
 
     routine.active().onTrue(Commands.sequence(S_P1.resetOdometry(), S_P1.cmd()));
 

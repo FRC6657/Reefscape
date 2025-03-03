@@ -125,9 +125,9 @@ public class Constants {
 
     // Position PID
     public static final PIDController kXController_Position =
-        new PIDController(3.8, 0, 0); // TODO: Tune
+        new PIDController(8, 0, 0); // TODO: Tune
     public static final PIDController kYController_Position =
-        new PIDController(3.8, 0, 0); // TODO: Tune
+        new PIDController(8, 0, 0); // TODO: Tune
     public static final PIDController kThetaController_Position =
         new PIDController(8, 0, 0); // TODO: Tune
   }
@@ -209,10 +209,10 @@ public class Constants {
 
     public static Translation2d[] ModulePositions =
         new Translation2d[] {
-          new Translation2d(TrackWidth / 2, TrackLength / 2),
-          new Translation2d(TrackWidth / 2, -TrackLength / 2),
-          new Translation2d(-TrackWidth / 2, TrackLength / 2),
-          new Translation2d(-TrackWidth / 2, -TrackLength / 2)
+          new Translation2d(TrackWidth / 2, TrackLength / 2), // FL
+          new Translation2d(TrackWidth / 2, -TrackLength / 2), // FR
+          new Translation2d(-TrackWidth / 2, TrackLength / 2), // BL
+          new Translation2d(-TrackWidth / 2, -TrackLength / 2) // BR
         };
 
     public static double TurnGearing = 150d / 7d;
@@ -249,11 +249,11 @@ public class Constants {
   public static class Intake {
 
     public static double pivotGearing = (60d / 1) * (72d / 28);
-    public static double maxAngle = Units.degreesToRadians(124);
-    public static double minAngle = Units.degreesToRadians(10);
+    public static double maxAngle = Units.degreesToRadians(116);
+    public static double minAngle = Units.degreesToRadians(5);
 
-    public static double coralScoreAngle = Units.degreesToRadians(100);
-    public static double algaeScoreAngle = Units.degreesToRadians(124);
+    public static double coralScoreAngle = Units.degreesToRadians(15);
+    public static double algaeScoreAngle = Units.degreesToRadians(5);
 
     public static final double kPivotSupplyLimit = 40;
     public static final double kRollersCurrentLimit = 30;
@@ -304,7 +304,7 @@ public class Constants {
             .withKS(0) // Volts
             .withKG(0.35) // Volts
             .withGravityType(GravityTypeValue.Elevator_Static)
-            .withKP(4.5)
+            .withKP(9.5)
             .withKI(0)
             .withKD(0);
 

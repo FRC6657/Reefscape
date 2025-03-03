@@ -11,6 +11,7 @@ import com.reduxrobotics.sensors.canandmag.Canandmag;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -65,8 +66,8 @@ public class ModuleIO_Real implements ModuleIO {
     var driveConfig = new TalonFXConfiguration();
     driveConfig.CurrentLimits.StatorCurrentLimitEnable = true;
     driveConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
-    driveConfig.CurrentLimits.StatorCurrentLimit = 40; // reduced from 80
-    driveConfig.CurrentLimits.SupplyCurrentLimit = 40; // reduced from 65 to 40 for testing
+    driveConfig.CurrentLimits.StatorCurrentLimit = 80; // reduced from 80
+    driveConfig.CurrentLimits.SupplyCurrentLimit = 65; // reduced from 65 to 40 for testing
     driveConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     driveConfig.Feedback.SensorToMechanismRatio = Swerve.DriveGearing.L3.reduction;
     driveConfig.Slot0.kS = 1;
@@ -74,7 +75,8 @@ public class ModuleIO_Real implements ModuleIO {
     driveConfig.Slot0.kV = (12d / (Motors.FalconRPS * Swerve.DriveGearing.L3.reduction));
     driveConfig.Slot0.kP = 2.25;
     driveConfig.Slot0.kD = 0;
-    driveConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+    // if (moduleInformation.name != "Back Right ") {
+    driveConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     drive.getConfigurator().apply(driveConfig);
 
     // Drive Motor Status Signals
@@ -132,7 +134,11 @@ public class ModuleIO_Real implements ModuleIO {
 
     turn.optimizeBusUtilization();
 
-    turn.setPosition(encoder.getAbsPosition()); // Sync the Turn Motor Encoder with the ABS Encoder.
+    double encoderOffset = Units.degreesToRotations(0);
+
+    turn.setPosition(
+        encoder.getAbsPosition()
+            + encoderOffset); // Sync the Turn Motor Encoder with the ABS Encoder.
   }
 
   @Override

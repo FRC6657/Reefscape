@@ -125,12 +125,18 @@ public class Robot extends LoggedRobot {
 
     autoChooser.addDefaultOption("None", superstructure.logMessage("Autonomous: No Auto Selected"));
     autoChooser.addOption("TimedL1", superstructure.TimedL1());
+    autoChooser.addOption("Extended TimedL1", superstructure.ExtendedTimedL1());
 
-    autoChooser.addOption("1Piece L1", superstructure.taxiMiddleL1(autoFactory).cmd());
-    autoChooser.addOption("Taxi", superstructure.taxi(autoFactory, false).cmd());
-    autoChooser.addOption("Taxi Processor", superstructure.taxi(autoFactory, true).cmd());
-    autoChooser.addOption("3Piece L4", superstructure.L4_3Piece(autoFactory, false).cmd());
-    autoChooser.addOption("3Piece L4 Processor", superstructure.L4_3Piece(autoFactory, true).cmd());
+    autoChooser.addOption("TimedL4", superstructure.TimedL4());
+
+    autoChooser.addOption(
+        "(TESTING ONLY) DirectionTest", superstructure.DirectionTest(autoFactory, false).cmd());
+    autoChooser.addOption(
+        "(TESTING ONLY) DirectionTest (P)", superstructure.DirectionTest(autoFactory, true).cmd());
+
+    // autoChooser.addOption("3Piece L4", superstructure.L4_3Piece(autoFactory, false).cmd());
+    // autoChooser.addOption("3Piece L4 Processor", superstructure.L4_3Piece(autoFactory,
+    // true).cmd());
   }
 
   @SuppressWarnings("resource")
@@ -148,18 +154,18 @@ public class Robot extends LoggedRobot {
     }
 
     drivebase.setDefaultCommand(
-        drivebase.driveRR(
+        drivebase.drive(
             () ->
                 new ChassisSpeeds(
                     MathUtil.applyDeadband(-driver.getLeftY(), 0.1)
-                        * 1
-                        * (!elevator.isDown() ? 0.25 : 1),
+                        * 3
+                        * (!elevator.isDown() ? 0.33 : 1),
                     MathUtil.applyDeadband(-driver.getLeftX(), 0.1)
-                        * 1
-                        * (!elevator.isDown() ? 0.25 : 1),
-                    MathUtil.applyDeadband(-driver.getRightX(), 0.1)
-                        * 1
-                        * (!elevator.isDown() ? 0.25 : 1))));
+                        * 3
+                        * (!elevator.isDown() ? 0.33 : 1),
+                    MathUtil.applyDeadband(driver.getRightX(), 0.1)
+                        * 3
+                        * (!elevator.isDown() ? 0.33 : 1))));
 
     operator.button(9).onTrue(superstructure.selectElevatorHeight(2));
     operator.button(8).onTrue(superstructure.selectElevatorHeight(3));
@@ -170,6 +176,19 @@ public class Robot extends LoggedRobot {
 
     operator.button(6).onTrue(superstructure.selectReef("Left"));
     operator.button(3).onTrue(superstructure.selectReef("Right"));
+
+    operator.button(4).onTrue(superstructure.HomeRobot());
+    operator
+        .button(1)
+        .onTrue(outtake.changeRollerSetpoint(-0.8))
+        .onFalse(outtake.changeRollerSetpoint(0));
+
+    operator
+        .button(1)
+        .onTrue(outtake.changeRollerSetpoint(-0.8))
+        .onFalse(outtake.changeRollerSetpoint(0));
+
+    operator.button(4).onTrue(superstructure.HomeRobot());
 
     driver
         .y()
@@ -182,6 +201,7 @@ public class Robot extends LoggedRobot {
         .a()
         .whileTrue(
             Commands.sequence(
+                superstructure.selectPiece("Coral"),
                 Commands.parallel( // Alignment Commands
                     drivebase.goToPose(superstructure::getNearestReef), // Align Drivebase to
                     superstructure.raiseElevator() // Raise Elevator to selected leel
@@ -212,8 +232,6 @@ public class Robot extends LoggedRobot {
 
     // General Score
     driver.leftTrigger().onTrue(superstructure.Score()).onFalse(superstructure.HomeRobot());
-
-    driver.x().onTrue(outtake.changeRollerSetpoint(-0.8)).onFalse(outtake.changeRollerSetpoint(0));
 
     Logger.start();
   }
