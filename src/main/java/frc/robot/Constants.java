@@ -18,10 +18,10 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 
 public class Constants {
@@ -113,28 +113,14 @@ public class Constants {
   public static class AutoConstants {
 
     // Choreo
-    public static final PIDController kXController_Choreo =
-        new PIDController(0.25, 0, 0); // TODO: Tune
-    public static final PIDController kYController_Choreo =
-        new PIDController(0.25, 0, 0); // TODO: Tune
-    public static final PIDController kThetaController_Choreo =
-        new PIDController(0.25, 0, 0); // TODO: Tune
-
-    // Repulsor
-    public static final PIDController kXController_Repulsor =
-        new PIDController(100, 0, 0); // TODO: Tune
-    public static final PIDController kYController_Repulsor =
-        new PIDController(100, 0, 0); // TODO: Tune
-    public static final PIDController kThetaController_Repulsor =
-        new PIDController(100, 0, 0); // TODO: Tune
+    public static final PIDController kXController_Choreo = new PIDController(0.25, 0, 0);
+    public static final PIDController kYController_Choreo = new PIDController(0.25, 0, 0);
+    public static final PIDController kThetaController_Choreo = new PIDController(0.25, 0, 0);
 
     // Position PID
-    public static final PIDController kXController_Position =
-        new PIDController(8, 0, 0); // TODO: Tune
-    public static final PIDController kYController_Position =
-        new PIDController(8, 0, 0); // TODO: Tune
-    public static final PIDController kThetaController_Position =
-        new PIDController(8, 0, 0); // TODO: Tune
+    public static final PIDController kXController_Position = new PIDController(5, 0, 0);
+    public static final PIDController kYController_Position = new PIDController(5, 0, 0);
+    public static final PIDController kThetaController_Position = new PIDController(5, 0, 0);
   }
 
   public static class VisionConstants {
@@ -189,19 +175,18 @@ public class Constants {
     public static final Matrix<N3, N1> multiTagStdDev = VecBuilder.fill(0.2, 0.2, 0.2);
   }
 
-  public static class Motors {
-    public static double FalconRPS =
-        Units.radiansPerSecondToRotationsPerMinute(DCMotor.getFalcon500(1).freeSpeedRadPerSec) / 60;
-  }
-
   public static class Swerve {
 
     public record ModuleConstants(int id, String prefix, int driveID, int turnID, int encoderID) {}
 
-    public static final double maxLinearSpeed = Units.feetToMeters(17.3);
-    public static final double maxLinearAcceleration = 10.0;
     public static final double trackWidthX = Units.inchesToMeters(23.75);
     public static final double trackWidthY = Units.inchesToMeters(23.75);
+
+    public static final double maxLinearSpeed = Units.feetToMeters(17.3);
+    public static final double maxLinearAcceleration = 10.0;
+    public static final double maxAngularSpeed =
+        maxLinearSpeed / Math.hypot(trackWidthX / 2.0, trackWidthY / 2.0);
+
     public static final ModuleConstants frontLeftModule =
         new ModuleConstants(
             0, "Front Left", CAN.Swerve_FL_D.id, CAN.Swerve_FL_T.id, CAN.Swerve_FL_E.id);
@@ -219,6 +204,13 @@ public class Constants {
     public static final double turnRatio = (150.0 / 7.0);
     public static final double driveRotorToMeters = driveRatio / (wheelRadiusMeters * 2 * Math.PI);
 
+    public static final Translation2d[] moduleTranslations = {
+      new Translation2d(trackWidthX / 2, trackWidthY / 2),
+      new Translation2d(trackWidthX / 2, -trackWidthY / 2),
+      new Translation2d(-trackWidthX / 2, trackWidthY / 2),
+      new Translation2d(-trackWidthX / 2, -trackWidthY / 2)
+    };
+
     public static TalonFXConfiguration driveConfig =
         new TalonFXConfiguration()
             .withCurrentLimits(
@@ -232,7 +224,7 @@ public class Constants {
                     .withInverted(InvertedValue.Clockwise_Positive)
                     .withNeutralMode(NeutralModeValue.Brake))
             .withFeedback(new FeedbackConfigs().withSensorToMechanismRatio(driveRotorToMeters))
-            .withSlot0(new Slot0Configs().withKS(1).withKP(2.25))
+            .withSlot0(new Slot0Configs().withKV(12d / maxLinearSpeed).withKS(0).withKP(2.25))
             .withMotionMagic(
                 new MotionMagicConfigs()
                     .withMotionMagicCruiseVelocity(maxLinearSpeed)

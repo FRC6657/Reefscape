@@ -1,57 +1,43 @@
 package frc.robot.subsystems.drivebase;
 
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+
 import com.ctre.phoenix6.StatusSignal;
+import com.ctre.phoenix6.configs.Pigeon2Configuration;
 import com.ctre.phoenix6.hardware.Pigeon2;
-import edu.wpi.first.math.util.Units;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.units.measure.LinearAcceleration;
-import frc.robot.Constants;
 import frc.robot.Constants.CAN;
 
 public class GyroIO_Real implements GyroIO {
 
-  public Pigeon2 gyro; // Gryo
-
-  // Status Signals for Logged Values
-  StatusSignal<Angle> yaw;
-  StatusSignal<Angle> pitch;
-  StatusSignal<Angle> roll;
-  StatusSignal<AngularVelocity> yawVel;
-  StatusSignal<LinearAcceleration> xAccel;
-  StatusSignal<LinearAcceleration> yAccel;
+  private final Pigeon2 gyro; // Gryo
+  private final StatusSignal<Angle> yaw; // Yaw
+  private final StatusSignal<AngularVelocity> yawVelocity; // Pitch
 
   public GyroIO_Real() {
 
-    gyro = new Pigeon2(CAN.Gyro.id); // Assign Gyro CAN ID
+    gyro = new Pigeon2(CAN.Gyro.id);
 
-    // Assign Status Signals
     yaw = gyro.getYaw();
-    pitch = gyro.getPitch();
-    roll = gyro.getRoll();
-    yawVel = gyro.getAngularVelocityZDevice();
-    xAccel = gyro.getAccelerationX();
-    yAccel = gyro.getAccelerationY();
+    yawVelocity = gyro.getAngularVelocityZWorld();
 
-    // Set update frequencies for Logged Values
-    yaw.setUpdateFrequency(Constants.mainLoopFrequency);
-    pitch.setUpdateFrequency(Constants.mainLoopFrequency);
-    roll.setUpdateFrequency(Constants.mainLoopFrequency);
-    yawVel.setUpdateFrequency(Constants.mainLoopFrequency);
-    xAccel.setUpdateFrequency(Constants.mainLoopFrequency);
-    yAccel.setUpdateFrequency(Constants.mainLoopFrequency);
-
-    // Turn off status signals for stuff not being used.
+    gyro.getConfigurator().apply(new Pigeon2Configuration());
+    gyro.getConfigurator().setYaw(0.0);
+    yaw.setUpdateFrequency(50);
+    yawVelocity.setUpdateFrequency(50);
     gyro.optimizeBusUtilization();
   }
 
   @Override
   public void updateInputs(GyroIOInputs inputs) {
-    inputs.yaw = Units.degreesToRadians(gyro.getYaw().getValueAsDouble());
-    inputs.pitch = Units.degreesToRadians(pitch.getValueAsDouble());
-    inputs.roll = Units.degreesToRadians(roll.getValueAsDouble());
-    inputs.yawVel = Units.degreesToRadians(yawVel.getValueAsDouble());
-    inputs.xAccel = xAccel.getValueAsDouble() * 9.81;
-    inputs.yAccel = yAccel.getValueAsDouble() * 9.81;
+    inputs.yawPosition = new Rotation2d(yaw.getValue());
+    inputs.yawVelocityRadPerSec = yawVelocity.getValue().in(RadiansPerSecond);
+  }
+
+  @Override
+  public void setYaw(Rotation2d yaw) {
+    gyro.setYaw(yaw.getDegrees());
   }
 }
