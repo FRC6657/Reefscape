@@ -275,14 +275,14 @@ public class Superstructure {
             .onlyIf(() -> selectedPiece == "Algae"),
         Commands.parallel(
                 drivebase.goToPose(
-                    () -> getNearestReef(), Units.inchesToMeters(2), Units.inchesToMeters(2), 0.5),
+                    () -> getNearestReef(), Units.inchesToMeters(2), Units.degreesToRadians(3), 0.5),
                 raiseElevator().andThen(Commands.waitUntil(elevator::atSetpoint)))
             .andThen(
                 Commands.either(
                     drivebase.goToPose(
                         () -> getNearestReef().plus(new Transform2d(-0.25, 0, new Rotation2d())),
                         Units.inchesToMeters(0.5),
-                        Units.inchesToMeters(0.5),
+                        Units.degreesToRadians(1),
                         0.25),
                     Commands.sequence(
                         drivebase
