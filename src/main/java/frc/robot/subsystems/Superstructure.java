@@ -5,13 +5,15 @@ import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.ScheduleCommand;
 import frc.robot.Constants;
 import frc.robot.Constants.FieldConstants.ReefSlot;
 import frc.robot.subsystems.drivebase.Swerve;
@@ -38,7 +40,7 @@ public class Superstructure {
   private int elevatorLevel = 2; // Selected Reef Level
 
   @AutoLogOutput(key = "States/Selected Piece")
-  private String selectedPiece = "Coral";
+  private String selectedPiece = "Algae";
 
   // Array for easily grabbing setpoint heights.
   private double[] elevatorSetpoints = {
@@ -79,7 +81,6 @@ public class Superstructure {
   }
 
   // Gets the closest reef sector to the robot.
-  @AutoLogOutput(key = "AutoAim/TargetPose")
   public Pose2d getNearestReef() {
 
     // Grab the alliance color
@@ -111,7 +112,8 @@ public class Superstructure {
           };
     }
 
-    // Create a list of reef middle poses the robot scores offcenter but this is used instead just
+    // Create a list of reef middle poses the robot scores offcenter but this is
+    // used instead just
     // to select the sector.
     List<Pose2d> reefMiddles = new ArrayList<>();
     for (ReefSlot reefSlot : reefSlots) {
@@ -126,10 +128,14 @@ public class Superstructure {
                 nearestReefMiddle)]; // Get the reef slot of the nearest reef middle pose
 
     // Return the reef slot based on the selected reef
-    if (selectedReef == "Left") {
-      return nearestReefSlot.left;
-    } else if (selectedReef == "Right") {
-      return nearestReefSlot.right;
+    if (selectedPiece == "Coral") {
+      if (selectedReef == "Left") {
+        return nearestReefSlot.left;
+      } else if (selectedReef == "Right") {
+        return nearestReefSlot.right;
+      }
+    } else {
+      return nearestReefSlot.algae;
     }
 
     // If the selected reef is invalid return the robot's current pose.
@@ -165,24 +171,6 @@ public class Superstructure {
                     + elevatorSetpoints[elevatorLevel]
                     + " Reef Level: "
                     + elevatorLevel));
-  }
-
-  // Command to algin to the reef and get ready to score a coral.
-  // This command aligns the drivebase to the nearest reef and raises the elevator to the selected
-  // reef level.
-  // Command will end when the drivebase is aligned and the elevator is at the selected reef level.
-  public Command ReefAlign(String side, int level) {
-    return Commands.sequence(
-        logMessage("Autonomous Reef Align | Side: " + side + " | Level:" + level),
-        selectPiece("Coral"),
-        selectReef(side),
-        selectElevatorHeight(level),
-        Commands.parallel(
-            drivebase.goToPose(
-                () -> getNearestReef(), Units.inchesToMeters(0.5), Units.inchesToMeters(0.5)),
-            elevator
-                .changeSetpoint((() -> elevatorSetpoints[elevatorLevel]))
-                .andThen(Commands.waitUntil(elevator::atSetpoint))));
   }
 
   // Command for intaking coral from the human player station
@@ -253,7 +241,8 @@ public class Superstructure {
   }
 
   // Scores a piece.
-  // If the elevator is up it will score from the elevator, otherwise it will score from the ground
+  // If the elevator is up it will score from the elevator, otherwise it will
+  // score from the ground
   // intake.
   public Command Score() {
     return Commands.either(GroundIntakeScore(), ElevatorScore(), elevator::isDown);
@@ -267,6 +256,40 @@ public class Superstructure {
         elevator.changeSetpoint(0),
         intake.changePivotSetpoint(Constants.Intake.minAngle),
         intake.changeRollerSpeed(0));
+  }
+
+  public Command AutoAim() {
+    return Commands.sequence(
+        Commands.either(
+                selectElevatorHeight(2),
+                selectElevatorHeight(3),
+                () -> {
+                  Pose2d nearestReef = getNearestReef();
+                  return nearestReef == Constants.FieldConstants.ReefPoses.Reef_1.blue.algae
+                      || nearestReef == Constants.FieldConstants.ReefPoses.Reef_3.blue.algae
+                      || nearestReef == Constants.FieldConstants.ReefPoses.Reef_5.blue.algae
+                      || nearestReef == Constants.FieldConstants.ReefPoses.Reef_2.red.algae
+                      || nearestReef == Constants.FieldConstants.ReefPoses.Reef_4.red.algae
+                      || nearestReef == Constants.FieldConstants.ReefPoses.Reef_6.red.algae;
+                })
+            .onlyIf(() -> selectedPiece == "Algae"),
+        Commands.parallel(
+                drivebase.goToPose(
+                    () -> getNearestReef(), Units.inchesToMeters(2), Units.inchesToMeters(2), 0.5),
+                raiseElevator().andThen(Commands.waitUntil(elevator::atSetpoint)))
+            .andThen(
+                Commands.either(
+                    drivebase.goToPose(
+                        () -> getNearestReef().plus(new Transform2d(-0.25, 0, new Rotation2d())),
+                        Units.inchesToMeters(0.5),
+                        Units.inchesToMeters(0.5),
+                        0.25),
+                    Commands.sequence(
+                        drivebase
+                            .driveVelocity(() -> new ChassisSpeeds(-1, 0, 0))
+                            .withTimeout(0.25),
+                        Commands.runOnce(() -> drivebase.drive(new ChassisSpeeds()), drivebase)),
+                    () -> selectedPiece == "Coral")));
   }
 
   public AutoRoutine DirectionTest(AutoFactory factory, boolean mirror) {
@@ -289,63 +312,63 @@ public class Superstructure {
     return routine;
   }
 
-  public AutoRoutine L4_3Piece(AutoFactory factory, boolean mirror) {
+  // public AutoRoutine L4_3Piece(AutoFactory factory, boolean mirror) {
 
-    final AutoRoutine routine = factory.newRoutine("3 Piece");
+  //   final AutoRoutine routine = factory.newRoutine("3 Piece");
 
-    String mirrorFlag = mirror ? "mirrored_" : "";
+  //   String mirrorFlag = mirror ? "mirrored_" : "";
 
-    final AutoTrajectory S_P1 = routine.trajectory(mirrorFlag + "3 Piece", 0);
-    final AutoTrajectory P1_I1 = routine.trajectory(mirrorFlag + "3 Piece", 1);
-    final AutoTrajectory I1_P2 = routine.trajectory(mirrorFlag + "3 Piece", 2);
-    final AutoTrajectory P2_I2 = routine.trajectory(mirrorFlag + "3 Piece", 3);
-    final AutoTrajectory I2_P3 = routine.trajectory(mirrorFlag + "3 Piece", 4);
+  //   final AutoTrajectory S_P1 = routine.trajectory(mirrorFlag + "3 Piece", 0);
+  //   final AutoTrajectory P1_I1 = routine.trajectory(mirrorFlag + "3 Piece", 1);
+  //   final AutoTrajectory I1_P2 = routine.trajectory(mirrorFlag + "3 Piece", 2);
+  //   final AutoTrajectory P2_I2 = routine.trajectory(mirrorFlag + "3 Piece", 3);
+  //   final AutoTrajectory I2_P3 = routine.trajectory(mirrorFlag + "3 Piece", 4);
 
-    S_P1.atTime("Score")
-        .onTrue(
-            Commands.sequence(
-                ReefAlign(mirror ? "Right" : "Left", 4).asProxy(),
-                Score().asProxy(),
-                HomeRobot().asProxy(),
-                Commands.waitUntil(elevator::nearSetpoint),
-                new ScheduleCommand(P1_I1.cmd())));
+  //   S_P1.atTime("Score")
+  //       .onTrue(
+  //           Commands.sequence(
+  //               ReefAlign(mirror ? "Right" : "Left", 4).asProxy(),
+  //               Score().asProxy(),
+  //               HomeRobot().asProxy(),
+  //               Commands.waitUntil(elevator::nearSetpoint),
+  //               new ScheduleCommand(P1_I1.cmd())));
 
-    P1_I1
-        .done()
-        .onTrue(
-            Commands.sequence(
-                outtake.changeRollerSetpoint(-0.5).asProxy(),
-                Commands.waitUntil(outtake::coralDetected).withTimeout(3).asProxy(),
-                new ScheduleCommand(I1_P2.cmd())));
+  //   P1_I1
+  //       .done()
+  //       .onTrue(
+  //           Commands.sequence(
+  //               outtake.changeRollerSetpoint(-0.5).asProxy(),
+  //               Commands.waitUntil(outtake::coralDetected).withTimeout(3).asProxy(),
+  //               new ScheduleCommand(I1_P2.cmd())));
 
-    I1_P2
-        .atTime("Score")
-        .onTrue(
-            Commands.sequence(
-                ReefAlign(mirror ? "Right" : "Left", 4).asProxy(),
-                Score().asProxy(),
-                HomeRobot().asProxy(),
-                Commands.waitUntil(elevator::nearSetpoint),
-                new ScheduleCommand(P2_I2.cmd())));
+  //   I1_P2
+  //       .atTime("Score")
+  //       .onTrue(
+  //           Commands.sequence(
+  //               ReefAlign(mirror ? "Right" : "Left", 4).asProxy(),
+  //               Score().asProxy(),
+  //               HomeRobot().asProxy(),
+  //               Commands.waitUntil(elevator::nearSetpoint),
+  //               new ScheduleCommand(P2_I2.cmd())));
 
-    P2_I2
-        .done()
-        .onTrue(
-            Commands.sequence(
-                outtake.changeRollerSetpoint(-0.5).asProxy(),
-                Commands.waitUntil(outtake::coralDetected).withTimeout(3).asProxy(),
-                new ScheduleCommand(I2_P3.cmd())));
+  //   P2_I2
+  //       .done()
+  //       .onTrue(
+  //           Commands.sequence(
+  //               outtake.changeRollerSetpoint(-0.5).asProxy(),
+  //               Commands.waitUntil(outtake::coralDetected).withTimeout(3).asProxy(),
+  //               new ScheduleCommand(I2_P3.cmd())));
 
-    I2_P3
-        .atTime("Score")
-        .onTrue(
-            Commands.sequence(
-                ReefAlign(mirror ? "Left" : "Right", 4).asProxy(),
-                Score().asProxy(),
-                HomeRobot().asProxy()));
+  //   I2_P3
+  //       .atTime("Score")
+  //       .onTrue(
+  //           Commands.sequence(
+  //               ReefAlign(mirror ? "Left" : "Right", 4).asProxy(),
+  //               Score().asProxy(),
+  //               HomeRobot().asProxy()));
 
-    routine.active().onTrue(Commands.sequence(S_P1.resetOdometry(), S_P1.cmd()));
+  //   routine.active().onTrue(Commands.sequence(S_P1.resetOdometry(), S_P1.cmd()));
 
-    return routine;
-  }
+  //   return routine;
+  // }
 }

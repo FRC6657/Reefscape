@@ -7,7 +7,6 @@ package frc.robot;
 import choreo.auto.AutoFactory;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
@@ -134,19 +133,7 @@ public class Robot extends LoggedRobot {
                         * Constants.Swerve.maxAngularSpeed
                         * 0.5)));
 
-    driver
-        .a()
-        .whileTrue(
-            Commands.parallel(
-                    swerve.goToPose(
-                        () -> superstructure.getNearestReef(),
-                        Units.inchesToMeters(0.5),
-                        Units.inchesToMeters(0.5)),
-                    superstructure
-                        .raiseElevator()
-                        .andThen(Commands.waitUntil(elevator::atSetpoint)))
-                .andThen(rumble(0.25, 1)));
-
+    driver.a().whileTrue(superstructure.AutoAim());
     driver.a().onFalse(Commands.runOnce(() -> swerve.drive(new ChassisSpeeds())));
 
     operator.button(9).onTrue(superstructure.selectElevatorHeight(2));

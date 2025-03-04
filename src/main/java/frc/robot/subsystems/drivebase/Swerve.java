@@ -229,7 +229,7 @@ public class Swerve extends SubsystemBase {
   PIDController thetaController = AutoConstants.kThetaController_Position;
 
   public void positionController(
-      Pose2d targetPose, double translationTolerance, double rotationTolerance) {
+      Pose2d targetPose, double translationTolerance, double rotationTolerance, double speed) {
 
     xController.setTolerance(translationTolerance);
     yController.setTolerance(translationTolerance);
@@ -246,11 +246,12 @@ public class Swerve extends SubsystemBase {
 
     ChassisSpeeds out =
         ChassisSpeeds.fromFieldRelativeSpeeds(
-            MathUtil.clamp(xFeedback, -translationClamp * 0.25, translationClamp * 0.25),
-            MathUtil.clamp(yFeedback, -translationClamp * 0.25, translationClamp * 0.25),
-            MathUtil.clamp(rotationFeedback, -rotationClamp * 0.25, rotationClamp * 0.25),
+            MathUtil.clamp(xFeedback, -translationClamp * speed, translationClamp * speed),
+            MathUtil.clamp(yFeedback, -translationClamp * speed, translationClamp * speed),
+            MathUtil.clamp(rotationFeedback, -rotationClamp * speed, rotationClamp * speed),
             getPose().getRotation());
 
+    Logger.recordOutput("AutoAim/Target", targetPose);
     Logger.recordOutput("AutoAim/AtSetpointX", xController.atSetpoint());
     Logger.recordOutput("AutoAim/AtSetpointY", yController.atSetpoint());
     Logger.recordOutput("AutoAim/AtSetpointTheta", thetaController.atSetpoint());
@@ -259,8 +260,12 @@ public class Swerve extends SubsystemBase {
   }
 
   public Command goToPose(
-      Supplier<Pose2d> target, double translationTolerance, double rotationTolerance) {
-    return this.run(() -> positionController(target.get(), translationTolerance, rotationTolerance))
+      Supplier<Pose2d> target,
+      double translationTolerance,
+      double rotationTolerance,
+      double speed) {
+    return this.run(
+            () -> positionController(target.get(), translationTolerance, rotationTolerance, speed))
         .until(
             () -> {
               return xController.atSetpoint()

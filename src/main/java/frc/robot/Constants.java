@@ -71,11 +71,13 @@ public class Constants {
       public Pose2d middle;
       public Pose2d left;
       public Pose2d right;
+      public Pose2d algae;
 
-      ReefSlot(Pose2d middle, Pose2d left, Pose2d right) {
+      ReefSlot(Pose2d middle, Pose2d left, Pose2d right, Pose2d algae) {
         this.middle = middle;
         this.left = left;
         this.right = right;
+        this.algae = algae;
       }
     }
 
@@ -92,20 +94,25 @@ public class Constants {
 
       // Shift the pose to the robot's left
       public Pose2d getLeftPose(Pose2d pose) {
-        return pose.transformBy(new Transform2d(0, -0.26, new Rotation2d()));
+        return pose.transformBy(new Transform2d(0.25, -0.26, new Rotation2d()));
       }
 
       public Pose2d getRightPose(Pose2d pose) {
-        return pose.transformBy(new Transform2d(0, 0.06, new Rotation2d()));
+        return pose.transformBy(new Transform2d(0.25, 0.06, new Rotation2d()));
+      }
+
+      public Pose2d getAlgaePose(Pose2d pose) {
+        return pose.transformBy(new Transform2d(0.25, -0.09, new Rotation2d()));
       }
 
       ReefPoses(Pose2d pose) {
-        this.blue = new ReefSlot(pose, getLeftPose(pose), getRightPose(pose));
+        this.blue = new ReefSlot(pose, getLeftPose(pose), getRightPose(pose), getAlgaePose(pose));
         this.red =
             new ReefSlot(
                 getRedReefPose(pose),
                 getRedReefPose(getLeftPose(pose)),
-                getRedReefPose(getRightPose(pose)));
+                getRedReefPose(getRightPose(pose)),
+                getRedReefPose(getAlgaePose(pose)));
       }
     }
   }
@@ -183,7 +190,7 @@ public class Constants {
     public static final double trackWidthY = Units.inchesToMeters(23.75);
 
     public static final double maxLinearSpeed = Units.feetToMeters(17.3);
-    public static final double maxLinearAcceleration = 10.0;
+    public static final double maxLinearAcceleration = 8;
     public static final double maxAngularSpeed =
         maxLinearSpeed / Math.hypot(trackWidthX / 2.0, trackWidthY / 2.0);
 
