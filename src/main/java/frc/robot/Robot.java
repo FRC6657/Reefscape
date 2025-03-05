@@ -16,7 +16,6 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import frc.robot.Constants.VisionConstants;
 import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.drivebase.GyroIO;
 import frc.robot.subsystems.drivebase.GyroIO_Real;
@@ -33,9 +32,6 @@ import frc.robot.subsystems.intake.IntakeIO_Sim;
 import frc.robot.subsystems.outtake.Outtake;
 import frc.robot.subsystems.outtake.OuttakeIO_Real;
 import frc.robot.subsystems.outtake.OuttakeIO_Sim;
-import frc.robot.subsystems.vision.ApriltagCamera;
-import frc.robot.subsystems.vision.ApriltagCameraIO_Real;
-import frc.robot.subsystems.vision.ApriltagCameraIO_Sim;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
@@ -51,7 +47,6 @@ public class Robot extends LoggedRobot {
   private final Elevator elevator;
   private final Intake intake;
   private final Outtake outtake;
-  private final ApriltagCamera[] cameras;
 
   private final Superstructure superstructure;
   private final AutoFactory autoFactory;
@@ -82,25 +77,6 @@ public class Robot extends LoggedRobot {
     elevator = new Elevator(RobotBase.isReal() ? new ElevatorIO_Real() : new ElevatorIO_Sim());
     intake = new Intake(RobotBase.isReal() ? new IntakeIO_Real() : new IntakeIO_Sim());
     outtake = new Outtake(RobotBase.isReal() ? new OuttakeIO_Real() : new OuttakeIO_Sim());
-
-    cameras =
-        new ApriltagCamera[] {
-          new ApriltagCamera(
-              RobotBase.isReal()
-                  ? new ApriltagCameraIO_Real(VisionConstants.camera1Info)
-                  : new ApriltagCameraIO_Sim(VisionConstants.camera1Info),
-              VisionConstants.camera1Info),
-          new ApriltagCamera(
-              RobotBase.isReal()
-                  ? new ApriltagCameraIO_Real(VisionConstants.camera2Info)
-                  : new ApriltagCameraIO_Sim(VisionConstants.camera2Info),
-              VisionConstants.camera2Info),
-          // new ApriltagCamera(
-          //     RobotBase.isReal()
-          //         ? new ApriltagCameraIO_Real(VisionConstants.camera3Info)
-          //         : new ApriltagCameraIO_Sim(VisionConstants.camera3Info),
-          //     VisionConstants.camera3Info)
-        };
 
     superstructure = new Superstructure(swerve, elevator, outtake, intake);
 
@@ -187,15 +163,6 @@ public class Robot extends LoggedRobot {
 
     superstructure.update3DPose();
 
-    for (var camera : cameras) {
-      if (RobotBase.isSimulation()) {
-        camera.updateSimPose(swerve.getPose());
-      }
-      camera.updateInputs();
-      swerve.addVisionMeasurement(
-          camera.getEstimatedPose(), camera.getLatestTimestamp(), camera.getLatestStdDevs());
-    }
-
     CommandScheduler.getInstance().run();
   }
 
@@ -206,20 +173,6 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void teleopInit() {
-
-    System.out.println(Constants.FieldConstants.ReefPoses.Reef_1.blue.left);
-    System.out.println(Constants.FieldConstants.ReefPoses.Reef_1.blue.right);
-    System.out.println(Constants.FieldConstants.ReefPoses.Reef_2.blue.left);
-    System.out.println(Constants.FieldConstants.ReefPoses.Reef_2.blue.right);
-    System.out.println(Constants.FieldConstants.ReefPoses.Reef_3.blue.left);
-    System.out.println(Constants.FieldConstants.ReefPoses.Reef_3.blue.right);
-    System.out.println(Constants.FieldConstants.ReefPoses.Reef_4.blue.left);
-    System.out.println(Constants.FieldConstants.ReefPoses.Reef_4.blue.right);
-    System.out.println(Constants.FieldConstants.ReefPoses.Reef_5.blue.left);
-    System.out.println(Constants.FieldConstants.ReefPoses.Reef_5.blue.right);
-    System.out.println(Constants.FieldConstants.ReefPoses.Reef_6.blue.left);
-    System.out.println(Constants.FieldConstants.ReefPoses.Reef_6.blue.right);
-
     autoChooser.get().cancel();
   }
 

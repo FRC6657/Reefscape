@@ -42,13 +42,14 @@ public class ApriltagCamera {
     poseEstimator =
         new PhotonPoseEstimator(
             AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeWelded),
-            PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
+            PoseStrategy.PNP_DISTANCE_TRIG_SOLVE,
             cameraInfo.robotToCamera);
   }
 
-  public void updateInputs() {
+  public void updateInputs(double headingTimestamp, Rotation3d robotHeading) {
     io.updateInputs(inputs);
 
+    poseEstimator.addHeadingData(headingTimestamp, robotHeading);
     var result = poseEstimator.update(inputs.result);
 
     if (result.isPresent()) {
