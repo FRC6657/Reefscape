@@ -321,6 +321,16 @@ public class Superstructure {
     return routine;
   }
 
+  public Command AutonomousScoringSequence(int level, String reef) {
+    return Commands.sequence(
+        AutoAim(4, reef),
+        Score(),
+        drivebase.driveVelocity(() -> new ChassisSpeeds(0.5, 0, 0)).withTimeout(0.25),
+        Commands.runOnce(() -> drivebase.drive(new ChassisSpeeds()), drivebase),
+        HomeRobot(),
+        Commands.waitUntil(elevator::nearSetpoint));
+  }
+
   public AutoRoutine L4_3Piece(AutoFactory factory, boolean mirror) {
 
     final AutoRoutine routine = factory.newRoutine("3 Piece");
@@ -336,12 +346,7 @@ public class Superstructure {
     S_P1.atTime("Score")
         .onTrue(
             Commands.sequence(
-                    AutoAim(4, mirror ? "Right" : "Left"),
-                    Score(),
-                    drivebase.driveVelocity(() -> new ChassisSpeeds(0.5, 0, 0)).withTimeout(0.25),
-                    Commands.runOnce(() -> drivebase.drive(new ChassisSpeeds()), drivebase),
-                    HomeRobot(),
-                    Commands.waitUntil(elevator::nearSetpoint),
+                    AutonomousScoringSequence(4, mirror ? "Right" : "Left"),
                     new ScheduleCommand(P1_I1.cmd()))
                 .asProxy());
 
@@ -358,12 +363,7 @@ public class Superstructure {
         .atTime("Score")
         .onTrue(
             Commands.sequence(
-                    AutoAim(4, mirror ? "Right" : "Left"),
-                    Score(),
-                    drivebase.driveVelocity(() -> new ChassisSpeeds(0.5, 0, 0)).withTimeout(0.25),
-                    Commands.runOnce(() -> drivebase.drive(new ChassisSpeeds()), drivebase),
-                    HomeRobot(),
-                    Commands.waitUntil(elevator::nearSetpoint),
+                    AutonomousScoringSequence(4, mirror ? "Right" : "Left"),
                     new ScheduleCommand(P2_I2.cmd()))
                 .asProxy());
 
@@ -376,16 +376,7 @@ public class Superstructure {
                     new ScheduleCommand(I2_P3.cmd()))
                 .asProxy());
 
-    I2_P3
-        .atTime("Score")
-        .onTrue(
-            Commands.sequence(
-                    AutoAim(4, mirror ? "Left" : "Right"),
-                    Score(),
-                    drivebase.driveVelocity(() -> new ChassisSpeeds(0.25, 0, 0)).withTimeout(0.5),
-                    Commands.runOnce(() -> drivebase.drive(new ChassisSpeeds()), drivebase),
-                    HomeRobot())
-                .asProxy());
+    I2_P3.atTime("Score").onTrue(AutonomousScoringSequence(4, mirror ? "Left" : "Right").asProxy());
 
     routine.active().onTrue(Commands.sequence(S_P1.resetOdometry(), S_P1.cmd()));
 
