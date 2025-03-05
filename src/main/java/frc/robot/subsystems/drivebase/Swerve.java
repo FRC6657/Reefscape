@@ -231,9 +231,9 @@ public class Swerve extends SubsystemBase {
   public void positionController(
       Pose2d targetPose, double translationTolerance, double rotationTolerance, double speed) {
 
-    xController.setTolerance(translationTolerance);
-    yController.setTolerance(translationTolerance);
-    thetaController.setTolerance(rotationTolerance);
+    xController.setTolerance(translationTolerance, Units.inchesToMeters(0.125));
+    yController.setTolerance(translationTolerance, Units.inchesToMeters(0.125));
+    thetaController.setTolerance(rotationTolerance, Units.degreesToRadians(1));
 
     double xFeedback = xController.calculate(getPose().getX(), targetPose.getX());
     double yFeedback = yController.calculate(getPose().getY(), targetPose.getY());

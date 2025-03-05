@@ -108,6 +108,7 @@ public class Robot extends LoggedRobot {
         new AutoFactory(swerve::getPose, swerve::resetPose, swerve::followTrajectory, true, swerve);
 
     autoChooser.addDefaultOption("Test", superstructure.DirectionTest(autoFactory, false).cmd());
+    autoChooser.addOption("3 Piece", superstructure.L4_3Piece(autoFactory, false).cmd());
   }
 
   @Override
@@ -205,6 +206,20 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void teleopInit() {
+
+    System.out.println(Constants.FieldConstants.ReefPoses.Reef_1.blue.left);
+    System.out.println(Constants.FieldConstants.ReefPoses.Reef_1.blue.right);
+    System.out.println(Constants.FieldConstants.ReefPoses.Reef_2.blue.left);
+    System.out.println(Constants.FieldConstants.ReefPoses.Reef_2.blue.right);
+    System.out.println(Constants.FieldConstants.ReefPoses.Reef_3.blue.left);
+    System.out.println(Constants.FieldConstants.ReefPoses.Reef_3.blue.right);
+    System.out.println(Constants.FieldConstants.ReefPoses.Reef_4.blue.left);
+    System.out.println(Constants.FieldConstants.ReefPoses.Reef_4.blue.right);
+    System.out.println(Constants.FieldConstants.ReefPoses.Reef_5.blue.left);
+    System.out.println(Constants.FieldConstants.ReefPoses.Reef_5.blue.right);
+    System.out.println(Constants.FieldConstants.ReefPoses.Reef_6.blue.left);
+    System.out.println(Constants.FieldConstants.ReefPoses.Reef_6.blue.right);
+
     autoChooser.get().cancel();
   }
 

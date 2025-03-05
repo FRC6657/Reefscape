@@ -14,6 +14,7 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.ScheduleCommand;
 import frc.robot.Constants;
 import frc.robot.Constants.FieldConstants.ReefSlot;
 import frc.robot.subsystems.drivebase.Swerve;
@@ -236,7 +237,7 @@ public class Superstructure {
         logMessage("Elevator Score"),
         outtake.changeRollerSetpoint(-0.3),
         Commands.waitUntil(() -> !outtake.coralDetected()).unless(RobotBase::isSimulation),
-        Commands.waitSeconds(2),
+        Commands.waitSeconds(0.3),
         outtake.changeRollerSetpoint(0));
   }
 
@@ -258,6 +259,11 @@ public class Superstructure {
         intake.changeRollerSpeed(0));
   }
 
+  public Command AutoAim(int coralLevel, String reefPole) {
+    return Commands.sequence(
+        selectPiece("Coral"), selectElevatorHeight(coralLevel), selectReef(reefPole), AutoAim());
+  }
+
   public Command AutoAim() {
     return Commands.sequence(
         Commands.either(
@@ -275,7 +281,10 @@ public class Superstructure {
             .onlyIf(() -> selectedPiece == "Algae"),
         Commands.parallel(
                 drivebase.goToPose(
-                    () -> getNearestReef(), Units.inchesToMeters(2), Units.degreesToRadians(3), 0.5),
+                    () -> getNearestReef(),
+                    Units.inchesToMeters(2),
+                    Units.degreesToRadians(3),
+                    0.25),
                 raiseElevator().andThen(Commands.waitUntil(elevator::atSetpoint)))
             .andThen(
                 Commands.either(
@@ -312,63 +321,74 @@ public class Superstructure {
     return routine;
   }
 
-  // public AutoRoutine L4_3Piece(AutoFactory factory, boolean mirror) {
+  public AutoRoutine L4_3Piece(AutoFactory factory, boolean mirror) {
 
-  //   final AutoRoutine routine = factory.newRoutine("3 Piece");
+    final AutoRoutine routine = factory.newRoutine("3 Piece");
 
-  //   String mirrorFlag = mirror ? "mirrored_" : "";
+    String mirrorFlag = mirror ? "mirrored_" : "";
 
-  //   final AutoTrajectory S_P1 = routine.trajectory(mirrorFlag + "3 Piece", 0);
-  //   final AutoTrajectory P1_I1 = routine.trajectory(mirrorFlag + "3 Piece", 1);
-  //   final AutoTrajectory I1_P2 = routine.trajectory(mirrorFlag + "3 Piece", 2);
-  //   final AutoTrajectory P2_I2 = routine.trajectory(mirrorFlag + "3 Piece", 3);
-  //   final AutoTrajectory I2_P3 = routine.trajectory(mirrorFlag + "3 Piece", 4);
+    final AutoTrajectory S_P1 = routine.trajectory(mirrorFlag + "3 Piece", 0);
+    final AutoTrajectory P1_I1 = routine.trajectory(mirrorFlag + "3 Piece", 1);
+    final AutoTrajectory I1_P2 = routine.trajectory(mirrorFlag + "3 Piece", 2);
+    final AutoTrajectory P2_I2 = routine.trajectory(mirrorFlag + "3 Piece", 3);
+    final AutoTrajectory I2_P3 = routine.trajectory(mirrorFlag + "3 Piece", 4);
 
-  //   S_P1.atTime("Score")
-  //       .onTrue(
-  //           Commands.sequence(
-  //               ReefAlign(mirror ? "Right" : "Left", 4).asProxy(),
-  //               Score().asProxy(),
-  //               HomeRobot().asProxy(),
-  //               Commands.waitUntil(elevator::nearSetpoint),
-  //               new ScheduleCommand(P1_I1.cmd())));
+    S_P1.atTime("Score")
+        .onTrue(
+            Commands.sequence(
+                    AutoAim(4, mirror ? "Right" : "Left"),
+                    Score(),
+                    drivebase.driveVelocity(() -> new ChassisSpeeds(0.5, 0, 0)).withTimeout(0.25),
+                    Commands.runOnce(() -> drivebase.drive(new ChassisSpeeds()), drivebase),
+                    HomeRobot(),
+                    Commands.waitUntil(elevator::nearSetpoint),
+                    new ScheduleCommand(P1_I1.cmd()))
+                .asProxy());
 
-  //   P1_I1
-  //       .done()
-  //       .onTrue(
-  //           Commands.sequence(
-  //               outtake.changeRollerSetpoint(-0.5).asProxy(),
-  //               Commands.waitUntil(outtake::coralDetected).withTimeout(3).asProxy(),
-  //               new ScheduleCommand(I1_P2.cmd())));
+    P1_I1
+        .done()
+        .onTrue(
+            Commands.sequence(
+                    outtake.changeRollerSetpoint(-0.5),
+                    Commands.waitUntil(outtake::coralDetected).withTimeout(3),
+                    new ScheduleCommand(I1_P2.cmd()))
+                .asProxy());
 
-  //   I1_P2
-  //       .atTime("Score")
-  //       .onTrue(
-  //           Commands.sequence(
-  //               ReefAlign(mirror ? "Right" : "Left", 4).asProxy(),
-  //               Score().asProxy(),
-  //               HomeRobot().asProxy(),
-  //               Commands.waitUntil(elevator::nearSetpoint),
-  //               new ScheduleCommand(P2_I2.cmd())));
+    I1_P2
+        .atTime("Score")
+        .onTrue(
+            Commands.sequence(
+                    AutoAim(4, mirror ? "Right" : "Left"),
+                    Score(),
+                    drivebase.driveVelocity(() -> new ChassisSpeeds(0.5, 0, 0)).withTimeout(0.25),
+                    Commands.runOnce(() -> drivebase.drive(new ChassisSpeeds()), drivebase),
+                    HomeRobot(),
+                    Commands.waitUntil(elevator::nearSetpoint),
+                    new ScheduleCommand(P2_I2.cmd()))
+                .asProxy());
 
-  //   P2_I2
-  //       .done()
-  //       .onTrue(
-  //           Commands.sequence(
-  //               outtake.changeRollerSetpoint(-0.5).asProxy(),
-  //               Commands.waitUntil(outtake::coralDetected).withTimeout(3).asProxy(),
-  //               new ScheduleCommand(I2_P3.cmd())));
+    P2_I2
+        .done()
+        .onTrue(
+            Commands.sequence(
+                    outtake.changeRollerSetpoint(-0.5),
+                    Commands.waitUntil(outtake::coralDetected).withTimeout(3),
+                    new ScheduleCommand(I2_P3.cmd()))
+                .asProxy());
 
-  //   I2_P3
-  //       .atTime("Score")
-  //       .onTrue(
-  //           Commands.sequence(
-  //               ReefAlign(mirror ? "Left" : "Right", 4).asProxy(),
-  //               Score().asProxy(),
-  //               HomeRobot().asProxy()));
+    I2_P3
+        .atTime("Score")
+        .onTrue(
+            Commands.sequence(
+                    AutoAim(4, mirror ? "Left" : "Right"),
+                    Score(),
+                    drivebase.driveVelocity(() -> new ChassisSpeeds(0.25, 0, 0)).withTimeout(0.5),
+                    Commands.runOnce(() -> drivebase.drive(new ChassisSpeeds()), drivebase),
+                    HomeRobot())
+                .asProxy());
 
-  //   routine.active().onTrue(Commands.sequence(S_P1.resetOdometry(), S_P1.cmd()));
+    routine.active().onTrue(Commands.sequence(S_P1.resetOdometry(), S_P1.cmd()));
 
-  //   return routine;
-  // }
+    return routine;
+  }
 }
