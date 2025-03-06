@@ -4,8 +4,6 @@
 
 package frc.robot.subsystems.vision;
 
-import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -15,6 +13,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import frc.robot.Constants;
 import frc.robot.Constants.VisionConstants;
 import frc.robot.Constants.VisionConstants.CameraInfo;
 import org.littletonrobotics.junction.Logger;
@@ -27,7 +26,7 @@ public class ApriltagCamera {
   private final ApriltagCameraIO io;
   private final AprilTagCameraIOInputsAutoLogged inputs = new AprilTagCameraIOInputsAutoLogged();
 
-  private final PhotonPoseEstimator poseEstimator;
+  private PhotonPoseEstimator poseEstimator;
   private final CameraInfo cameraInfo;
 
   private Pose3d latestPose = new Pose3d();
@@ -41,7 +40,7 @@ public class ApriltagCamera {
 
     poseEstimator =
         new PhotonPoseEstimator(
-            AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeWelded),
+            Constants.VisionConstants.kReefTagLayout,
             PoseStrategy.PNP_DISTANCE_TRIG_SOLVE,
             cameraInfo.robotToCamera);
   }

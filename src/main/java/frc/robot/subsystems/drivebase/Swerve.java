@@ -354,8 +354,11 @@ public class Swerve extends SubsystemBase {
       if (RobotBase.isSimulation()) {
         camera.updateSimPose(getPose());
       }
-      camera.updateInputs(RobotBase.isSimulation() ? Timer.getFPGATimestamp() : gyroInputs.timestamp, RobotBase.isSimulation() ? new Rotation3d(getPose().getRotation()) : gyroInputs.heading);
-      addVisionMeasurement(camera.getEstimatedPose(), camera.getLatestTimestamp(), camera.getLatestStdDevs());
+      camera.updateInputs(
+          RobotBase.isSimulation() ? Timer.getFPGATimestamp() : gyroInputs.timestamp,
+          RobotBase.isSimulation() ? new Rotation3d(getPose().getRotation()) : gyroInputs.heading);
+      addVisionMeasurement(
+          camera.getEstimatedPose(), camera.getLatestTimestamp(), camera.getLatestStdDevs());
     }
   }
 }

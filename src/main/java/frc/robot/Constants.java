@@ -10,6 +10,9 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import edu.wpi.first.apriltag.AprilTag;
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.PIDController;
@@ -23,6 +26,7 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
+import java.util.List;
 
 public class Constants {
 
@@ -131,6 +135,26 @@ public class Constants {
   }
 
   public static class VisionConstants {
+
+    public static final AprilTagFieldLayout kTagLayout =
+        AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeWelded);
+
+    private static final List<AprilTag> kReefTags =
+        List.of(
+            kTagLayout.getTags().get(5),
+            kTagLayout.getTags().get(6),
+            kTagLayout.getTags().get(7),
+            kTagLayout.getTags().get(8),
+            kTagLayout.getTags().get(9),
+            kTagLayout.getTags().get(10),
+            kTagLayout.getTags().get(16),
+            kTagLayout.getTags().get(17),
+            kTagLayout.getTags().get(18),
+            kTagLayout.getTags().get(19),
+            kTagLayout.getTags().get(20),
+            kTagLayout.getTags().get(21));
+    public static final AprilTagFieldLayout kReefTagLayout =
+        new AprilTagFieldLayout(kReefTags, kTagLayout.getFieldLength(), kTagLayout.getFieldWidth());
 
     public static class CameraInfo {
 

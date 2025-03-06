@@ -83,7 +83,7 @@ public class Robot extends LoggedRobot {
     autoFactory =
         new AutoFactory(swerve::getPose, swerve::resetPose, swerve::followTrajectory, true, swerve);
 
-    autoChooser.addOption("Do Nothing", Commands.none());
+    autoChooser.addDefaultOption("Do Nothing", Commands.none());
     autoChooser.addOption("Test", superstructure.DirectionTest(autoFactory, false).cmd());
     autoChooser.addOption("3 Piece", superstructure.L4_3Piece(autoFactory, false).cmd());
   }
