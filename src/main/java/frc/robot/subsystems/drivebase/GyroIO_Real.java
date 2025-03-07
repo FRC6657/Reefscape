@@ -2,6 +2,7 @@ package frc.robot.subsystems.drivebase;
 
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 
+import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.Pigeon2Configuration;
 import com.ctre.phoenix6.hardware.Pigeon2;
@@ -39,6 +40,13 @@ public class GyroIO_Real implements GyroIO {
 
   @Override
   public void updateInputs(GyroIOInputs inputs) {
+
+    BaseStatusSignal.refreshAll(
+        yaw,
+        pitch,
+        roll,
+        yawVelocity
+    );
 
     inputs.yawPosition = new Rotation2d(yaw.getValue());
     inputs.yawVelocityRadPerSec = yawVelocity.getValue().in(RadiansPerSecond);
