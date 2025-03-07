@@ -44,7 +44,7 @@ public class ApriltagCamera {
     poseEstimator =
         new PhotonPoseEstimator(
             Constants.VisionConstants.kReefTagLayout,
-            PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
+            PoseStrategy.CONSTRAINED_SOLVEPNP,
             cameraInfo.robotToCamera);
   }
 
