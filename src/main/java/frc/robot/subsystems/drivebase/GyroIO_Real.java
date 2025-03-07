@@ -40,4 +40,9 @@ public class GyroIO_Real implements GyroIO {
     inputs.yawVelocityRadPerSec = yawVelocity.getValue().in(RadiansPerSecond);
     inputs.timestamp = yaw.getTimestamp().getTime();
   }
+
+  @Override
+  public void setYaw(Rotation2d yaw) {
+    gyro.setYaw(yaw.getDegrees());
+  }
 }
