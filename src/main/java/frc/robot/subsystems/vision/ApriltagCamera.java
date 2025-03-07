@@ -8,6 +8,7 @@ import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
@@ -45,7 +46,7 @@ public class ApriltagCamera {
             cameraInfo.robotToCamera);
   }
 
-  public void updateInputs(double headingTimestamp, Rotation3d robotHeading) {
+  public void updateInputs(double headingTimestamp, Rotation2d robotHeading) {
     io.updateInputs(inputs);
 
     poseEstimator.addHeadingData(headingTimestamp, robotHeading);
