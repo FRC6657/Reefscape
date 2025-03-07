@@ -360,7 +360,7 @@ public class Swerve extends SubsystemBase {
           RobotBase.isSimulation() ? getPose().getRotation() : gyroInputs.yawPosition);
 
       Pose3d estPose = camera.getEstimatedPose();
-      if(estPose != new Pose3d(new Translation3d(100, 100, 100), new Rotation3d())){
+      if (estPose.getTranslation().getZ() < 10) {
         Logger.recordOutput("Vision/ProcessedPoses", estPose);
         addVisionMeasurement(estPose, camera.getLatestTimestamp(), camera.getLatestStdDevs());
       }

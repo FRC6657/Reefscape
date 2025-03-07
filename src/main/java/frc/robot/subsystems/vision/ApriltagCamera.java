@@ -94,8 +94,10 @@ public class ApriltagCamera {
     } else {
       latestPose = new Pose3d(new Translation3d(100, 100, 100), new Rotation3d());
       stdDevs = VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
-      Logger.recordOutput("Vision/ApriltagCameras/" + cameraInfo.cameraName + "/Corners", new Translation2d[] {});
-      Logger.recordOutput("Vision/ApriltagCameras/" + cameraInfo.cameraName + "/TagPoses" , new Pose3d[]{});
+      Logger.recordOutput(
+          "Vision/ApriltagCameras/" + cameraInfo.cameraName + "/Corners", new Translation2d[] {});
+      Logger.recordOutput(
+          "Vision/ApriltagCameras/" + cameraInfo.cameraName + "/TagPoses", new Pose3d[] {});
     }
 
     Logger.processInputs("Vision/ApriltagCameras/" + cameraInfo.cameraName + "/Inputs", inputs);
