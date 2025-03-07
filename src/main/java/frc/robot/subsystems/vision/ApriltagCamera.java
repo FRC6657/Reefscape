@@ -4,17 +4,19 @@
 
 package frc.robot.subsystems.vision;
 
-import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import frc.robot.Constants;
 import frc.robot.Constants.VisionConstants;
 import frc.robot.Constants.VisionConstants.CameraInfo;
 import org.littletonrobotics.junction.Logger;
@@ -27,7 +29,7 @@ public class ApriltagCamera {
   private final ApriltagCameraIO io;
   private final AprilTagCameraIOInputsAutoLogged inputs = new AprilTagCameraIOInputsAutoLogged();
 
-  private final PhotonPoseEstimator poseEstimator;
+  private PhotonPoseEstimator poseEstimator;
   private final CameraInfo cameraInfo;
 
   private Pose3d latestPose = new Pose3d();
@@ -41,19 +43,26 @@ public class ApriltagCamera {
 
     poseEstimator =
         new PhotonPoseEstimator(
-            AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeWelded),
+            Constants.VisionConstants.kReefTagLayout,
             PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
             cameraInfo.robotToCamera);
   }
 
-  public void updateInputs() {
+  public void updateInputs(double headingTimestamp, Rotation2d robotHeading) {
     io.updateInputs(inputs);
+
+    poseEstimator.addHeadingData(headingTimestamp, robotHeading);
+
+    var alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
+    poseEstimator.setFieldTags(
+        alliance == Alliance.Blue ? VisionConstants.kBlueTagLayout : VisionConstants.kRedTagLayout);
 
     var result = poseEstimator.update(inputs.result);
 
     if (result.isPresent()) {
       latestPose = result.get().estimatedPose;
       latestTimestamp = result.get().timestampSeconds;
+
       stdDevs = getEstimationStdDevs(latestPose.toPose2d(), inputs.result);
 
       Translation2d[] tagCorners = new Translation2d[inputs.result.targets.size() * 4];
@@ -76,6 +85,8 @@ public class ApriltagCamera {
       }
 
       Logger.recordOutput(
+          "Vision/ApriltagCameras/" + cameraInfo.cameraName + "/STDDevs", stdDevs.getData());
+      Logger.recordOutput(
           "Vision/ApriltagCameras/" + cameraInfo.cameraName + "/Corners", tagCorners);
       Logger.recordOutput(
           "Vision/ApriltagCameras/" + cameraInfo.cameraName + "/TagPoses", tagPoses);
@@ -85,6 +96,8 @@ public class ApriltagCamera {
       stdDevs = VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
       Logger.recordOutput(
           "Vision/ApriltagCameras/" + cameraInfo.cameraName + "/Corners", new Translation2d[] {});
+      Logger.recordOutput(
+          "Vision/ApriltagCameras/" + cameraInfo.cameraName + "/TagPoses", new Pose3d[] {});
     }
 
     Logger.processInputs("Vision/ApriltagCameras/" + cameraInfo.cameraName + "/Inputs", inputs);
@@ -109,10 +122,13 @@ public class ApriltagCamera {
     }
     if (numTags == 0) return estStdDevs;
     avgDist /= numTags;
+
     // Decrease std devs if multiple targets are visible
     if (numTags > 1) estStdDevs = VisionConstants.multiTagStdDev;
-    // Increase std devs based on (average) distance
-    if (numTags == 1 && avgDist > 4) estStdDevs = VisionConstants.singleTagStdDev;
+    // Ignore a single tag too far away
+    if (numTags == 1 && avgDist > 4)
+      estStdDevs = VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
+    // Scale std devs for single tag based on distance.
     else estStdDevs = estStdDevs.times(1 + (avgDist * avgDist / 30));
 
     return estStdDevs;

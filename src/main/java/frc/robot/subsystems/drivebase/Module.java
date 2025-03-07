@@ -10,33 +10,41 @@ public class Module {
   private ModuleIO io;
   private ModuleIOInputsAutoLogged inputs = new ModuleIOInputsAutoLogged();
 
-  // Name to track the module's name
-  private String name;
-
-  public Module(ModuleIO io, String name) {
+  public Module(ModuleIO io) {
     this.io = io;
-    this.name = name;
   }
 
-  // Get the Swerve Module's Position
-  public SwerveModulePosition getModulePosition() {
-    return io.getModulePosition();
+  /**
+   * Runs the module with the given state
+   *
+   * @param state The state to run the module with
+   * @return The optimized module state being ran
+   */
+  public SwerveModuleState runSetpoint(SwerveModuleState state) {
+    state.optimize(inputs.turnPosition);
+    io.setTurnSetpoint(state.angle);
+    io.setDriveSetpoint(state.speedMetersPerSecond);
+    return state;
   }
 
-  // Get the Swerve Module's State
-  public SwerveModuleState getModuleState() {
-    return io.getModuleState();
+  /**
+   * @return the current state of the module
+   */
+  public SwerveModuleState getState() {
+    return new SwerveModuleState(inputs.driveVelocityMetersPerSec, inputs.turnPosition);
   }
 
-  // Set the new desired Module Setpoint
-  public void changeState(SwerveModuleState desiredState) {
-    io.changeDriveSetpoint(desiredState.speedMetersPerSecond);
-    io.changeTurnSetpoint(desiredState.angle.getRadians());
+  /**
+   * @return the current position of the module
+   */
+  public SwerveModulePosition getPosition() {
+    return new SwerveModulePosition(inputs.drivePositionMeters, inputs.turnPosition);
   }
 
   // Update Module IO
   public void updateInputs() {
     io.updateInputs(inputs);
-    Logger.processInputs("Swerve/" + name + " Module", inputs);
+    Logger.processInputs(
+        new StringBuilder("Swerve/").append(inputs.prefix).append(" Module").toString(), inputs);
   }
 }

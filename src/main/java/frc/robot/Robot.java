@@ -5,10 +5,7 @@
 package frc.robot;
 
 import choreo.auto.AutoFactory;
-import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.PowerDistribution;
@@ -19,9 +16,6 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.Constants.Swerve.ModuleInformation;
-import frc.robot.Constants.VisionConstants;
 import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.drivebase.GyroIO;
 import frc.robot.subsystems.drivebase.GyroIO_Real;
@@ -38,9 +32,6 @@ import frc.robot.subsystems.intake.IntakeIO_Sim;
 import frc.robot.subsystems.outtake.Outtake;
 import frc.robot.subsystems.outtake.OuttakeIO_Real;
 import frc.robot.subsystems.outtake.OuttakeIO_Sim;
-import frc.robot.subsystems.vision.ApriltagCamera;
-import frc.robot.subsystems.vision.ApriltagCameraIO_Real;
-import frc.robot.subsystems.vision.ApriltagCameraIO_Sim;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
@@ -52,99 +43,54 @@ public class Robot extends LoggedRobot {
   private CommandXboxController driver = new CommandXboxController(0);
   private CommandGenericHID operator = new CommandGenericHID(1);
 
-  private Swerve drivebase;
-  private Elevator elevator;
-  private Outtake outtake;
-  private Intake intake;
+  private final Swerve swerve;
+  private final Elevator elevator;
+  private final Intake intake;
+  private final Outtake outtake;
 
-  private ApriltagCamera[] cameras;
-
-  private Superstructure superstructure;
-
+  private final Superstructure superstructure;
   private final AutoFactory autoFactory;
 
   private LoggedDashboardChooser<Command> autoChooser =
       new LoggedDashboardChooser<>("Auto Chooser");
 
-  Trigger elevatorRumble;
-
   public Robot() {
 
-    drivebase =
+    swerve =
         new Swerve(
-            RobotBase.isReal()
-                ? new ModuleIO[] {
-                  new ModuleIO_Real(ModuleInformation.frontLeft),
-                  new ModuleIO_Real(ModuleInformation.frontRight),
-                  new ModuleIO_Real(ModuleInformation.backLeft),
-                  new ModuleIO_Real(ModuleInformation.backRight)
-                }
-                : new ModuleIO[] {
-                  new ModuleIO_Sim(ModuleInformation.frontLeft),
-                  new ModuleIO_Sim(ModuleInformation.frontRight),
-                  new ModuleIO_Sim(ModuleInformation.backLeft),
-                  new ModuleIO_Sim(ModuleInformation.backRight)
-                },
-            RobotBase.isReal() ? new GyroIO_Real() : new GyroIO() {});
+            RobotBase.isReal() ? new GyroIO_Real() : new GyroIO() {},
+            new ModuleIO[] {
+              RobotBase.isReal()
+                  ? new ModuleIO_Real(Constants.Swerve.frontLeftModule)
+                  : new ModuleIO_Sim(Constants.Swerve.frontLeftModule),
+              RobotBase.isReal()
+                  ? new ModuleIO_Real(Constants.Swerve.frontRightModule)
+                  : new ModuleIO_Sim(Constants.Swerve.frontRightModule),
+              RobotBase.isReal()
+                  ? new ModuleIO_Real(Constants.Swerve.backLeftModule)
+                  : new ModuleIO_Sim(Constants.Swerve.backLeftModule),
+              RobotBase.isReal()
+                  ? new ModuleIO_Real(Constants.Swerve.backRightModule)
+                  : new ModuleIO_Sim(Constants.Swerve.backRightModule)
+            });
 
-    intake = new Intake(RobotBase.isReal() ? new IntakeIO_Real() : new IntakeIO_Sim());
     elevator = new Elevator(RobotBase.isReal() ? new ElevatorIO_Real() : new ElevatorIO_Sim());
+    intake = new Intake(RobotBase.isReal() ? new IntakeIO_Real() : new IntakeIO_Sim());
     outtake = new Outtake(RobotBase.isReal() ? new OuttakeIO_Real() : new OuttakeIO_Sim());
 
-    elevatorRumble =
-        new Trigger(() -> elevator.atSetpoint() && !elevator.isDown()).onTrue(rumble(0.25, 1));
-
-    cameras =
-        new ApriltagCamera[] {
-          new ApriltagCamera(
-              RobotBase.isReal()
-                  ? new ApriltagCameraIO_Real(VisionConstants.camera1Info)
-                  : new ApriltagCameraIO_Sim(VisionConstants.camera1Info),
-              VisionConstants.camera1Info),
-          new ApriltagCamera(
-              RobotBase.isReal()
-                  ? new ApriltagCameraIO_Real(VisionConstants.camera2Info)
-                  : new ApriltagCameraIO_Sim(VisionConstants.camera2Info),
-              VisionConstants.camera2Info),
-          // new ApriltagCamera(
-          //     RobotBase.isReal()
-          //         ? new ApriltagCameraIO_Real(VisionConstants.camera3Info)
-          //         : new ApriltagCameraIO_Sim(VisionConstants.camera3Info),
-          //     VisionConstants.camera3Info)
-        };
-
-    superstructure = new Superstructure(drivebase, elevator, outtake, intake);
+    superstructure = new Superstructure(swerve, elevator, outtake, intake);
 
     autoFactory =
-        new AutoFactory(
-            drivebase::getPose,
-            drivebase::resetOdometryChoreo,
-            drivebase::followTrajectory,
-            true,
-            drivebase);
+        new AutoFactory(swerve::getPose, swerve::resetPose, swerve::followTrajectory, true, swerve);
 
-    autoChooser.addDefaultOption("None", superstructure.logMessage("Autonomous: No Auto Selected"));
-    autoChooser.addOption("TimedL1", superstructure.TimedL1());
-    autoChooser.addOption("Extended TimedL1", superstructure.ExtendedTimedL1());
-
-    autoChooser.addOption("TimedL4", superstructure.TimedL4());
-
-    autoChooser.addOption(
-        "(TESTING ONLY) DirectionTest", superstructure.DirectionTest(autoFactory, false).cmd());
-    autoChooser.addOption(
-        "(TESTING ONLY) DirectionTest (P)", superstructure.DirectionTest(autoFactory, true).cmd());
-
-    // autoChooser.addOption("3Piece L4", superstructure.L4_3Piece(autoFactory, false).cmd());
-    // autoChooser.addOption("3Piece L4 Processor", superstructure.L4_3Piece(autoFactory,
-    // true).cmd());
+    autoChooser.addDefaultOption("Do Nothing", Commands.none());
+    autoChooser.addOption("Test", superstructure.DirectionTest(autoFactory, false).cmd());
+    autoChooser.addOption("3 Piece", superstructure.L4_3Piece(autoFactory, false).cmd());
   }
 
-  @SuppressWarnings("resource")
   @Override
   public void robotInit() {
-
     Logger.recordMetadata("Arborbotics 2025", "Arborbotics 2025");
-
     if (isReal()) {
       Logger.addDataReceiver(new WPILOGWriter());
       Logger.addDataReceiver(new NT4Publisher());
@@ -153,19 +99,22 @@ public class Robot extends LoggedRobot {
       Logger.addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables
     }
 
-    drivebase.setDefaultCommand(
-        drivebase.drive(
+    swerve.setDefaultCommand(
+        swerve.driveTeleop(
             () ->
                 new ChassisSpeeds(
-                    MathUtil.applyDeadband(-driver.getLeftY(), 0.1)
-                        * 3
-                        * (!elevator.isDown() ? 0.33 : 1),
-                    MathUtil.applyDeadband(-driver.getLeftX(), 0.1)
-                        * 3
-                        * (!elevator.isDown() ? 0.33 : 1),
-                    MathUtil.applyDeadband(driver.getRightX(), 0.1)
-                        * 3
-                        * (!elevator.isDown() ? 0.33 : 1))));
+                    -MathUtil.applyDeadband(driver.getLeftY(), 0.1)
+                        * Constants.Swerve.maxLinearSpeed
+                        * 0.2,
+                    -MathUtil.applyDeadband(driver.getLeftX(), 0.1)
+                        * Constants.Swerve.maxLinearSpeed
+                        * 0.2,
+                    -MathUtil.applyDeadband(driver.getRightX(), 0.1)
+                        * Constants.Swerve.maxAngularSpeed
+                        * 0.2)));
+
+    driver.a().whileTrue(superstructure.AutoAim());
+    driver.a().onFalse(Commands.runOnce(() -> swerve.drive(new ChassisSpeeds())));
 
     operator.button(9).onTrue(superstructure.selectElevatorHeight(2));
     operator.button(8).onTrue(superstructure.selectElevatorHeight(3));
@@ -189,30 +138,6 @@ public class Robot extends LoggedRobot {
         .onFalse(outtake.changeRollerSetpoint(0));
 
     operator.button(4).onTrue(superstructure.HomeRobot());
-
-    driver
-        .y()
-        .onTrue(
-            drivebase.resetOdometry(
-                new Pose2d(
-                    drivebase.getPose().getX(), drivebase.getPose().getY(), new Rotation2d())));
-
-    driver
-        .a()
-        .whileTrue(
-            Commands.sequence(
-                superstructure.selectPiece("Coral"),
-                Commands.parallel( // Alignment Commands
-                    drivebase.goToPose(superstructure::getNearestReef), // Align Drivebase to
-                    superstructure.raiseElevator() // Raise Elevator to selected leel
-                    ),
-                Commands.waitUntil(elevator::atSetpoint), // Ensure the elevator is fully raised
-                superstructure.Score(), // Score the piece
-                rumble(0.5, 1), // Rumble the controller
-                elevator.changeSetpoint(0) // Lower the elevator
-                ));
-
-    driver.a().onFalse(superstructure.HomeRobot().andThen(rumble(0, 0)));
 
     // Manual Elevator Controls
     driver.povUp().onTrue(superstructure.raiseElevator());
@@ -239,33 +164,19 @@ public class Robot extends LoggedRobot {
   @Override
   public void robotPeriodic() {
 
-    for (var camera : cameras) {
-      if (RobotBase.isSimulation()) {
-        camera.updateSimPose(drivebase.getPose());
-      }
-      camera.updateInputs();
-      drivebase.addVisionMeasurement(
-          camera.getEstimatedPose(), camera.getLatestTimestamp(), camera.getLatestStdDevs());
-    }
-
     superstructure.update3DPose();
 
     CommandScheduler.getInstance().run();
   }
 
   @Override
-  public void disabledInit() {
-    intake.changePivotIdlemode(IdleMode.kCoast);
-  }
-
-  @Override
-  public void disabledExit() {
-    intake.changePivotIdlemode(IdleMode.kBrake);
-  }
-
-  @Override
   public void autonomousInit() {
     autoChooser.get().schedule();
+  }
+
+  @Override
+  public void teleopInit() {
+    autoChooser.get().cancel();
   }
 
   private Command rumble(double duration, double intensity) {

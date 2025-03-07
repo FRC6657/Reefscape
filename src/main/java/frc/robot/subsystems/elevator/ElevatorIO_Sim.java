@@ -16,10 +16,10 @@ public class ElevatorIO_Sim implements ElevatorIO {
   public double setpoint = Constants.Elevator.minHeight;
   public ProfiledPIDController pid =
       new ProfiledPIDController(
-          75,
+          150,
           0,
           0,
-          new Constraints(15d / Constants.Elevator.stages, 7.5 / Constants.Elevator.stages));
+          new Constraints(30d / Constants.Elevator.stages, 15 / Constants.Elevator.stages));
 
   public ElevatorIO_Sim() {
 

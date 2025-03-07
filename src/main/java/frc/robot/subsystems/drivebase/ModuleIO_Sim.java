@@ -1,141 +1,103 @@
 package frc.robot.subsystems.drivebase;
 
-import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.PositionVoltage;
-import com.ctre.phoenix6.controls.VelocityVoltage;
+import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.sim.ChassisReference;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.kinematics.SwerveModulePosition;
-import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
-import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import frc.robot.Constants;
-import frc.robot.Constants.Motors;
-import frc.robot.Constants.Swerve;
-import frc.robot.Constants.Swerve.ModuleInformation;
+import frc.robot.Constants.Swerve.ModuleConstants;
 
 public class ModuleIO_Sim implements ModuleIO {
 
-  private TalonFX drive;
-  private TalonFX turn;
+  private static final double loopPeriod = 0.02;
+  private final ModuleConstants constants;
 
-  private DCMotorSim driveSim;
-  private DCMotorSim turnSim;
+  private static final DCMotor driveMotor = DCMotor.getFalcon500(1);
+  private static final DCMotor turnMotor = DCMotor.getFalcon500(1);
 
-  private VelocityVoltage driveControl;
-  private PositionVoltage turnControl;
+  private final TalonFX drive;
 
-  public ModuleIO_Sim(ModuleInformation moduleInformation) {
+  private final DCMotorSim driveSim;
+  private final DCMotorSim turnSim;
 
-    drive = new TalonFX(moduleInformation.driveID);
-    turn = new TalonFX(moduleInformation.turnID);
+  private final Rotation2d turnAbsoluteInitPosition = new Rotation2d(Math.random() * 2.0 * Math.PI);
+  private double turnAppliedVolts = 0.0;
 
-    driveControl = new VelocityVoltage(0);
-    turnControl = new PositionVoltage(turn.getPosition().getValueAsDouble());
+  private final MotionMagicVelocityVoltage drivePID = new MotionMagicVelocityVoltage(0.0);
+  private final PIDController turnPID = new PIDController(100.0, 0.0, 0.0);
 
-    var driveConfig = new TalonFXConfiguration();
-    driveConfig.Feedback.SensorToMechanismRatio = Swerve.DriveGearing.L3.reduction;
-    driveConfig.Slot0.kS = 0;
-    driveConfig.Slot0.kA = 0.65;
-    driveConfig.Slot0.kV = 12d / (Motors.FalconRPS / Swerve.DriveGearing.L3.reduction);
-    driveConfig.Slot0.kP = 4.0;
-    driveConfig.Slot0.kD = 0.2;
+  public ModuleIO_Sim(ModuleConstants constants) {
 
-    drive.getConfigurator().apply(driveConfig);
+    this.constants = constants;
 
-    var turnConfig = new TalonFXConfiguration();
-    turnConfig.Feedback.SensorToMechanismRatio = Swerve.TurnGearing;
-    turnConfig.Slot0.kS = 0;
-    turnConfig.Slot0.kA = 0;
-    turnConfig.Slot0.kV = 0;
-    turnConfig.Slot0.kP = 150;
-    turnConfig.Slot0.kD = 2.5;
-    turnConfig.ClosedLoopGeneral.ContinuousWrap = true;
+    drive = new TalonFX(constants.driveID());
+    drive.getConfigurator().apply(Constants.Swerve.driveConfig);
 
-    turn.getConfigurator().apply(turnConfig);
+    turnPID.enableContinuousInput(-0.5, 0.5);
 
     driveSim =
         new DCMotorSim(
-            LinearSystemId.createDCMotorSystem(DCMotor.getKrakenX60(1), 0.00075, 1),
-            DCMotor.getKrakenX60(1));
+            LinearSystemId.createDCMotorSystem(driveMotor, 0.005, Constants.Swerve.driveRatio),
+            driveMotor,
+            0,
+            0);
 
     turnSim =
         new DCMotorSim(
-            LinearSystemId.createDCMotorSystem(DCMotor.getFalcon500(1), 0.00001, 1),
-            DCMotor.getFalcon500(1));
+            LinearSystemId.createDCMotorSystem(turnMotor, 0.0004, Constants.Swerve.turnRatio),
+            turnMotor,
+            0,
+            0);
   }
 
   @Override
   public void updateInputs(ModuleIOInputs inputs) {
 
     var driveSimState = drive.getSimState();
-    var turnSimState = turn.getSimState();
+    driveSimState.Orientation = ChassisReference.Clockwise_Positive;
+    driveSim.setInput(driveSimState.getMotorVoltage());
 
-    driveSimState.setSupplyVoltage(RobotController.getBatteryVoltage());
-    turnSimState.setSupplyVoltage(RobotController.getBatteryVoltage());
+    driveSim.update(loopPeriod);
+    turnSim.update(loopPeriod);
 
-    var driveApplied = driveSimState.getMotorVoltage();
-    var turnApplied = turnSimState.getMotorVoltage();
+    driveSimState.setRotorVelocity(
+        (driveSim.getAngularVelocityRPM() / 60.0) * Constants.Swerve.driveRatio);
 
-    driveSim.setInputVoltage(driveApplied);
-    turnSim.setInputVoltage(turnApplied);
+    inputs.prefix = constants.prefix();
 
-    driveSim.update(1d / Constants.mainLoopFrequency);
-    turnSim.update(1d / Constants.mainLoopFrequency);
+    inputs.drivePositionMeters =
+        driveSim.getAngularPositionRotations()
+            * (Constants.Swerve.wheelRadiusMeters * 2.0 * Math.PI);
+    inputs.driveVelocityMetersPerSec =
+        (driveSim.getAngularVelocityRPM() / 60)
+            * (Constants.Swerve.wheelRadiusMeters * 2.0 * Math.PI);
+    inputs.driveAppliedVolts = driveSimState.getMotorVoltage();
+    inputs.driveCurrentAmps = Math.abs(driveSim.getCurrentDrawAmps());
 
-    driveSimState.setRawRotorPosition(driveSim.getAngularPosition());
-    driveSimState.setRotorVelocity(driveSim.getAngularVelocity());
-
-    turnSimState.setRawRotorPosition(turnSim.getAngularPosition());
-    turnSimState.setRotorVelocity(turnSim.getAngularVelocity());
-
-    inputs.driveApplied = driveApplied;
-    inputs.driveSupplyCurrent = driveSim.getCurrentDrawAmps();
-    inputs.drivePosition =
-        drive.getPosition().getValueAsDouble() * (Swerve.WheelDiameter * Math.PI);
-    inputs.driveVelocity =
-        drive.getVelocity().getValueAsDouble() * (Swerve.WheelDiameter * Math.PI);
-    inputs.driveAcceleration =
-        driveSim.getAngularAccelerationRadPerSecSq()
-            * ((Swerve.WheelDiameter * Math.PI) / (2 * Math.PI));
-
-    inputs.turnApplied = turnApplied;
-    inputs.turnSupplyCurrent = turnSim.getCurrentDrawAmps();
-    inputs.turnPosition = turn.getPosition().getValueAsDouble() * (2 * Math.PI);
-    inputs.turnVelocity = turn.getVelocity().getValueAsDouble() * (2 * Math.PI);
-    inputs.turnAcceleration = turnSim.getAngularAccelerationRadPerSecSq();
-
-    inputs.encoderAbsPosition =
-        MathUtil.angleModulus(turn.getPosition().getValueAsDouble() * (2 * Math.PI)) + Math.PI;
-    inputs.encoderRelPosition = turn.getPosition().getValueAsDouble() * (2 * Math.PI);
-    inputs.encoderVelocity = turn.getVelocity().getValueAsDouble() * (2 * Math.PI);
+    inputs.turnAbsolutePosition =
+        new Rotation2d(turnSim.getAngularPositionRad()).plus(turnAbsoluteInitPosition);
+    inputs.turnPosition = new Rotation2d(turnSim.getAngularPositionRad());
+    inputs.turnVelocityRadPerSec = turnSim.getAngularVelocityRadPerSec();
+    inputs.turnAppliedVolts = turnAppliedVolts;
+    inputs.turnCurrentAmps = Math.abs(turnSim.getCurrentDrawAmps());
   }
 
   @Override
-  public void changeDriveSetpoint(double mps) {
-    drive.setControl(driveControl.withSlot(0).withVelocity(mps / (Swerve.WheelDiameter * Math.PI)));
+  public void setDriveSetpoint(double metersPerSecond) {
+    drive.setControl(drivePID.withVelocity(metersPerSecond));
   }
 
   @Override
-  public void changeTurnSetpoint(double rad) {
-    turn.setControl(turnControl.withSlot(0).withPosition(Units.radiansToRotations(rad)));
-  }
-
-  @Override
-  public SwerveModulePosition getModulePosition() {
-    return new SwerveModulePosition(
-        drive.getPosition().getValueAsDouble() * (Swerve.WheelDiameter * Math.PI),
-        new Rotation2d(Units.rotationsToRadians(turn.getPosition().getValueAsDouble())));
-  }
-
-  @Override
-  public SwerveModuleState getModuleState() {
-    return new SwerveModuleState(
-        drive.getVelocity().getValueAsDouble() * (Swerve.WheelDiameter * Math.PI),
-        new Rotation2d(turn.getPosition().getValueAsDouble() * (2 * Math.PI)));
+  public void setTurnSetpoint(Rotation2d rotation) {
+    turnSim.setInputVoltage(
+        MathUtil.clamp(
+            turnPID.calculate(turnSim.getAngularPositionRotations(), rotation.getRotations()),
+            -12.0,
+            12.0));
   }
 }

@@ -1,9 +1,8 @@
 package frc.robot.subsystems.vision;
 
-import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFieldLayout.OriginPosition;
-import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Pose2d;
+import frc.robot.Constants;
 import frc.robot.Constants.VisionConstants.CameraInfo;
 import org.photonvision.PhotonCamera;
 import org.photonvision.simulation.PhotonCameraSim;
@@ -34,7 +33,7 @@ public class ApriltagCameraIO_Sim implements ApriltagCameraIO {
     cameraSim.setMaxSightRange(7);
     sim.addCamera(cameraSim, cameraInfo.robotToCamera);
     try {
-      var field = AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeWelded);
+      var field = Constants.VisionConstants.kReefTagLayout;
       field.setOrigin(OriginPosition.kBlueAllianceWallRightSide);
       sim.addAprilTags(field);
     } catch (Exception e) {

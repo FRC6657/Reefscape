@@ -9,6 +9,7 @@ import static edu.wpi.first.units.Units.*;
 import choreo.trajectory.SwerveSample;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -24,212 +25,200 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.Constants.AutoConstants;
+import frc.robot.Constants.VisionConstants;
+import frc.robot.subsystems.vision.ApriltagCamera;
+import frc.robot.subsystems.vision.ApriltagCameraIO_Real;
+import frc.robot.subsystems.vision.ApriltagCameraIO_Sim;
+import java.util.Arrays;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class Swerve extends SubsystemBase {
 
-  // Array for storing modules.
-  private Module[] modules =
-      new Module[] {
-        new Module(new ModuleIO() {}, ""),
-        new Module(new ModuleIO() {}, ""),
-        new Module(new ModuleIO() {}, ""),
-        new Module(new ModuleIO() {}, "")
-      };
+  private final GyroIO gyroIO;
+  private final GyroIOInputsAutoLogged gyroInputs = new GyroIOInputsAutoLogged();
 
-  private GyroIO gyroIO;
-  private GyroIOInputsAutoLogged gyroInputs = new GyroIOInputsAutoLogged();
+  private final Module[] modules; // FL FR BL BR
 
-  private Rotation2d simHeading = new Rotation2d();
+  private final SwerveDriveKinematics kinematics;
+  private final SwerveDrivePoseEstimator poseEstimator;
 
-  private SwerveDriveKinematics kinematics =
-      new SwerveDriveKinematics(Constants.Swerve.ModulePositions);
-  private SwerveDrivePoseEstimator poseEstimator =
-      new SwerveDrivePoseEstimator(
-          kinematics, new Rotation2d(gyroInputs.yaw), getModulePositions(), new Pose2d());
+  private final ApriltagCamera[] cameras;
 
-  double translationTolerance = Units.inchesToMeters(0.7);
-  double rotationTolerance = Units.degreesToRadians(3);
+  public Swerve(GyroIO gyroIO, ModuleIO[] moduleIOs) {
 
-  public Swerve(ModuleIO[] moduleIOs, GyroIO gyroIO) {
-
-    String[] moduleNames = new String[] {"Front Left", "Front Right", "Back Left", "Back Right"};
-
-    for (int i = 0; i < 4; i++) {
-      modules[i] = new Module(moduleIOs[i], moduleNames[i]);
-    }
+    this.kinematics = new SwerveDriveKinematics(Constants.Swerve.moduleTranslations);
+    this.poseEstimator =
+        new SwerveDrivePoseEstimator(
+            kinematics,
+            new Rotation2d(),
+            new SwerveModulePosition[] {
+              new SwerveModulePosition(),
+              new SwerveModulePosition(),
+              new SwerveModulePosition(),
+              new SwerveModulePosition()
+            },
+            new Pose2d(),
+            VecBuilder.fill(0.6, 0.6, 0.07),
+            VecBuilder.fill(0.9, 0.9, 0.4));
 
     this.gyroIO = gyroIO;
+    this.modules = new Module[moduleIOs.length];
+
+    for (int i = 0; i < moduleIOs.length; i++) {
+      modules[i] = new Module(moduleIOs[i]);
+    }
+
+    cameras =
+        new ApriltagCamera[] {
+          new ApriltagCamera(
+              RobotBase.isReal()
+                  ? new ApriltagCameraIO_Real(VisionConstants.camera1Info)
+                  : new ApriltagCameraIO_Sim(VisionConstants.camera1Info),
+              VisionConstants.camera1Info),
+          new ApriltagCamera(
+              RobotBase.isReal()
+                  ? new ApriltagCameraIO_Real(VisionConstants.camera2Info)
+                  : new ApriltagCameraIO_Sim(VisionConstants.camera2Info),
+              VisionConstants.camera2Info),
+          // new ApriltagCamera(
+          //     RobotBase.isReal()
+          //         ? new ApriltagCameraIO_Real(VisionConstants.camera3Info)
+          //         : new ApriltagCameraIO_Sim(VisionConstants.camera3Info),
+          //     VisionConstants.camera3Info)
+        };
+
+    xController.setTolerance(Units.inchesToMeters(0.5));
+    yController.setTolerance(Units.inchesToMeters(0.5));
+    thetaController.setTolerance(Units.degreesToRadians(2.0));
 
     thetaController.enableContinuousInput(-Math.PI, Math.PI);
     choreoThetaController.enableContinuousInput(-Math.PI, Math.PI);
-
-    xController.setTolerance(translationTolerance);
-    yController.setTolerance(translationTolerance);
-    thetaController.setTolerance(rotationTolerance);
   }
 
-  /** Used for only teleop */
-  public Command drive(Supplier<ChassisSpeeds> fieldRelativeSpeeds) {
-    return Commands.run(
-        () -> {
-          Alliance alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
-          Rotation2d rotation =
-              getPose().getRotation().plus(new Rotation2d(alliance == Alliance.Blue ? 0 : Math.PI));
-          this.driveChassisSpeeds(
-              ChassisSpeeds.fromFieldRelativeSpeeds(fieldRelativeSpeeds.get(), rotation));
-        },
-        this);
-  }
-
-  public Command driveRR(Supplier<ChassisSpeeds> robotRelativeSpeeds) {
-    return Commands.run(
-        () -> {
-          this.driveChassisSpeeds(robotRelativeSpeeds.get());
-        },
-        this);
-  }
-
-  public void driveChassisSpeeds(ChassisSpeeds desiredSpeeds) {
-
-    var newSpeeds = ChassisSpeeds.discretize(desiredSpeeds, 1 / Constants.mainLoopFrequency);
-    newSpeeds.vyMetersPerSecond *= -1;
-    var states = kinematics.toSwerveModuleStates(newSpeeds);
-    for (int i = 0; i < 4; i++) {
-      states[i].optimize(getModulePositions()[i].angle);
-      modules[i].changeState(states[i]);
-    }
-
-    Logger.recordOutput("Swerve/Setpoints", states);
-  }
-
-  public Command resetOdometry(Pose2d newPose) {
-    return Commands.runOnce(
-            () -> {
-              var adjusted = new Pose2d(newPose.getX(), -newPose.getY(), newPose.getRotation());
-
-              var yaw =
-                  RobotBase.isSimulation() ? newPose.getRotation() : new Rotation2d(gyroInputs.yaw);
-              poseEstimator.resetPosition(yaw, getModulePositions(), adjusted);
-            })
-        .andThen(Commands.print("Pose Reset"));
-  }
-
-  public void resetOdometryChoreo(Pose2d newPose) {
-    resetOdometry(newPose).schedule();
-  }
-
-  @AutoLogOutput(key = "Swerve/Positions")
-  public SwerveModulePosition[] getModulePositions() {
-    return new SwerveModulePosition[] {
-      modules[0].getModulePosition(),
-      modules[1].getModulePosition(),
-      modules[2].getModulePosition(),
-      modules[3].getModulePosition()
-    };
-  }
-
-  @AutoLogOutput(key = "Swerve/States")
-  public SwerveModuleState[] getModuleStates() {
-    return new SwerveModuleState[] {
-      modules[0].getModuleState(),
-      modules[1].getModuleState(),
-      modules[2].getModuleState(),
-      modules[3].getModuleState()
-    };
-  }
-
-  @AutoLogOutput(key = "Swerve/Pose")
+  /**
+   * @return The current pose of the robot
+   */
+  @AutoLogOutput(key = "Odometry/Pose")
   public Pose2d getPose() {
-    var pose = poseEstimator.getEstimatedPosition();
-    var newY = pose.getY() * -1;
-    return new Pose2d(pose.getX(), newY, pose.getRotation());
+    return poseEstimator.getEstimatedPosition();
   }
 
-  public void addVisionMeasurement(Pose3d visionPose, double timestamp, Matrix<N3, N1> stdDevs) {
-    if (RobotBase.isReal()) {
+  /**
+   * @param pose The new pose of the robot
+   */
+  public void resetPose(Pose2d pose) {
+    var yaw = RobotBase.isSimulation() ? pose.getRotation() : gyroInputs.yawPosition;
+    poseEstimator.resetPosition(
+        yaw,
+        Arrays.stream(modules).map(m -> m.getPosition()).toArray(SwerveModulePosition[]::new),
+        pose);
+  }
 
-      // Reject poses tilted too far
-      if (Math.abs(visionPose.getRotation().getMeasureX().in(Degrees)) > 10
-          || Math.abs(visionPose.getRotation().getMeasureY().in(Degrees)) > 10) {
-        Logger.recordOutput("Errors/RejectedPoses", visionPose);
-        return;
-      }
-      // Reject poses too far off the floor
-      if (Math.abs(visionPose.getTranslation().getZ()) > Units.inchesToMeters(12)) {
-        Logger.recordOutput("Errors/RejectedPoses", visionPose);
-        return;
-      }
+  /**
+   * @return The velocity of the robot in robot relative coordinates
+   */
+  @AutoLogOutput(key = "Odometry/Velocity Robot Relative")
+  public ChassisSpeeds getVelocityRobotRelative() {
+    var speeds =
+        kinematics.toChassisSpeeds(
+            Arrays.stream(modules).map((m) -> m.getState()).toArray(SwerveModuleState[]::new));
+    return new ChassisSpeeds(
+        speeds.vxMetersPerSecond, speeds.vyMetersPerSecond, speeds.omegaRadiansPerSecond);
+  }
 
-      var newPose =
-          new Pose3d(
-              visionPose.getX(), -visionPose.getY(), visionPose.getZ(), visionPose.getRotation());
+  /**
+   * @return The velocity of the robot in field relative coordinates
+   */
+  @AutoLogOutput(key = "Odometry/Velocity Field Relative")
+  public ChassisSpeeds getVelocityFieldRelative() {
+    var speeds =
+        kinematics.toChassisSpeeds(
+            Arrays.stream(modules).map(m -> m.getState()).toArray(SwerveModuleState[]::new));
+    speeds = ChassisSpeeds.fromRobotRelativeSpeeds(speeds, getPose().getRotation());
+    return speeds;
+  }
 
-      Logger.recordOutput(
-          "Vision/VisionPoseConverged",
-          Math.abs(newPose.toPose2d().minus(getPose()).getTranslation().getNorm())
-              < Units.inchesToMeters(2));
+  /**
+   * Runs the drivetrain at the given robot relative speeds
+   *
+   * @param speeds The desired robot relative speeds
+   */
+  public void drive(ChassisSpeeds speeds) {
 
-      poseEstimator.addVisionMeasurement(newPose.toPose2d(), timestamp, stdDevs);
+    speeds = ChassisSpeeds.discretize(speeds, 0.02);
+    final SwerveModuleState[] moduleStates = kinematics.toSwerveModuleStates(speeds);
+    SwerveDriveKinematics.desaturateWheelSpeeds(moduleStates, Constants.Swerve.maxLinearSpeed);
+    final SwerveModuleState[] optimizedModuleStates = new SwerveModuleState[moduleStates.length];
+
+    for (int i = 0; i < moduleStates.length; i++) {
+      optimizedModuleStates[i] = modules[i].runSetpoint(moduleStates[i]); // Run setpoints
     }
+
+    Logger.recordOutput("SwerveStates/RawSetpoints", moduleStates);
+    Logger.recordOutput("Swerve/RR Target Speeds", speeds);
+    Logger.recordOutput("Swerve/RR Speed Error", speeds.minus(getVelocityRobotRelative()));
+    Logger.recordOutput(
+        "Swerve/FR Target Speeds",
+        ChassisSpeeds.fromFieldRelativeSpeeds(speeds, getPose().getRotation()));
+    Logger.recordOutput(
+        "Swerve/FR Speed Error",
+        ChassisSpeeds.fromFieldRelativeSpeeds(speeds, getPose().getRotation())
+            .minus(getVelocityFieldRelative()));
+    Logger.recordOutput("SwerveStates/OptimizedSetpoints", optimizedModuleStates);
+    Logger.recordOutput(
+        "SwerveStates/ObservedStates",
+        Arrays.stream(modules).map(m -> m.getState()).toArray(SwerveModuleState[]::new));
   }
 
-  public boolean atPose(Pose2d desiredPose) {
-
-    double xError = xController.getError();
-    double yError = yController.getError();
-    double thetaError = thetaController.getError();
-
-    Logger.recordOutput("AutoAim/XError", xError);
-    Logger.recordOutput("AutoAim/YError", yError);
-    Logger.recordOutput("AutoAim/ThetaError", thetaError);
-
-    return xController.atSetpoint() && yController.atSetpoint() && thetaController.atSetpoint();
+  /**
+   * Runs the drivetrain at the given robot relative speeds
+   *
+   * @param speeds The desired field relative speeds
+   * @return The command to run the drivetrain at the given robot relative speeds
+   */
+  public Command driveVelocity(Supplier<ChassisSpeeds> speeds) {
+    return this.run(() -> drive(speeds.get()));
   }
 
-  public Command goToPose(Supplier<Pose2d> target) {
+  /**
+   * Runs the drivetrain at the given field relative speeds
+   *
+   * @param speeds The desired field relative speeds
+   * @return The command to run the drivetrain at the given field relative speeds
+   */
+  public Command driveVelocityFieldRelative(Supplier<ChassisSpeeds> speeds) {
+    return this.driveVelocity(
+        () -> {
+          var speed = ChassisSpeeds.fromFieldRelativeSpeeds(speeds.get(), getPose().getRotation());
+          return speed;
+        });
+  }
+
+  /**
+   * Runs the drivetrain for teleop with field relative speeds
+   *
+   * @param speeds The desired field relative speeds
+   * @return The command to run the drivetrain for teleop with field relative speeds
+   */
+  public Command driveTeleop(Supplier<ChassisSpeeds> speeds) {
     return this.run(
-            () -> {
-              positionController(target.get());
-            })
-        .until(() -> atPose(target.get()))
-        .andThen(
-            Commands.sequence(
-                Commands.runOnce(() -> this.driveChassisSpeeds(new ChassisSpeeds())),
-                Commands.waitSeconds(0.25)));
-  }
-
-  PIDController xController = AutoConstants.kXController_Position;
-  PIDController yController = AutoConstants.kYController_Position;
-  PIDController thetaController = AutoConstants.kThetaController_Position;
-
-  public void positionController(Pose2d targetPose) {
-
-    double xFeedback = xController.calculate(getPose().getX(), targetPose.getX());
-    double yFeedback = yController.calculate(getPose().getY(), targetPose.getY());
-    double rotationFeedback =
-        thetaController.calculate(
-            getPose().getRotation().getRadians(), targetPose.getRotation().getRadians());
-
-    ChassisSpeeds out =
-        ChassisSpeeds.fromFieldRelativeSpeeds(
-            MathUtil.clamp(xFeedback, -0.5, 0.5),
-            MathUtil.clamp(yFeedback, -0.5, 0.5),
-            MathUtil.clamp(-rotationFeedback, -0.5, 0.5),
-            getPose().getRotation());
-
-    Logger.recordOutput("AutoAim/AtSetpointX", xController.atSetpoint());
-    Logger.recordOutput("AutoAim/AtSetpointY", yController.atSetpoint());
-    Logger.recordOutput("AutoAim/AtSetpointTheta", thetaController.atSetpoint());
-
-    driveChassisSpeeds(out);
+        () -> {
+          var speed =
+              ChassisSpeeds.fromFieldRelativeSpeeds(
+                  speeds.get(),
+                  DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue
+                      ? getPose().getRotation()
+                      : getPose().getRotation().minus(Rotation2d.fromDegrees(180)));
+          this.drive(speed);
+        });
   }
 
   PIDController choreoXController = AutoConstants.kXController_Choreo;
@@ -240,7 +229,7 @@ public class Swerve extends SubsystemBase {
 
     Pose2d currentPose = getPose();
 
-    Logger.recordOutput("Swerve/Auto/DesiredPose", sample.getPose());
+    Logger.recordOutput("Choreo/DesiredPose", sample.getPose());
 
     double xFF = sample.vx;
     double yFF = sample.vy;
@@ -255,34 +244,124 @@ public class Swerve extends SubsystemBase {
         ChassisSpeeds.fromFieldRelativeSpeeds(
             xFF + xFeedback,
             yFF + yFeedback,
-            -(rotationFF + rotationFeedback),
+            rotationFF + rotationFeedback,
             currentPose.getRotation());
 
-    driveChassisSpeeds(out);
+    drive(out);
   }
 
-  double odometryYVelocity = 0;
-  double odometryYPoseOffset = 0;
+  PIDController xController = AutoConstants.kXController_Position;
+  PIDController yController = AutoConstants.kYController_Position;
+  PIDController thetaController = AutoConstants.kThetaController_Position;
 
+  public void positionController(
+      Pose2d targetPose, double translationTolerance, double rotationTolerance, double speed) {
+
+    xController.setTolerance(translationTolerance, Units.inchesToMeters(0.125));
+    yController.setTolerance(translationTolerance, Units.inchesToMeters(0.125));
+    thetaController.setTolerance(rotationTolerance, Units.degreesToRadians(1));
+
+    double xFeedback = xController.calculate(getPose().getX(), targetPose.getX());
+    double yFeedback = yController.calculate(getPose().getY(), targetPose.getY());
+    double rotationFeedback =
+        thetaController.calculate(
+            getPose().getRotation().getRadians(), targetPose.getRotation().getRadians());
+
+    double translationClamp = Constants.Swerve.maxLinearSpeed;
+    double rotationClamp = Constants.Swerve.maxAngularSpeed;
+
+    ChassisSpeeds out =
+        ChassisSpeeds.fromFieldRelativeSpeeds(
+            MathUtil.clamp(xFeedback, -translationClamp * speed, translationClamp * speed),
+            MathUtil.clamp(yFeedback, -translationClamp * speed, translationClamp * speed),
+            MathUtil.clamp(rotationFeedback, -rotationClamp * speed, rotationClamp * speed),
+            getPose().getRotation());
+
+    Logger.recordOutput("AutoAim/Target", targetPose);
+    Logger.recordOutput("AutoAim/AtSetpointX", xController.atSetpoint());
+    Logger.recordOutput("AutoAim/AtSetpointY", yController.atSetpoint());
+    Logger.recordOutput("AutoAim/AtSetpointTheta", thetaController.atSetpoint());
+
+    drive(out);
+  }
+
+  public Command goToPose(
+      Supplier<Pose2d> target,
+      double translationTolerance,
+      double rotationTolerance,
+      double speed) {
+    return this.run(
+            () -> positionController(target.get(), translationTolerance, rotationTolerance, speed))
+        .until(
+            () -> {
+              return xController.atSetpoint()
+                  && yController.atSetpoint()
+                  && thetaController.atSetpoint();
+            })
+        .andThen(Commands.runOnce(() -> this.drive(new ChassisSpeeds())));
+  }
+
+  public void addVisionMeasurement(Pose3d visionPose, double timestamp, Matrix<N3, N1> stdDevs) {
+    if (RobotBase.isReal()) {
+
+      if (Math.abs(visionPose.getRotation().getMeasureX().in(Degrees)) > 10
+          || Math.abs(visionPose.getRotation().getMeasureY().in(Degrees)) > 10) {
+        Logger.recordOutput("Errors/RejectedPoses", visionPose);
+        return;
+      }
+      // Reject poses too far off the floor
+      if (Math.abs(visionPose.getTranslation().getZ()) > Units.inchesToMeters(12)) {
+        Logger.recordOutput("Errors/RejectedPoses", visionPose);
+        return;
+      }
+
+      poseEstimator.addVisionMeasurement(visionPose.toPose2d(), timestamp, stdDevs);
+    }
+  }
+
+  @Override
   public void periodic() {
 
-    for (var module : modules) {
+    gyroIO.updateInputs(gyroInputs);
+    Logger.processInputs("Swerve/Gyro", gyroInputs);
+    for (Module module : modules) {
       module.updateInputs();
     }
-    gyroIO.updateInputs(gyroInputs);
-    Logger.processInputs("Gyro/", gyroInputs);
 
     if (RobotBase.isReal()) {
-      poseEstimator.update(new Rotation2d(gyroInputs.yaw), getModulePositions());
+      poseEstimator.update(
+          gyroInputs.yawPosition,
+          Arrays.stream(modules).map(m -> m.getPosition()).toArray(SwerveModulePosition[]::new));
     } else {
-      // Simulate Gyro Heading
-      simHeading = poseEstimator.getEstimatedPosition().getRotation();
+      var simHeading = getPose().getRotation();
       var gyroDelta =
           new Rotation2d(
-              kinematics.toChassisSpeeds(getModuleStates()).omegaRadiansPerSecond
-                  * (1 / Constants.mainLoopFrequency));
+                  kinematics.toChassisSpeeds(
+                          Arrays.stream(modules)
+                              .map(m -> m.getState())
+                              .toArray(SwerveModuleState[]::new))
+                      .omegaRadiansPerSecond)
+              .times(0.02);
+
       simHeading = simHeading.plus(gyroDelta);
-      poseEstimator.update(simHeading, getModulePositions());
+      poseEstimator.update(
+          simHeading,
+          Arrays.stream(modules).map(m -> m.getPosition()).toArray(SwerveModulePosition[]::new));
+    }
+
+    for (var camera : cameras) {
+      if (RobotBase.isSimulation()) {
+        camera.updateSimPose(getPose());
+      }
+      camera.updateInputs(
+          RobotBase.isSimulation() ? Timer.getFPGATimestamp() : gyroInputs.timestamp,
+          RobotBase.isSimulation() ? getPose().getRotation() : gyroInputs.yawPosition);
+
+      Pose3d estPose = camera.getEstimatedPose();
+      if (estPose.getTranslation().getZ() < 10) {
+        Logger.recordOutput("Vision/ProcessedPoses", estPose);
+        addVisionMeasurement(estPose, camera.getLatestTimestamp(), camera.getLatestStdDevs());
+      }
     }
   }
 }

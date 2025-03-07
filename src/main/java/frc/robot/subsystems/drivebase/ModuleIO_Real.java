@@ -1,192 +1,134 @@
 package frc.robot.subsystems.drivebase;
 
-import com.ctre.phoenix6.StatusSignal;
-import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.PositionVoltage;
-import com.ctre.phoenix6.controls.VelocityVoltage;
+import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
+import com.ctre.phoenix6.controls.MotionMagicVoltage;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.InvertedValue;
-import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.reduxrobotics.sensors.canandmag.Canandmag;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.kinematics.SwerveModulePosition;
-import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.units.measure.AngularAcceleration;
-import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.units.measure.Current;
-import edu.wpi.first.units.measure.Temperature;
-import edu.wpi.first.units.measure.Voltage;
-import edu.wpi.first.wpilibj.RobotController;
 import frc.robot.Constants;
-import frc.robot.Constants.Motors;
-import frc.robot.Constants.Swerve;
-import frc.robot.Constants.Swerve.ModuleInformation;
+import frc.robot.Constants.Swerve.ModuleConstants;
 
 public class ModuleIO_Real implements ModuleIO {
 
+  // Module Specific Constants
+  private final ModuleConstants constants;
+
   // Module Hardware
-  private TalonFX drive;
-  private TalonFX turn;
-  private Canandmag encoder;
+  private final TalonFX drive;
+  private final TalonFX turn;
+  private final Canandmag encoder;
 
-  // Module Control Variables
-  private VelocityVoltage driveControl;
-  private PositionVoltage turnControl;
+  // Useful Status Signals
+  private final BaseStatusSignal drivePosition;
+  private final BaseStatusSignal driveVelocity;
+  private final BaseStatusSignal driveAppliedVolts;
+  private final BaseStatusSignal driveCurrent;
+  private final BaseStatusSignal driveSupplyCurrent;
 
-  private StatusSignal<Voltage> driveApplied; // Volts
-  private StatusSignal<Current> driveStatorCurrent; // Amps
-  private StatusSignal<Current> driveSupplyCurrent; // Amps
-  private StatusSignal<Angle> drivePosition; // Mechanism Rotations
-  private StatusSignal<AngularVelocity> driveVelocity; // Mechanism Rotations per Second
-  private StatusSignal<AngularAcceleration> driveAcceleration; // Mecanism Roations per Second^2
-  private StatusSignal<Temperature> driveTemp; // Celcius
+  private final BaseStatusSignal turnPosition;
+  private final BaseStatusSignal turnVelocity;
+  private final BaseStatusSignal turnAppliedVolts;
+  private final BaseStatusSignal turnCurrent;
 
-  private StatusSignal<Voltage> turnApplied; // Volts
-  private StatusSignal<Current> turnStatorCurrent; // Amps
-  private StatusSignal<Current> turnSupplyCurrent; // Amps
-  private StatusSignal<Angle> turnPosition; // Mechanism Rotations
-  private StatusSignal<AngularVelocity> turnVelocity; // Mechanism Rotations per Second
-  private StatusSignal<AngularAcceleration> turnAcceleration; // Mecanism Roations per Second^2
-  private StatusSignal<Temperature> turnTemp; // Celcius
+  // Control Signals
+  private final MotionMagicVelocityVoltage drivePID = new MotionMagicVelocityVoltage(0.0);
+  private final MotionMagicVoltage turnPID = new MotionMagicVoltage(0.0);
 
-  public ModuleIO_Real(ModuleInformation moduleInformation) {
+  public ModuleIO_Real(ModuleConstants constants) {
+    this.constants = constants;
 
-    // Assign Module Hardware CAN IDs
-    drive = new TalonFX(moduleInformation.driveID);
-    turn = new TalonFX(moduleInformation.turnID);
-    encoder = new Canandmag(moduleInformation.encoderID);
+    // Assign Hardware
+    drive = new TalonFX(constants.driveID());
+    turn = new TalonFX(constants.turnID());
+    encoder = new Canandmag(constants.encoderID());
 
-    // Set Default Control Values
-    driveControl = new VelocityVoltage(0);
-    turnControl = new PositionVoltage(turn.getPosition().getValueAsDouble());
+    // Configure Motors
+    drive.getConfigurator().apply(Constants.Swerve.driveConfig);
+    turn.getConfigurator().apply(Constants.Swerve.turnConfig);
 
-    // Drive Motor Configuration
-    var driveConfig = new TalonFXConfiguration();
-    driveConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    driveConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
-    driveConfig.CurrentLimits.StatorCurrentLimit = 80; // reduced from 80
-    driveConfig.CurrentLimits.SupplyCurrentLimit = 65; // reduced from 65 to 40 for testing
-    driveConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-    driveConfig.Feedback.SensorToMechanismRatio = Swerve.DriveGearing.L3.reduction;
-    driveConfig.Slot0.kS = 1;
-    driveConfig.Slot0.kA = 0;
-    driveConfig.Slot0.kV = (12d / (Motors.FalconRPS * Swerve.DriveGearing.L3.reduction));
-    driveConfig.Slot0.kP = 2.25;
-    driveConfig.Slot0.kD = 0;
-    // if (moduleInformation.name != "Back Right ") {
-    driveConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-    drive.getConfigurator().apply(driveConfig);
-
-    // Drive Motor Status Signals
-    driveApplied = drive.getMotorVoltage();
-    driveStatorCurrent = drive.getStatorCurrent();
-    driveSupplyCurrent = drive.getSupplyCurrent();
+    // Assign Status Signals
     drivePosition = drive.getPosition();
     driveVelocity = drive.getVelocity();
-    driveAcceleration = drive.getAcceleration();
-    driveTemp = drive.getDeviceTemp();
+    driveAppliedVolts = drive.getMotorVoltage();
+    driveCurrent = drive.getStatorCurrent();
+    driveSupplyCurrent = drive.getSupplyCurrent();
 
-    driveApplied.setUpdateFrequency(Constants.mainLoopFrequency);
-    driveStatorCurrent.setUpdateFrequency(Constants.mainLoopFrequency / 2);
-    driveSupplyCurrent.setUpdateFrequency(Constants.mainLoopFrequency / 2);
-    drivePosition.setUpdateFrequency(Constants.mainLoopFrequency);
-    driveVelocity.setUpdateFrequency(Constants.mainLoopFrequency);
-    driveAcceleration.setUpdateFrequency(Constants.mainLoopFrequency);
-    driveTemp.setUpdateFrequency(Constants.mainLoopFrequency / 4);
-
-    drive.optimizeBusUtilization();
-
-    // Turn Motor Configuration
-    var turnConfig = new TalonFXConfiguration();
-    turnConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-    turnConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
-    turnConfig.CurrentLimits.StatorCurrentLimit = 40;
-    turnConfig.CurrentLimits.SupplyCurrentLimit = 30;
-    turnConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-    turnConfig.Feedback.SensorToMechanismRatio = Swerve.TurnGearing;
-    turnConfig.Slot0.kS = 0;
-    turnConfig.Slot0.kA = 0;
-    turnConfig.Slot0.kV = (12d / (Motors.FalconRPS * Swerve.TurnGearing));
-    turnConfig.Slot0.kP = 150;
-    turnConfig.Slot0.kD = 0;
-    turnConfig.ClosedLoopGeneral.ContinuousWrap = true;
-
-    turn.getConfigurator().apply(turnConfig);
-
-    // Turn Motor Status Signals
-    turnApplied = turn.getMotorVoltage();
-    turnStatorCurrent = turn.getStatorCurrent();
-    turnSupplyCurrent = turn.getSupplyCurrent();
     turnPosition = turn.getPosition();
     turnVelocity = turn.getVelocity();
-    turnAcceleration = turn.getAcceleration();
-    turnTemp = turn.getDeviceTemp();
+    turnAppliedVolts = turn.getMotorVoltage();
+    turnCurrent = turn.getStatorCurrent();
 
-    turnApplied.setUpdateFrequency(Constants.mainLoopFrequency);
-    turnStatorCurrent.setUpdateFrequency(Constants.mainLoopFrequency / 2);
-    turnSupplyCurrent.setUpdateFrequency(Constants.mainLoopFrequency / 2);
-    turnPosition.setUpdateFrequency(Constants.mainLoopFrequency);
-    turnVelocity.setUpdateFrequency(Constants.mainLoopFrequency);
-    turnAcceleration.setUpdateFrequency(Constants.mainLoopFrequency);
-    turnTemp.setUpdateFrequency(Constants.mainLoopFrequency / 4);
+    // Set Status Signal Update Frequency
+    BaseStatusSignal.setUpdateFrequencyForAll(
+        50,
+        drivePosition,
+        driveVelocity,
+        driveAppliedVolts,
+        driveCurrent,
+        driveSupplyCurrent,
+        turnPosition,
+        turnVelocity,
+        turnAppliedVolts,
+        turnCurrent);
 
+    // Optimize Bus Utilization
+    drive.optimizeBusUtilization();
     turn.optimizeBusUtilization();
 
-    double encoderOffset = Units.degreesToRotations(0);
-
-    turn.setPosition(
-        encoder.getAbsPosition()
-            + encoderOffset); // Sync the Turn Motor Encoder with the ABS Encoder.
+    // Zero Turn Motor Encoder
+    turn.setPosition(encoder.getAbsPosition());
   }
 
   @Override
   public void updateInputs(ModuleIOInputs inputs) {
 
-    inputs.driveApplied = drive.get() * RobotController.getBatteryVoltage();
-    inputs.driveStatorCurrent = driveStatorCurrent.getValueAsDouble();
-    inputs.driveSupplyCurrent = driveSupplyCurrent.getValueAsDouble();
-    inputs.drivePosition = drivePosition.getValueAsDouble() * Swerve.WheelDiameter * Math.PI;
-    inputs.driveVelocity = driveVelocity.getValueAsDouble() * Swerve.WheelDiameter * Math.PI;
-    inputs.driveAcceleration =
-        driveAcceleration.getValueAsDouble() * Swerve.WheelDiameter * Math.PI;
-    inputs.driveTemp = driveTemp.getValueAsDouble();
+    // Refresh Status Signals
+    BaseStatusSignal.refreshAll(
+        drivePosition,
+        driveVelocity,
+        driveAppliedVolts,
+        driveCurrent,
+        driveSupplyCurrent,
+        turnPosition,
+        turnVelocity,
+        turnAppliedVolts,
+        turnCurrent);
 
-    inputs.turnApplied = turnApplied.getValueAsDouble();
-    inputs.turnStatorCurrent = turnStatorCurrent.getValueAsDouble();
-    inputs.turnSupplyCurrent = turnSupplyCurrent.getValueAsDouble();
-    inputs.turnPosition = turnPosition.getValueAsDouble() * 2 * Math.PI;
-    inputs.turnVelocity = turnVelocity.getValueAsDouble() * 2 * Math.PI;
-    inputs.turnAcceleration = turnAcceleration.getValueAsDouble() * 2 * Math.PI;
-    inputs.turnTemp = turnTemp.getValueAsDouble();
+    // Update Inputs
+    inputs.prefix = constants.prefix();
 
-    inputs.encoderAbsPosition = encoder.getAbsPosition() * 2 * Math.PI;
-    inputs.encoderRelPosition = encoder.getPosition() * 2 * Math.PI;
-    inputs.encoderVelocity = encoder.getVelocity() * 2 * Math.PI;
+    inputs.drivePositionMeters = drivePosition.getValueAsDouble();
+    inputs.driveVelocityMetersPerSec = driveVelocity.getValueAsDouble();
+    inputs.driveAppliedVolts = driveAppliedVolts.getValueAsDouble();
+    inputs.driveCurrentAmps = driveCurrent.getValueAsDouble();
+    inputs.driveSupplyCurrentAmps = driveSupplyCurrent.getValueAsDouble();
+
+    inputs.turnAbsolutePosition = Rotation2d.fromRotations(encoder.getAbsPosition());
+    inputs.turnPosition = Rotation2d.fromRotations(turnPosition.getValueAsDouble());
+    inputs.turnVelocityRadPerSec = Units.rotationsToRadians(turnVelocity.getValueAsDouble());
+    inputs.turnAppliedVolts = turnAppliedVolts.getValueAsDouble();
+    inputs.turnCurrentAmps = turnCurrent.getValueAsDouble();
+
+    //    drive.setControl(new VoltageOut(0));
   }
 
   @Override
-  public void changeDriveSetpoint(double mps) {
-    drive.setControl(driveControl.withSlot(0).withVelocity(mps / (Swerve.WheelDiameter * Math.PI)));
+  public void setDriveSetpoint(double metersPerSecond) {
+    // If the robot is stopped, set the drive to 0 volts
+    if (metersPerSecond == 0 && MathUtil.isNear(0.0, driveVelocity.getValueAsDouble(), 0.1)) {
+      drive.setControl(new VoltageOut(0));
+    } else { // Otherwise, set the drive to the desired velocity
+      drive.setControl(drivePID.withVelocity(metersPerSecond));
+    }
   }
 
   @Override
-  public void changeTurnSetpoint(double rad) {
-    turn.setControl(turnControl.withSlot(0).withPosition(rad / (2 * Math.PI)));
-  }
-
-  @Override
-  public SwerveModulePosition getModulePosition() {
-    return new SwerveModulePosition(
-        drive.getPosition().getValueAsDouble() * Swerve.WheelDiameter * Math.PI,
-        new Rotation2d(turn.getPosition().getValueAsDouble() * 2 * Math.PI));
-  }
-
-  @Override
-  public SwerveModuleState getModuleState() {
-    return new SwerveModuleState(
-        drive.getVelocity().getValueAsDouble() * Swerve.WheelDiameter * Math.PI,
-        new Rotation2d(turn.getPosition().getValueAsDouble() * 2 * Math.PI));
+  public void setTurnSetpoint(Rotation2d rotation) {
+    // Set the module rotation to the desired position
+    turn.setControl(turnPID.withPosition(rotation.getRotations()));
   }
 }

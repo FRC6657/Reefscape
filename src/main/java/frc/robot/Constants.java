@@ -1,9 +1,18 @@
 package frc.robot;
 
+import com.ctre.phoenix6.configs.ClosedLoopGeneralConfigs;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
+import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
+import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.signals.GravityTypeValue;
+import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
+import edu.wpi.first.apriltag.AprilTag;
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.PIDController;
@@ -16,26 +25,26 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
+import java.util.List;
 
 public class Constants {
 
   public static double mainLoopFrequency = 50d; // Hz
 
   public static enum CAN {
-    Swerve_FL_D(1),
-    Swerve_FR_D(2),
-    Swerve_BL_D(3),
-    Swerve_BR_D(4),
-    Swerve_FL_T(5),
-    Swerve_FR_T(6),
-    Swerve_BL_T(7),
-    Swerve_BR_T(8),
-    Swerve_FL_E(9),
-    Swerve_FR_E(10),
-    Swerve_BL_E(11),
-    Swerve_BR_E(12),
+    Swerve_FR_D(1),
+    Swerve_FL_D(2),
+    Swerve_BR_D(3),
+    Swerve_BL_D(4),
+    Swerve_FR_T(5),
+    Swerve_FL_T(6),
+    Swerve_BR_T(7),
+    Swerve_BL_T(8),
+    Swerve_FR_E(9),
+    Swerve_FL_E(10),
+    Swerve_BR_E(11),
+    Swerve_BL_E(12),
     Gyro(13),
     OuttakeMotor(14),
     Elevetor_Leader(15),
@@ -66,11 +75,13 @@ public class Constants {
       public Pose2d middle;
       public Pose2d left;
       public Pose2d right;
+      public Pose2d algae;
 
-      ReefSlot(Pose2d middle, Pose2d left, Pose2d right) {
+      ReefSlot(Pose2d middle, Pose2d left, Pose2d right, Pose2d algae) {
         this.middle = middle;
         this.left = left;
         this.right = right;
+        this.algae = algae;
       }
     }
 
@@ -87,20 +98,25 @@ public class Constants {
 
       // Shift the pose to the robot's left
       public Pose2d getLeftPose(Pose2d pose) {
-        return pose.transformBy(new Transform2d(0, -0.26, new Rotation2d()));
+        return pose.transformBy(new Transform2d(0.25, -0.26, new Rotation2d()));
       }
 
       public Pose2d getRightPose(Pose2d pose) {
-        return pose.transformBy(new Transform2d(0, 0.06, new Rotation2d()));
+        return pose.transformBy(new Transform2d(0.25, 0.06, new Rotation2d()));
+      }
+
+      public Pose2d getAlgaePose(Pose2d pose) {
+        return pose.transformBy(new Transform2d(0.25, -0.09, new Rotation2d()));
       }
 
       ReefPoses(Pose2d pose) {
-        this.blue = new ReefSlot(pose, getLeftPose(pose), getRightPose(pose));
+        this.blue = new ReefSlot(pose, getLeftPose(pose), getRightPose(pose), getAlgaePose(pose));
         this.red =
             new ReefSlot(
                 getRedReefPose(pose),
                 getRedReefPose(getLeftPose(pose)),
-                getRedReefPose(getRightPose(pose)));
+                getRedReefPose(getRightPose(pose)),
+                getRedReefPose(getAlgaePose(pose)));
       }
     }
   }
@@ -108,31 +124,66 @@ public class Constants {
   public static class AutoConstants {
 
     // Choreo
-    public static final PIDController kXController_Choreo =
-        new PIDController(0.25, 0, 0); // TODO: Tune
-    public static final PIDController kYController_Choreo =
-        new PIDController(0.25, 0, 0); // TODO: Tune
-    public static final PIDController kThetaController_Choreo =
-        new PIDController(0.25, 0, 0); // TODO: Tune
-
-    // Repulsor
-    public static final PIDController kXController_Repulsor =
-        new PIDController(100, 0, 0); // TODO: Tune
-    public static final PIDController kYController_Repulsor =
-        new PIDController(100, 0, 0); // TODO: Tune
-    public static final PIDController kThetaController_Repulsor =
-        new PIDController(100, 0, 0); // TODO: Tune
+    public static final PIDController kXController_Choreo = new PIDController(4, 0, 0);
+    public static final PIDController kYController_Choreo = new PIDController(4, 0, 0);
+    public static final PIDController kThetaController_Choreo = new PIDController(4, 0, 0);
 
     // Position PID
-    public static final PIDController kXController_Position =
-        new PIDController(8, 0, 0); // TODO: Tune
-    public static final PIDController kYController_Position =
-        new PIDController(8, 0, 0); // TODO: Tune
-    public static final PIDController kThetaController_Position =
-        new PIDController(8, 0, 0); // TODO: Tune
+    public static final PIDController kXController_Position = new PIDController(8, 0, 0.2);
+    public static final PIDController kYController_Position = new PIDController(8, 0, 0.2);
+    public static final PIDController kThetaController_Position = new PIDController(5, 0, 0);
   }
 
   public static class VisionConstants {
+
+    public static final AprilTagFieldLayout kTagLayout =
+        AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeWelded);
+
+    public static final List<Integer> kRedReefTagIDs = List.of(6, 7, 8, 9, 10, 11);
+
+    public static final List<Integer> kBlueReefTagIDs = List.of(17, 18, 19, 20, 21, 22);
+
+    private static final List<AprilTag> kBlueReefTags =
+        List.of(
+            kTagLayout.getTags().get(16),
+            kTagLayout.getTags().get(17),
+            kTagLayout.getTags().get(18),
+            kTagLayout.getTags().get(19),
+            kTagLayout.getTags().get(20),
+            kTagLayout.getTags().get(21));
+
+    private static final List<AprilTag> kRedReefTags =
+        List.of(
+            kTagLayout.getTags().get(5),
+            kTagLayout.getTags().get(6),
+            kTagLayout.getTags().get(7),
+            kTagLayout.getTags().get(8),
+            kTagLayout.getTags().get(9),
+            kTagLayout.getTags().get(10));
+
+    private static final List<AprilTag> kReefTags =
+        List.of(
+            kTagLayout.getTags().get(5),
+            kTagLayout.getTags().get(6),
+            kTagLayout.getTags().get(7),
+            kTagLayout.getTags().get(8),
+            kTagLayout.getTags().get(9),
+            kTagLayout.getTags().get(10),
+            kTagLayout.getTags().get(16),
+            kTagLayout.getTags().get(17),
+            kTagLayout.getTags().get(18),
+            kTagLayout.getTags().get(19),
+            kTagLayout.getTags().get(20),
+            kTagLayout.getTags().get(21));
+
+    public static final AprilTagFieldLayout kBlueTagLayout =
+        new AprilTagFieldLayout(
+            kBlueReefTags, kTagLayout.getFieldLength(), kTagLayout.getFieldWidth());
+    public static final AprilTagFieldLayout kRedTagLayout =
+        new AprilTagFieldLayout(
+            kRedReefTags, kTagLayout.getFieldLength(), kTagLayout.getFieldWidth());
+    public static final AprilTagFieldLayout kReefTagLayout =
+        new AprilTagFieldLayout(kReefTags, kTagLayout.getFieldLength(), kTagLayout.getFieldWidth());
 
     public static class CameraInfo {
 
@@ -180,70 +231,89 @@ public class Constants {
             Rotation2d.fromDegrees(79.76),
             new int[] {1280, 800});
 
-    public static final Matrix<N3, N1> singleTagStdDev = VecBuilder.fill(0.4, 0.4, 0.4);
+    public static final Matrix<N3, N1> singleTagStdDev = VecBuilder.fill(1, 1, 2);
     public static final Matrix<N3, N1> multiTagStdDev = VecBuilder.fill(0.2, 0.2, 0.2);
-  }
-
-  public static class Motors {
-    public static double FalconRPS =
-        Units.radiansPerSecondToRotationsPerMinute(DCMotor.getFalcon500(1).freeSpeedRadPerSec) / 60;
   }
 
   public static class Swerve {
 
-    public enum DriveGearing {
-      L1(19d / 25d),
-      L2(17d / 27d),
-      L3(16d / 28d);
+    public record ModuleConstants(int id, String prefix, int driveID, int turnID, int encoderID) {}
 
-      public double reduction;
+    public static final double trackWidthX = Units.inchesToMeters(23.75);
+    public static final double trackWidthY = Units.inchesToMeters(23.75);
 
-      DriveGearing(double reduction) {
-        this.reduction = reduction * (50d / 14d) * (45d / 15d);
-      }
-    }
+    public static final double maxLinearSpeed = Units.feetToMeters(17.3);
+    public static final double maxLinearAcceleration = 8;
+    public static final double maxAngularSpeed =
+        maxLinearSpeed / Math.hypot(trackWidthX / 2.0, trackWidthY / 2.0);
 
-    public static double WheelDiameter = Units.inchesToMeters(4);
-    public static double TrackWidth = Units.inchesToMeters(29 - 5.25);
-    public static double TrackLength = Units.inchesToMeters(29 - 5.25);
+    public static final ModuleConstants frontLeftModule =
+        new ModuleConstants(
+            0, "Front Left", CAN.Swerve_FL_D.id, CAN.Swerve_FL_T.id, CAN.Swerve_FL_E.id);
+    public static final ModuleConstants frontRightModule =
+        new ModuleConstants(
+            0, "Front Right", CAN.Swerve_FR_D.id, CAN.Swerve_FR_T.id, CAN.Swerve_FR_E.id);
+    public static final ModuleConstants backLeftModule =
+        new ModuleConstants(
+            0, "Back Left", CAN.Swerve_BL_D.id, CAN.Swerve_BL_T.id, CAN.Swerve_BL_E.id);
+    public static final ModuleConstants backRightModule =
+        new ModuleConstants(
+            0, "Back Right", CAN.Swerve_BR_D.id, CAN.Swerve_BR_T.id, CAN.Swerve_BR_E.id);
+    public static final double wheelRadiusMeters = Units.inchesToMeters(2);
+    public static final double driveRatio = (45.0 / 15.0) * (16.0 / 28.0) * (50.0 / 14.0);
+    public static final double turnRatio = (150.0 / 7.0);
+    public static final double driveRotorToMeters = driveRatio / (wheelRadiusMeters * 2 * Math.PI);
 
-    public static Translation2d[] ModulePositions =
-        new Translation2d[] {
-          new Translation2d(TrackWidth / 2, TrackLength / 2), // FL
-          new Translation2d(TrackWidth / 2, -TrackLength / 2), // FR
-          new Translation2d(-TrackWidth / 2, TrackLength / 2), // BL
-          new Translation2d(-TrackWidth / 2, -TrackLength / 2) // BR
-        };
+    public static final Translation2d[] moduleTranslations = {
+      new Translation2d(trackWidthX / 2, trackWidthY / 2),
+      new Translation2d(trackWidthX / 2, -trackWidthY / 2),
+      new Translation2d(-trackWidthX / 2, trackWidthY / 2),
+      new Translation2d(-trackWidthX / 2, -trackWidthY / 2)
+    };
 
-    public static double TurnGearing = 150d / 7d;
+    public static TalonFXConfiguration driveConfig =
+        new TalonFXConfiguration()
+            .withCurrentLimits(
+                new CurrentLimitsConfigs()
+                    .withSupplyCurrentLimit(40)
+                    .withSupplyCurrentLimitEnable(true)
+                    .withStatorCurrentLimit(80)
+                    .withStatorCurrentLimitEnable(true))
+            .withMotorOutput(
+                new MotorOutputConfigs()
+                    .withInverted(InvertedValue.Clockwise_Positive)
+                    .withNeutralMode(NeutralModeValue.Coast))
+            .withFeedback(new FeedbackConfigs().withSensorToMechanismRatio(driveRotorToMeters))
+            .withSlot0(new Slot0Configs().withKV(12d / maxLinearSpeed).withKS(0).withKP(2.25))
+            .withMotionMagic(
+                new MotionMagicConfigs()
+                    .withMotionMagicCruiseVelocity(maxLinearSpeed)
+                    .withMotionMagicAcceleration(maxLinearAcceleration));
 
-    public static class ModuleInformation {
-
-      public String name;
-      public int driveID;
-      public int turnID;
-      public int encoderID;
-
-      public ModuleInformation(String name, int driveID, int turnID, int encoderID) {
-        this.name = name;
-        this.driveID = driveID;
-        this.turnID = turnID;
-        this.encoderID = encoderID;
-      }
-
-      public static ModuleInformation frontLeft =
-          new ModuleInformation(
-              "Front Left ", CAN.Swerve_FL_D.id, CAN.Swerve_FL_T.id, CAN.Swerve_FL_E.id);
-      public static ModuleInformation frontRight =
-          new ModuleInformation(
-              "Front Right ", CAN.Swerve_FR_D.id, CAN.Swerve_FR_T.id, CAN.Swerve_FR_E.id);
-      public static ModuleInformation backLeft =
-          new ModuleInformation(
-              "Back Left ", CAN.Swerve_BL_D.id, CAN.Swerve_BL_T.id, CAN.Swerve_BL_E.id);
-      public static ModuleInformation backRight =
-          new ModuleInformation(
-              "Back Right ", CAN.Swerve_BR_D.id, CAN.Swerve_BR_T.id, CAN.Swerve_BR_E.id);
-    }
+    public static TalonFXConfiguration turnConfig =
+        new TalonFXConfiguration()
+            .withCurrentLimits(
+                new CurrentLimitsConfigs()
+                    .withSupplyCurrentLimit(20)
+                    .withSupplyCurrentLimitEnable(true)
+                    .withStatorCurrentLimit(40)
+                    .withStatorCurrentLimitEnable(true))
+            .withMotorOutput(
+                new MotorOutputConfigs()
+                    .withInverted(InvertedValue.Clockwise_Positive)
+                    .withNeutralMode(NeutralModeValue.Coast))
+            .withFeedback(new FeedbackConfigs().withSensorToMechanismRatio(turnRatio))
+            .withSlot0(
+                new Slot0Configs()
+                    .withKV(12d / ((6300d / 60) / turnRatio))
+                    .withKS(0.27)
+                    .withKP(25)
+                    .withKD(0.6))
+            .withMotionMagic(
+                new MotionMagicConfigs()
+                    .withMotionMagicCruiseVelocity((6300 / 60) / turnRatio)
+                    .withMotionMagicAcceleration((6300 / 60) / (turnRatio * 0.005)))
+            .withClosedLoopGeneral(new ClosedLoopGeneralConfigs().withContinuousWrap(true));
   }
 
   public static class Intake {
