@@ -274,11 +274,11 @@ public class Constants {
                     .withInverted(InvertedValue.Clockwise_Positive)
                     .withNeutralMode(NeutralModeValue.Brake))
             .withFeedback(new FeedbackConfigs().withSensorToMechanismRatio(turnRatio))
-            .withSlot0(new Slot0Configs().withKS(0.27).withKP(20).withKD(0.6))
+            .withSlot0(new Slot0Configs().withKV(12d / ((6300d/60) / turnRatio)).withKS(0.27).withKP(20).withKD(0.6))
             .withMotionMagic(
                 new MotionMagicConfigs()
-                    .withMotionMagicCruiseVelocity((5800 / 60) / turnRatio)
-                    .withMotionMagicAcceleration((5800 / 60) / (turnRatio * 0.005)))
+                    .withMotionMagicCruiseVelocity((6300 / 60) / turnRatio)
+                    .withMotionMagicAcceleration((6300 / 60) / (turnRatio * 0.005)))
             .withClosedLoopGeneral(new ClosedLoopGeneralConfigs().withContinuousWrap(true));
   }
 
