@@ -14,6 +14,8 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import frc.robot.Constants;
 import frc.robot.Constants.VisionConstants;
 import frc.robot.Constants.VisionConstants.CameraInfo;
@@ -50,6 +52,11 @@ public class ApriltagCamera {
     io.updateInputs(inputs);
 
     poseEstimator.addHeadingData(headingTimestamp, robotHeading);
+
+    var alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
+    poseEstimator.setFieldTags(
+        alliance == Alliance.Blue ? VisionConstants.kBlueTagLayout : VisionConstants.kRedTagLayout);
+
     var result = poseEstimator.update(inputs.result);
 
     if (result.isPresent()) {

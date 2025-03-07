@@ -139,6 +139,28 @@ public class Constants {
     public static final AprilTagFieldLayout kTagLayout =
         AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeWelded);
 
+    public static final List<Integer> kRedReefTagIDs = List.of(6, 7, 8, 9, 10, 11);
+
+    public static final List<Integer> kBlueReefTagIDs = List.of(17, 18, 19, 20, 21, 22);
+
+    private static final List<AprilTag> kBlueReefTags =
+        List.of(
+            kTagLayout.getTags().get(16),
+            kTagLayout.getTags().get(17),
+            kTagLayout.getTags().get(18),
+            kTagLayout.getTags().get(19),
+            kTagLayout.getTags().get(20),
+            kTagLayout.getTags().get(21));
+
+    private static final List<AprilTag> kRedReefTags =
+        List.of(
+            kTagLayout.getTags().get(5),
+            kTagLayout.getTags().get(6),
+            kTagLayout.getTags().get(7),
+            kTagLayout.getTags().get(8),
+            kTagLayout.getTags().get(9),
+            kTagLayout.getTags().get(10));
+
     private static final List<AprilTag> kReefTags =
         List.of(
             kTagLayout.getTags().get(5),
@@ -153,6 +175,13 @@ public class Constants {
             kTagLayout.getTags().get(19),
             kTagLayout.getTags().get(20),
             kTagLayout.getTags().get(21));
+
+    public static final AprilTagFieldLayout kBlueTagLayout =
+        new AprilTagFieldLayout(
+            kBlueReefTags, kTagLayout.getFieldLength(), kTagLayout.getFieldWidth());
+    public static final AprilTagFieldLayout kRedTagLayout =
+        new AprilTagFieldLayout(
+            kRedReefTags, kTagLayout.getFieldLength(), kTagLayout.getFieldWidth());
     public static final AprilTagFieldLayout kReefTagLayout =
         new AprilTagFieldLayout(kReefTags, kTagLayout.getFieldLength(), kTagLayout.getFieldWidth());
 
