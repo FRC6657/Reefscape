@@ -15,6 +15,8 @@ import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
@@ -356,8 +358,12 @@ public class Swerve extends SubsystemBase {
       camera.updateInputs(
           RobotBase.isSimulation() ? Timer.getFPGATimestamp() : gyroInputs.timestamp,
           RobotBase.isSimulation() ? getPose().getRotation() : gyroInputs.yawPosition);
-      addVisionMeasurement(
-          camera.getEstimatedPose(), camera.getLatestTimestamp(), camera.getLatestStdDevs());
+
+      Pose3d estPose = camera.getEstimatedPose();
+      if(estPose != new Pose3d(new Translation3d(100, 100, 100), new Rotation3d())){
+        Logger.recordOutput("Vision/ProcessedPoses", estPose);
+        addVisionMeasurement(estPose, camera.getLatestTimestamp(), camera.getLatestStdDevs());
+      }
     }
   }
 }
