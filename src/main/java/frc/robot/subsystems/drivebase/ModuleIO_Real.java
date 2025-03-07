@@ -112,6 +112,8 @@ public class ModuleIO_Real implements ModuleIO {
     inputs.turnVelocityRadPerSec = Units.rotationsToRadians(turnVelocity.getValueAsDouble());
     inputs.turnAppliedVolts = turnAppliedVolts.getValueAsDouble();
     inputs.turnCurrentAmps = turnCurrent.getValueAsDouble();
+
+    //    drive.setControl(new VoltageOut(0));
   }
 
   @Override

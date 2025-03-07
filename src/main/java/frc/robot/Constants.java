@@ -33,18 +33,18 @@ public class Constants {
   public static double mainLoopFrequency = 50d; // Hz
 
   public static enum CAN {
-    Swerve_FL_D(1),
-    Swerve_FR_D(2),
-    Swerve_BL_D(3),
-    Swerve_BR_D(4),
-    Swerve_FL_T(5),
-    Swerve_FR_T(6),
-    Swerve_BL_T(7),
-    Swerve_BR_T(8),
-    Swerve_FL_E(9),
-    Swerve_FR_E(10),
-    Swerve_BL_E(11),
-    Swerve_BR_E(12),
+    Swerve_FR_D(1),
+    Swerve_FL_D(2),
+    Swerve_BR_D(3),
+    Swerve_BL_D(4),
+    Swerve_FR_T(5),
+    Swerve_FL_T(6),
+    Swerve_BR_T(7),
+    Swerve_BL_T(8),
+    Swerve_FR_E(9),
+    Swerve_FL_E(10),
+    Swerve_BR_E(11),
+    Swerve_BL_E(12),
     Gyro(13),
     OuttakeMotor(14),
     Elevetor_Leader(15),
@@ -282,7 +282,7 @@ public class Constants {
             .withMotorOutput(
                 new MotorOutputConfigs()
                     .withInverted(InvertedValue.Clockwise_Positive)
-                    .withNeutralMode(NeutralModeValue.Brake))
+                    .withNeutralMode(NeutralModeValue.Coast))
             .withFeedback(new FeedbackConfigs().withSensorToMechanismRatio(driveRotorToMeters))
             .withSlot0(new Slot0Configs().withKV(12d / maxLinearSpeed).withKS(0).withKP(2.25))
             .withMotionMagic(
@@ -301,13 +301,13 @@ public class Constants {
             .withMotorOutput(
                 new MotorOutputConfigs()
                     .withInverted(InvertedValue.Clockwise_Positive)
-                    .withNeutralMode(NeutralModeValue.Brake))
+                    .withNeutralMode(NeutralModeValue.Coast))
             .withFeedback(new FeedbackConfigs().withSensorToMechanismRatio(turnRatio))
             .withSlot0(
                 new Slot0Configs()
                     .withKV(12d / ((6300d / 60) / turnRatio))
                     .withKS(0.27)
-                    .withKP(20)
+                    .withKP(25)
                     .withKD(0.6))
             .withMotionMagic(
                 new MotionMagicConfigs()

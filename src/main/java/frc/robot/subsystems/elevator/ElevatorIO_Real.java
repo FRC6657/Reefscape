@@ -117,12 +117,12 @@ public class ElevatorIO_Real implements ElevatorIO {
     inputs.leaderMotorVoltage = leaderMotor.get() * RobotController.getBatteryVoltage();
     inputs.followMotorVoltage = followMotor.getMotorVoltage().getValueAsDouble();
 
-    leaderMotor.setControl(
-        motionMagicVoltage.withPosition(
-            Units.metersToInches(kSetpoint / Constants.Elevator.stages)
-                / (Constants.Elevator.sprocketPD * Math.PI)));
+    // leaderMotor.setControl(
+    //     motionMagicVoltage.withPosition(
+    //         Units.metersToInches(kSetpoint / Constants.Elevator.stages)
+    //             / (Constants.Elevator.sprocketPD * Math.PI)));
 
-    followMotor.setControl(new Follower(CAN.Elevetor_Leader.id, false));
+    // followMotor.setControl(new Follower(CAN.Elevetor_Leader.id, false));
 
     runAlgaeArm(inputs.kPosition);
 

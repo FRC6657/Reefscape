@@ -104,12 +104,14 @@ public class Robot extends LoggedRobot {
             () ->
                 new ChassisSpeeds(
                     -MathUtil.applyDeadband(driver.getLeftY(), 0.1)
-                        * Constants.Swerve.maxLinearSpeed,
+                        * Constants.Swerve.maxLinearSpeed
+                        * 0.2,
                     -MathUtil.applyDeadband(driver.getLeftX(), 0.1)
-                        * Constants.Swerve.maxLinearSpeed,
+                        * Constants.Swerve.maxLinearSpeed
+                        * 0.2,
                     -MathUtil.applyDeadband(driver.getRightX(), 0.1)
                         * Constants.Swerve.maxAngularSpeed
-                        * 0.5)));
+                        * 0.2)));
 
     driver.a().whileTrue(superstructure.AutoAim());
     driver.a().onFalse(Commands.runOnce(() -> swerve.drive(new ChassisSpeeds())));
