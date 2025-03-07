@@ -202,7 +202,7 @@ public class Constants {
             Rotation2d.fromDegrees(79.76),
             new int[] {1280, 800});
 
-    public static final Matrix<N3, N1> singleTagStdDev = VecBuilder.fill(0.4, 0.4, 0.4);
+    public static final Matrix<N3, N1> singleTagStdDev = VecBuilder.fill(1, 1, 2);
     public static final Matrix<N3, N1> multiTagStdDev = VecBuilder.fill(0.2, 0.2, 0.2);
   }
 
@@ -274,7 +274,12 @@ public class Constants {
                     .withInverted(InvertedValue.Clockwise_Positive)
                     .withNeutralMode(NeutralModeValue.Brake))
             .withFeedback(new FeedbackConfigs().withSensorToMechanismRatio(turnRatio))
-            .withSlot0(new Slot0Configs().withKV(12d / ((6300d/60) / turnRatio)).withKS(0.27).withKP(20).withKD(0.6))
+            .withSlot0(
+                new Slot0Configs()
+                    .withKV(12d / ((6300d / 60) / turnRatio))
+                    .withKS(0.27)
+                    .withKP(20)
+                    .withKD(0.6))
             .withMotionMagic(
                 new MotionMagicConfigs()
                     .withMotionMagicCruiseVelocity((6300 / 60) / turnRatio)
