@@ -62,6 +62,7 @@ public class ApriltagCamera {
     if (result.isPresent()) {
       latestPose = result.get().estimatedPose;
       latestTimestamp = result.get().timestampSeconds;
+
       stdDevs = getEstimationStdDevs(latestPose.toPose2d(), inputs.result);
 
       Translation2d[] tagCorners = new Translation2d[inputs.result.targets.size() * 4];
@@ -84,6 +85,8 @@ public class ApriltagCamera {
       }
 
       Logger.recordOutput(
+          "Vision/ApriltagCameras/" + cameraInfo.cameraName + "/STDDevs", stdDevs.getData());
+      Logger.recordOutput(
           "Vision/ApriltagCameras/" + cameraInfo.cameraName + "/Corners", tagCorners);
       Logger.recordOutput(
           "Vision/ApriltagCameras/" + cameraInfo.cameraName + "/TagPoses", tagPoses);
@@ -91,8 +94,8 @@ public class ApriltagCamera {
     } else {
       latestPose = new Pose3d(new Translation3d(100, 100, 100), new Rotation3d());
       stdDevs = VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
-      Logger.recordOutput(
-          "Vision/ApriltagCameras/" + cameraInfo.cameraName + "/Corners", new Translation2d[] {});
+      Logger.recordOutput("Vision/ApriltagCameras/" + cameraInfo.cameraName + "/Corners", new Translation2d[] {});
+      Logger.recordOutput("Vision/ApriltagCameras/" + cameraInfo.cameraName + "/TagPoses" , new Pose3d[]{});
     }
 
     Logger.processInputs("Vision/ApriltagCameras/" + cameraInfo.cameraName + "/Inputs", inputs);
@@ -117,10 +120,13 @@ public class ApriltagCamera {
     }
     if (numTags == 0) return estStdDevs;
     avgDist /= numTags;
+
     // Decrease std devs if multiple targets are visible
     if (numTags > 1) estStdDevs = VisionConstants.multiTagStdDev;
-    // Increase std devs based on (average) distance
-    if (numTags == 1 && avgDist > 4) estStdDevs = VisionConstants.singleTagStdDev;
+    // Ignore a single tag too far away
+    if (numTags == 1 && avgDist > 4)
+      estStdDevs = VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
+    // Scale std devs for single tag based on distance.
     else estStdDevs = estStdDevs.times(1 + (avgDist * avgDist / 30));
 
     return estStdDevs;
