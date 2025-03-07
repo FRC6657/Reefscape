@@ -46,6 +46,8 @@ public class ApriltagCamera {
             Constants.VisionConstants.kReefTagLayout,
             PoseStrategy.CONSTRAINED_SOLVEPNP,
             cameraInfo.robotToCamera);
+
+    poseEstimator.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
   }
 
   public void updateInputs(double headingTimestamp, Rotation2d robotHeading) {
