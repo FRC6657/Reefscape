@@ -9,12 +9,12 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
 import edu.wpi.first.wpilibj.RobotBase;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -118,18 +118,17 @@ public class Robot extends LoggedRobot {
                         * Constants.Swerve.maxAngularSpeed
                         * 0.2)));
 
-
-    debug.a().onTrue(
-      Commands.runOnce(
-        () -> 
-        swerve.resetPose(
-          new Pose2d(
-            swerve.getPose().getTranslation(), 
-            (DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red) ? Rotation2d.k180deg : Rotation2d.kZero
-          )
-        )
-      )
-    );
+    debug
+        .a()
+        .onTrue(
+            Commands.runOnce(
+                () ->
+                    swerve.resetPose(
+                        new Pose2d(
+                            swerve.getPose().getTranslation(),
+                            (DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red)
+                                ? Rotation2d.k180deg
+                                : Rotation2d.kZero))));
 
     driver.a().whileTrue(superstructure.AutoAim());
     driver.a().onFalse(Commands.runOnce(() -> swerve.drive(new ChassisSpeeds())));

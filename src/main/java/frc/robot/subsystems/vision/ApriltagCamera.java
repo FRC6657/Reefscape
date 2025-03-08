@@ -50,9 +50,9 @@ public class ApriltagCamera {
     poseEstimator.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
   }
 
-  public void setPoseStrategy(PoseStrategy newStrategy){
+  public void setPoseStrategy(PoseStrategy newStrategy) {
     poseEstimator.setPrimaryStrategy(newStrategy);
-  }  
+  }
 
   public void updateInputs(double headingTimestamp, Rotation2d robotHeading) {
     io.updateInputs(inputs);
