@@ -39,6 +39,7 @@ import java.util.Arrays;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
+import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 
 public class Swerve extends SubsystemBase {
 
@@ -122,6 +123,10 @@ public class Swerve extends SubsystemBase {
         yaw,
         Arrays.stream(modules).map(m -> m.getPosition()).toArray(SwerveModulePosition[]::new),
         pose);
+
+    for(var camera : cameras){
+      camera.setPoseStrategy(PoseStrategy.CONSTRAINED_SOLVEPNP);
+    }
   }
 
   /**

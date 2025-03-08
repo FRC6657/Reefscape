@@ -44,11 +44,15 @@ public class ApriltagCamera {
     poseEstimator =
         new PhotonPoseEstimator(
             Constants.VisionConstants.kReefTagLayout,
-            PoseStrategy.CONSTRAINED_SOLVEPNP,
+            PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
             cameraInfo.robotToCamera);
 
     poseEstimator.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
   }
+
+  public void setPoseStrategy(PoseStrategy newStrategy){
+    poseEstimator.setPrimaryStrategy(newStrategy);
+  }  
 
   public void updateInputs(double headingTimestamp, Rotation2d robotHeading) {
     io.updateInputs(inputs);
