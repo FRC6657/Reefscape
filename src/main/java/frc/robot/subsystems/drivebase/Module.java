@@ -47,4 +47,8 @@ public class Module {
     Logger.processInputs(
         new StringBuilder("Swerve/").append(inputs.prefix).append(" Module").toString(), inputs);
   }
+
+  public void resetDriveEncoder() {
+    io.resetDriveEncoder();
+  }
 }

@@ -8,6 +8,7 @@ public interface GyroIO {
   @AutoLog
   public static class GyroIOInputs {
     public Rotation2d yawPosition = new Rotation2d();
+    public double yaw = 0.0;
     public double yawVelocityRadPerSec = 0.0;
     public double timestamp = 0.0;
   }

@@ -326,6 +326,56 @@ public class Swerve extends SubsystemBase {
     }
   }
 
+  public Command wheelRadiusCharacterization() {
+
+    double driveRadius =
+        Constants.Swerve.moduleTranslations[0].getNorm(); // Radius of drive wheel circle
+    ChassisSpeeds speeds =
+        new ChassisSpeeds(0, 0, Units.rotationsToRadians(0.2)); // Speed to rotate at
+
+    return Commands.runOnce(
+            () -> {
+              // Reset Gyro and Zero Wheel Encoders
+              gyroIO.setYaw(new Rotation2d());
+              for (var module : modules) {
+                module.resetDriveEncoder();
+              }
+            })
+        .andThen(
+            // Turn for 5 seconds at the desired speed to collect gyro/encoder data
+            Commands.sequence(
+                Commands.waitSeconds(1),
+                Commands.runEnd(() -> this.drive(speeds), () -> this.drive(new ChassisSpeeds()))
+                    .raceWith(Commands.waitSeconds(5))))
+        .andThen(
+            // Process collected data
+            this.runOnce(
+                () -> {
+
+                  // Wheels should have all moved more or less the same distance, average them just
+                  // incase.
+                  double avgWheelRoations = 0;
+                  for (var module : modules) {
+                    avgWheelRoations +=
+                        Math.abs(
+                            module.getPosition().distanceMeters
+                                / (Units.inchesToMeters(Constants.Swerve.wheelRadiusMeters)
+                                    * 2
+                                    * Math.PI));
+                  }
+                  avgWheelRoations /= 4;
+
+                  // Compare the expected distance to the observed distance to back calculate the
+                  // "real" wheel radius.
+                  double expectedDistance =
+                      (driveRadius * 2 * Math.PI) * Units.degreesToRotations(gyroInputs.yaw);
+                  double observedRadius = expectedDistance / (avgWheelRoations * 2 * Math.PI);
+
+                  // Log the calculated radius
+                  Logger.recordOutput("Characterization/WheelRadius", observedRadius);
+                }));
+  }
+
   @Override
   public void periodic() {
 
@@ -351,6 +401,7 @@ public class Swerve extends SubsystemBase {
               .times(0.02);
 
       simHeading = simHeading.plus(gyroDelta);
+
       poseEstimator.update(
           simHeading,
           Arrays.stream(modules).map(m -> m.getPosition()).toArray(SwerveModulePosition[]::new));

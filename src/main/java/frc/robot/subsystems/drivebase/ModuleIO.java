@@ -27,4 +27,6 @@ public interface ModuleIO {
   public default void setDriveSetpoint(final double metersPerSecond) {}
 
   public default void setTurnSetpoint(final Rotation2d rotation) {}
+
+  public default void resetDriveEncoder() {}
 }

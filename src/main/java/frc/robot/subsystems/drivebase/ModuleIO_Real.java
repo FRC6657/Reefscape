@@ -131,4 +131,9 @@ public class ModuleIO_Real implements ModuleIO {
     // Set the module rotation to the desired position
     turn.setControl(turnPID.withPosition(rotation.getRotations()));
   }
+
+  @Override
+  public void resetDriveEncoder() {
+    drive.setPosition(0);
+  }
 }

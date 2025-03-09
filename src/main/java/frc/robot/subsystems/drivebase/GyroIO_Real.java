@@ -37,6 +37,7 @@ public class GyroIO_Real implements GyroIO {
     BaseStatusSignal.refreshAll(yaw, yawVelocity);
 
     inputs.yawPosition = new Rotation2d(yaw.getValue());
+    inputs.yaw = yaw.getValueAsDouble();
     inputs.yawVelocityRadPerSec = yawVelocity.getValue().in(RadiansPerSecond);
     inputs.timestamp = yaw.getTimestamp().getTime();
   }
