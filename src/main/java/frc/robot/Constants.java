@@ -390,8 +390,8 @@ public class Constants {
             .withSupplyCurrentLowerLimit(kSupplyLimit)
             .withSupplyCurrentLowerTime(0);
 
-    public static double kMaxVelocity = 360; // Inches/s of Carriage Travel
-    public static double kMaxAcceleration = 360; // Inches/s/s of Carriage Travel
+    public static double kMaxVelocity = 114; // Inches/s of Carriage Travel
+    public static double kMaxAcceleration = 1500; // Inches/s/s of Carriage Travel
 
     public static MotionMagicConfigs kMotionMagicConfig =
         new MotionMagicConfigs()
