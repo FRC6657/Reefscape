@@ -7,10 +7,10 @@ package frc.robot.subsystems.drivebase;
 import static edu.wpi.first.units.Units.*;
 
 import choreo.trajectory.SwerveSample;
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -21,6 +21,7 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -257,12 +258,42 @@ public class Swerve extends SubsystemBase {
     drive(out);
   }
 
-  PIDController xController = AutoConstants.kXController_Position;
-  PIDController yController = AutoConstants.kYController_Position;
-  PIDController thetaController = AutoConstants.kThetaController_Position;
+  ProfiledPIDController xController = AutoConstants.kXController_Position;
+  ProfiledPIDController yController = AutoConstants.kYController_Position;
+  ProfiledPIDController thetaController = AutoConstants.kThetaController_Position;
+
+  public Command resetAutoAimPID() {
+    return Commands.runOnce(() -> {
+      xController.reset(getPose().getX());
+      yController.reset(getPose().getY());
+      thetaController.reset(getPose().getRotation().getRadians());
+    });
+  }
+
+  /**
+   * Default position controller with 0.5 inch translation tolerance and 2 degree rotation tolerance
+   * 1 m/s translation and 2 rad/s rotation speed targets. Generally good for high precision
+   * movement.
+   */
+  public void positionController(Pose2d targetPose) {
+    positionController(
+        targetPose,
+        Units.inchesToMeters(0.5),
+        Units.degreesToRadians(2.0),
+        new Constraints(1, 2),
+        new Constraints(Units.rotationsToRadians(1), Units.rotationsToRadians(2)));
+  }
 
   public void positionController(
-      Pose2d targetPose, double translationTolerance, double rotationTolerance, double speed) {
+      Pose2d targetPose,
+      double translationTolerance,
+      double rotationTolerance,
+      Constraints translationConstraints,
+      Constraints rotationConstraints) {
+
+    xController.setConstraints(translationConstraints);
+    yController.setConstraints(translationConstraints);
+    thetaController.setConstraints(rotationConstraints);
 
     xController.setTolerance(translationTolerance, Units.inchesToMeters(0.125));
     yController.setTolerance(translationTolerance, Units.inchesToMeters(0.125));
@@ -274,15 +305,9 @@ public class Swerve extends SubsystemBase {
         thetaController.calculate(
             getPose().getRotation().getRadians(), targetPose.getRotation().getRadians());
 
-    double translationClamp = Constants.Swerve.maxLinearSpeed;
-    double rotationClamp = Constants.Swerve.maxAngularSpeed;
-
     ChassisSpeeds out =
         ChassisSpeeds.fromFieldRelativeSpeeds(
-            MathUtil.clamp(xFeedback, -translationClamp * speed, translationClamp * speed),
-            MathUtil.clamp(yFeedback, -translationClamp * speed, translationClamp * speed),
-            MathUtil.clamp(rotationFeedback, -rotationClamp * speed, rotationClamp * speed),
-            getPose().getRotation());
+            xFeedback, yFeedback, rotationFeedback, getPose().getRotation());
 
     Logger.recordOutput("AutoAim/Target", targetPose);
     Logger.recordOutput("AutoAim/AtSetpointX", xController.atSetpoint());
@@ -292,13 +317,33 @@ public class Swerve extends SubsystemBase {
     drive(out);
   }
 
+  /**
+   * Default goToPose command with 0.5 inch translation tolerance and 2 degree rotation tolerance 1
+   * m/s translation and 2 rad/s rotation speed targets. Generally good for high precision movement.
+   */
+  public Command goToPose(Supplier<Pose2d> target) {
+    return this.goToPose(
+        target,
+        Units.inchesToMeters(0.5),
+        Units.degreesToRadians(2.0),
+        new Constraints(1, 2),
+        new Constraints(Units.rotationsToRadians(1), Units.rotationsToRadians(2)));
+  }
+
   public Command goToPose(
       Supplier<Pose2d> target,
       double translationTolerance,
       double rotationTolerance,
-      double speed) {
+      Constraints translationConstraints,
+      Constraints rotationConstraints) {
     return this.run(
-            () -> positionController(target.get(), translationTolerance, rotationTolerance, speed))
+            () ->
+                positionController(
+                    target.get(),
+                    translationTolerance,
+                    rotationTolerance,
+                    translationConstraints,
+                    rotationConstraints))
         .until(
             () -> {
               return xController.atSetpoint()

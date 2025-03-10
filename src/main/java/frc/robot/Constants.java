@@ -16,6 +16,7 @@ import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
@@ -25,6 +26,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
 import java.util.List;
 
@@ -129,9 +131,16 @@ public class Constants {
     public static final PIDController kThetaController_Choreo = new PIDController(4, 0, 0);
 
     // Position PID
-    public static final PIDController kXController_Position = new PIDController(8, 0, 0.2);
-    public static final PIDController kYController_Position = new PIDController(8, 0, 0.2);
-    public static final PIDController kThetaController_Position = new PIDController(5, 0, 0);
+
+    public static final Constraints kAutoAimTranslationConstraints = new Constraints(2, 5);
+    public static final Constraints kAutoAimRotationConstraints = new Constraints(Units.rotationsToRadians(3), Units.rotationsToRadians(10));
+
+    public static final ProfiledPIDController kXController_Position =
+        new ProfiledPIDController(8, 0, 0, kAutoAimTranslationConstraints);
+    public static final ProfiledPIDController kYController_Position =
+        new ProfiledPIDController(8, 0, 0, kAutoAimTranslationConstraints);
+    public static final ProfiledPIDController kThetaController_Position =
+        new ProfiledPIDController(5, 0, 0, kAutoAimRotationConstraints);
   }
 
   public static class VisionConstants {

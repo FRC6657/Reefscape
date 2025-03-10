@@ -8,6 +8,7 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -82,6 +83,7 @@ public class Superstructure {
   }
 
   // Gets the closest reef sector to the robot.
+  @AutoLogOutput(key = "States/Nearest Reef")
   public Pose2d getNearestReef() {
 
     // Grab the alliance color
@@ -279,20 +281,19 @@ public class Superstructure {
                       || nearestReef == Constants.FieldConstants.ReefPoses.Reef_6.red.algae;
                 })
             .onlyIf(() -> selectedPiece == "Algae"),
+        drivebase.resetAutoAimPID(),
         Commands.parallel(
                 drivebase.goToPose(
                     () -> getNearestReef(),
                     Units.inchesToMeters(2),
                     Units.degreesToRadians(3),
-                    0.25),
+                    new Constraints(3, 3),
+                    new Constraints(Units.rotationsToRadians(2), Units.rotationsToRadians(4))),
                 raiseElevator().andThen(Commands.waitUntil(elevator::atSetpoint)))
             .andThen(
                 Commands.either(
                     drivebase.goToPose(
-                        () -> getNearestReef().plus(new Transform2d(-0.25, 0, new Rotation2d())),
-                        Units.inchesToMeters(0.5),
-                        Units.degreesToRadians(1),
-                        0.25),
+                        () -> getNearestReef().plus(new Transform2d(-0.25, 0, new Rotation2d()))),
                     Commands.sequence(
                         drivebase
                             .driveVelocity(() -> new ChassisSpeeds(-1, 0, 0))
