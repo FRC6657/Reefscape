@@ -294,11 +294,11 @@ public class Constants {
                     .withInverted(InvertedValue.Clockwise_Positive)
                     .withNeutralMode(NeutralModeValue.Coast))
             .withFeedback(new FeedbackConfigs().withSensorToMechanismRatio(driveRotorToMeters))
-            .withSlot0(new Slot0Configs().withKV(12d / maxLinearSpeed).withKS(0).withKP(2.25))
-            .withMotionMagic(
-                new MotionMagicConfigs()
-                    .withMotionMagicCruiseVelocity(maxLinearSpeed)
-                    .withMotionMagicAcceleration(maxLinearAcceleration));
+            .withSlot0(new Slot0Configs().withKV(12d / maxLinearSpeed).withKS(0).withKP(2.25));
+            // .withMotionMagic(
+            //     new MotionMagicConfigs()
+            //         .withMotionMagicCruiseVelocity(maxLinearSpeed)
+            //         .withMotionMagicAcceleration(maxLinearAcceleration));
 
     public static TalonFXConfiguration turnConfig =
         new TalonFXConfiguration()

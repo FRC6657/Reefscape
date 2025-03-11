@@ -3,6 +3,7 @@ package frc.robot.subsystems.drivebase;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
+import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.reduxrobotics.sensors.canandmag.Canandmag;
@@ -35,7 +36,7 @@ public class ModuleIO_Real implements ModuleIO {
   private final BaseStatusSignal turnCurrent;
 
   // Control Signals
-  private final MotionMagicVelocityVoltage drivePID = new MotionMagicVelocityVoltage(0.0);
+  private final VelocityVoltage drivePID = new VelocityVoltage(0.0);
   private final MotionMagicVoltage turnPID = new MotionMagicVoltage(0.0);
 
   public ModuleIO_Real(ModuleConstants constants) {
