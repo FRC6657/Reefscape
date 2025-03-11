@@ -1,6 +1,6 @@
 package frc.robot.subsystems.drivebase;
 
-import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
+import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.sim.ChassisReference;
 import edu.wpi.first.math.MathUtil;
@@ -28,7 +28,7 @@ public class ModuleIO_Sim implements ModuleIO {
   private final Rotation2d turnAbsoluteInitPosition = new Rotation2d(Math.random() * 2.0 * Math.PI);
   private double turnAppliedVolts = 0.0;
 
-  private final MotionMagicVelocityVoltage drivePID = new MotionMagicVelocityVoltage(0.0);
+  private final VelocityVoltage drivePID = new VelocityVoltage(0.0);
   private final PIDController turnPID = new PIDController(100.0, 0.0, 0.0);
 
   public ModuleIO_Sim(ModuleConstants constants) {
