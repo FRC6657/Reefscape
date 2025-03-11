@@ -48,6 +48,7 @@ public class Module {
         new StringBuilder("Swerve/").append(inputs.prefix).append(" Module").toString(), inputs);
   }
 
+  /** Reset the drive encoder to 0 */
   public void resetDriveEncoder() {
     io.resetDriveEncoder();
   }

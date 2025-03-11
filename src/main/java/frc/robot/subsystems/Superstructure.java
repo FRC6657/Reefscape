@@ -35,13 +35,13 @@ public class Superstructure {
   Outtake outtake;
   Intake intake;
 
-  @AutoLogOutput(key = "States/Selected Reef")
+  @AutoLogOutput(key = "RobotStates/Selected Reef")
   private String selectedReef = "Left"; // Selected Reef Pole
 
-  @AutoLogOutput(key = "States/Elevator Level")
+  @AutoLogOutput(key = "RobotStates/Elevator Level")
   private int elevatorLevel = 2; // Selected Reef Level
 
-  @AutoLogOutput(key = "States/Selected Piece")
+  @AutoLogOutput(key = "RobotStates/Selected Piece")
   private String selectedPiece = "Algae";
 
   // Array for easily grabbing setpoint heights.
@@ -83,7 +83,7 @@ public class Superstructure {
   }
 
   // Gets the closest reef sector to the robot.
-  @AutoLogOutput(key = "States/Nearest Reef")
+  @AutoLogOutput(key = "RobotStates/Nearest Reef")
   public Pose2d getNearestReef() {
 
     // Grab the alliance color
@@ -261,13 +261,21 @@ public class Superstructure {
         intake.changeRollerSpeed(0));
   }
 
+  /** Auto aim wrapper command. Used to select level and pole side before auto aiming. */
   public Command AutoAim(int coralLevel, String reefPole) {
     return Commands.sequence(
         selectPiece("Coral"), selectElevatorHeight(coralLevel), selectReef(reefPole), AutoAim());
   }
 
+  /**
+   * General Purpose Auto Aim Command.
+   *
+   * <p>Will use the selected reef pole and level to aim at the nearest reef sector. In algae mode
+   * it will select the correct elevator height based on the nearest reef sector.
+   */
   public Command AutoAim() {
     return Commands.sequence(
+        // Select Elevator Height If In Algae Mode
         Commands.either(
                 selectElevatorHeight(2),
                 selectElevatorHeight(3),
@@ -281,7 +289,10 @@ public class Superstructure {
                       || nearestReef == Constants.FieldConstants.ReefPoses.Reef_6.red.algae;
                 })
             .onlyIf(() -> selectedPiece == "Algae"),
+        // Reset Auto Aim PID to reset the rate limiter
         drivebase.resetAutoAimPID(),
+        // Drive towards the pose with a larger tolerance
+        // While raising the elevator.
         Commands.parallel(
                 drivebase.goToPose(
                     () -> getNearestReef(),
@@ -290,6 +301,10 @@ public class Superstructure {
                     new Constraints(3, 3),
                     new Constraints(Units.rotationsToRadians(2), Units.rotationsToRadians(4))),
                 raiseElevator().andThen(Commands.waitUntil(elevator::atSetpoint)))
+            // Approach the Reef Pole once the elevator is fully raised.
+            // This has a tighter tolerance and slower speed.
+            // If the robot is in algae mode it will just drive forward for a bit to grab the algae.
+            // This is not PID controlled.
             .andThen(
                 Commands.either(
                     drivebase.goToPose(
@@ -329,7 +344,7 @@ public class Superstructure {
         drivebase.driveVelocity(() -> new ChassisSpeeds(0.5, 0, 0)).withTimeout(0.25),
         Commands.runOnce(() -> drivebase.drive(new ChassisSpeeds()), drivebase),
         HomeRobot(),
-        Commands.waitUntil(elevator::nearSetpoint));
+        Commands.waitUntil(elevator::atSetpoint));
   }
 
   public AutoRoutine L4_3Piece(AutoFactory factory, boolean mirror) {

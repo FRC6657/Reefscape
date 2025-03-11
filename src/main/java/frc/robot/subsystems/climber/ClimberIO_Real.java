@@ -9,7 +9,6 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.RobotController;
 import frc.robot.Constants;
-import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class ClimberIO_Real implements ClimberIO {
@@ -21,7 +20,6 @@ public class ClimberIO_Real implements ClimberIO {
   private PIDController pid = new PIDController(0, 0, 0); // TODO Tune
 
   // Log setpoint
-  @AutoLogOutput(key = "Climber/Setpoint")
   private double setpoint = Constants.ClimberConstants.minRotations;
 
   public ClimberIO_Real() {

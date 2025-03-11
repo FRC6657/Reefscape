@@ -112,8 +112,6 @@ public class ModuleIO_Real implements ModuleIO {
     inputs.turnVelocityRadPerSec = Units.rotationsToRadians(turnVelocity.getValueAsDouble());
     inputs.turnAppliedVolts = turnAppliedVolts.getValueAsDouble();
     inputs.turnCurrentAmps = turnCurrent.getValueAsDouble();
-
-    //    drive.setControl(new VoltageOut(0));
   }
 
   @Override
@@ -133,6 +131,7 @@ public class ModuleIO_Real implements ModuleIO {
   }
 
   @Override
+  /** Reset the drive encoder to 0 */
   public void resetDriveEncoder() {
     drive.setPosition(0);
   }

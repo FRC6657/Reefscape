@@ -17,7 +17,6 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.RobotController;
 import frc.robot.Constants;
-import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class IntakeIO_Real implements IntakeIO {
@@ -32,10 +31,8 @@ public class IntakeIO_Real implements IntakeIO {
   private Canandmag encoder;
 
   // Variables to store/log the setpoints
-  @AutoLogOutput(key = "Intake/AngleSetpoint")
   private double angleSetpoint = Constants.Intake.maxAngle;
 
-  @AutoLogOutput(key = "Intake/SpeedSetpoint")
   private double speedSetpoint = 0;
 
   private ProfiledPIDController pivotPID =
@@ -82,7 +79,8 @@ public class IntakeIO_Real implements IntakeIO {
     // Feed the PID with default values
     changePivotSetpoint(Constants.Intake.minAngle);
     changeRollerSpeed(0);
-    // pivotPID.setGoal(angleSetpoint);
+
+    pivotPID.reset(encoder.getAbsPosition());
   }
 
   @Override

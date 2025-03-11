@@ -30,7 +30,7 @@ public class Elevator extends SubsystemBase {
 
   /**
    * @param setpoint in Carriage Meters
-   * @return
+   * @return Command to change the setpoint
    */
   public Command changeSetpoint(double setpoint) {
     return this.runOnce(
@@ -40,6 +40,10 @@ public class Elevator extends SubsystemBase {
         });
   }
 
+  /**
+   * @param setpointSupplier source of the setpoint in Carriage Meters
+   * @return Command to change the setpoint
+   */
   public Command changeSetpoint(DoubleSupplier setpointSupplier) {
     return this.runOnce(
         () ->
@@ -50,16 +54,17 @@ public class Elevator extends SubsystemBase {
                     Constants.Elevator.maxHeight)));
   }
 
+  /**
+   * @return True if the elevator is at the setpoint within 1 inch of carriage travel.
+   */
   @AutoLogOutput(key = "Elevator/AtSetpoint")
   public boolean atSetpoint() {
     return MathUtil.isNear(inputs.kSetpoint, inputs.kPosition, Units.inchesToMeters(1));
   }
 
-  public boolean nearSetpoint() {
-    return MathUtil.isNear(inputs.kSetpoint, inputs.kPosition, Units.inchesToMeters(30));
-  }
-
-  @AutoLogOutput(key = "Elevator/IsDown")
+  /**
+   * @return True if the elevator is all the way down and wants to be all the way down
+   */
   public boolean isDown() {
     return MathUtil.isNear(0, inputs.kPosition, Units.inchesToMeters(1)) && inputs.kSetpoint == 0;
   }

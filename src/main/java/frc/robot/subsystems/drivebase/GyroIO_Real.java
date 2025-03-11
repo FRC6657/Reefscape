@@ -19,29 +19,32 @@ public class GyroIO_Real implements GyroIO {
 
   public GyroIO_Real() {
 
-    gyro = new Pigeon2(CAN.Gyro.id);
+    gyro = new Pigeon2(CAN.Gyro.id); // Assign CAN ID to Gyro
 
+    // Seed status signals
     yaw = gyro.getYaw();
     yawVelocity = gyro.getAngularVelocityZWorld();
 
-    gyro.getConfigurator().apply(new Pigeon2Configuration());
-    gyro.getConfigurator().setYaw(0.0);
-    yaw.setUpdateFrequency(50);
-    yawVelocity.setUpdateFrequency(50);
-    gyro.optimizeBusUtilization();
+    gyro.getConfigurator().apply(new Pigeon2Configuration()); // Reset Factory Defaults
+    gyro.setYaw(0); // Zero Gyro
+
+    BaseStatusSignal.setUpdateFrequencyForAll(50, yaw, yawVelocity); // Set update frequency
+    gyro.optimizeBusUtilization(); // Turn down all other status frames we dont use
   }
 
   @Override
   public void updateInputs(GyroIOInputs inputs) {
 
-    BaseStatusSignal.refreshAll(yaw, yawVelocity);
+    BaseStatusSignal.refreshAll(yaw, yawVelocity); // Pull Latest Data
 
-    inputs.yawPosition = new Rotation2d(yaw.getValue());
-    inputs.yaw = yaw.getValueAsDouble();
-    inputs.yawVelocityRadPerSec = yawVelocity.getValue().in(RadiansPerSecond);
-    inputs.timestamp = yaw.getTimestamp().getTime();
+    // Assign Inputs
+    inputs.yawPosition = new Rotation2d(yaw.getValue()); // Normalized Yaw
+    inputs.yaw = yaw.getValueAsDouble(); // Raw Yaw
+    inputs.yawVelocityRadPerSec = yawVelocity.getValue().in(RadiansPerSecond); // Yaw Velocity
+    inputs.timestamp = yaw.getTimestamp().getTime(); // Gyro Reading Timestamp
   }
 
+  /** Set the yaw of the gyro */
   @Override
   public void setYaw(Rotation2d yaw) {
     gyro.setYaw(yaw.getDegrees());

@@ -133,7 +133,8 @@ public class Constants {
     // Position PID
 
     public static final Constraints kAutoAimTranslationConstraints = new Constraints(2, 5);
-    public static final Constraints kAutoAimRotationConstraints = new Constraints(Units.rotationsToRadians(3), Units.rotationsToRadians(10));
+    public static final Constraints kAutoAimRotationConstraints =
+        new Constraints(Units.rotationsToRadians(3), Units.rotationsToRadians(10));
 
     public static final ProfiledPIDController kXController_Position =
         new ProfiledPIDController(8, 0, 0, kAutoAimTranslationConstraints);
@@ -210,7 +211,7 @@ public class Constants {
       }
     }
 
-    public static CameraInfo camera1Info =
+    public static CameraInfo BlackReefInfo =
         new CameraInfo(
             "Black_Reef",
             new Transform3d(
@@ -219,7 +220,7 @@ public class Constants {
             Rotation2d.fromDegrees(79.19),
             new int[] {1280, 800});
 
-    public static CameraInfo camera2Info =
+    public static CameraInfo WhiteReefInfo =
         new CameraInfo(
             "White_Reef",
             new Transform3d(

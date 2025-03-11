@@ -82,14 +82,14 @@ public class Swerve extends SubsystemBase {
         new ApriltagCamera[] {
           new ApriltagCamera(
               RobotBase.isReal()
-                  ? new ApriltagCameraIO_Real(VisionConstants.camera1Info)
-                  : new ApriltagCameraIO_Sim(VisionConstants.camera1Info),
-              VisionConstants.camera1Info),
+                  ? new ApriltagCameraIO_Real(VisionConstants.BlackReefInfo)
+                  : new ApriltagCameraIO_Sim(VisionConstants.BlackReefInfo),
+              VisionConstants.BlackReefInfo),
           new ApriltagCamera(
               RobotBase.isReal()
-                  ? new ApriltagCameraIO_Real(VisionConstants.camera2Info)
-                  : new ApriltagCameraIO_Sim(VisionConstants.camera2Info),
-              VisionConstants.camera2Info),
+                  ? new ApriltagCameraIO_Real(VisionConstants.WhiteReefInfo)
+                  : new ApriltagCameraIO_Sim(VisionConstants.WhiteReefInfo),
+              VisionConstants.WhiteReefInfo),
           // new ApriltagCamera(
           //     RobotBase.isReal()
           //         ? new ApriltagCameraIO_Real(VisionConstants.camera3Info)
@@ -97,10 +97,12 @@ public class Swerve extends SubsystemBase {
           //     VisionConstants.camera3Info)
         };
 
+    // Default auto aim PID tolerance
     xController.setTolerance(Units.inchesToMeters(0.5));
     yController.setTolerance(Units.inchesToMeters(0.5));
     thetaController.setTolerance(Units.degreesToRadians(2.0));
 
+    // Enable Wrapping
     thetaController.enableContinuousInput(-Math.PI, Math.PI);
     choreoThetaController.enableContinuousInput(-Math.PI, Math.PI);
   }
@@ -108,7 +110,7 @@ public class Swerve extends SubsystemBase {
   /**
    * @return The current pose of the robot
    */
-  @AutoLogOutput(key = "Odometry/Pose")
+  @AutoLogOutput(key = "Swerve/Pose")
   public Pose2d getPose() {
     return poseEstimator.getEstimatedPosition();
   }
@@ -133,7 +135,6 @@ public class Swerve extends SubsystemBase {
   /**
    * @return The velocity of the robot in robot relative coordinates
    */
-  @AutoLogOutput(key = "Odometry/Velocity Robot Relative")
   public ChassisSpeeds getVelocityRobotRelative() {
     var speeds =
         kinematics.toChassisSpeeds(
@@ -145,7 +146,6 @@ public class Swerve extends SubsystemBase {
   /**
    * @return The velocity of the robot in field relative coordinates
    */
-  @AutoLogOutput(key = "Odometry/Velocity Field Relative")
   public ChassisSpeeds getVelocityFieldRelative() {
     var speeds =
         kinematics.toChassisSpeeds(
@@ -170,19 +170,9 @@ public class Swerve extends SubsystemBase {
       optimizedModuleStates[i] = modules[i].runSetpoint(moduleStates[i]); // Run setpoints
     }
 
-    Logger.recordOutput("SwerveStates/RawSetpoints", moduleStates);
-    Logger.recordOutput("Swerve/RR Target Speeds", speeds);
-    Logger.recordOutput("Swerve/RR Speed Error", speeds.minus(getVelocityRobotRelative()));
+    Logger.recordOutput("Swerve/ModuleSetpoints", optimizedModuleStates);
     Logger.recordOutput(
-        "Swerve/FR Target Speeds",
-        ChassisSpeeds.fromFieldRelativeSpeeds(speeds, getPose().getRotation()));
-    Logger.recordOutput(
-        "Swerve/FR Speed Error",
-        ChassisSpeeds.fromFieldRelativeSpeeds(speeds, getPose().getRotation())
-            .minus(getVelocityFieldRelative()));
-    Logger.recordOutput("SwerveStates/OptimizedSetpoints", optimizedModuleStates);
-    Logger.recordOutput(
-        "SwerveStates/ObservedStates",
+        "Swerve/ModuleStates",
         Arrays.stream(modules).map(m -> m.getState()).toArray(SwerveModuleState[]::new));
   }
 
@@ -262,12 +252,17 @@ public class Swerve extends SubsystemBase {
   ProfiledPIDController yController = AutoConstants.kYController_Position;
   ProfiledPIDController thetaController = AutoConstants.kThetaController_Position;
 
+  /**
+   * Reset the states of the auto aim PID controllers, this stops issues when jumping between
+   * locations.
+   */
   public Command resetAutoAimPID() {
-    return Commands.runOnce(() -> {
-      xController.reset(getPose().getX());
-      yController.reset(getPose().getY());
-      thetaController.reset(getPose().getRotation().getRadians());
-    });
+    return Commands.runOnce(
+        () -> {
+          xController.reset(getPose().getX());
+          yController.reset(getPose().getY());
+          thetaController.reset(getPose().getRotation().getRadians());
+        });
   }
 
   /**
@@ -284,6 +279,15 @@ public class Swerve extends SubsystemBase {
         new Constraints(Units.rotationsToRadians(1), Units.rotationsToRadians(2)));
   }
 
+  /**
+   * Runs the drivebase to a given pose with the given tolerances and constraints
+   *
+   * @param targetPose The target pose
+   * @param translationTolerance The translation tolerance for stopping the movement
+   * @param rotationTolerance The rotation tolerance for stopping the movement
+   * @param translationConstraints The translation velocity/acceleration targets
+   * @param rotationConstraints The rotation velocity/acceleration targets
+   */
   public void positionController(
       Pose2d targetPose,
       double translationTolerance,
@@ -330,6 +334,16 @@ public class Swerve extends SubsystemBase {
         new Constraints(Units.rotationsToRadians(1), Units.rotationsToRadians(2)));
   }
 
+  /**
+   * Command to drive to a given pose with the given tolerances and constraints
+   *
+   * @param target The target pose
+   * @param translationTolerance The translation tolerance for stopping the command
+   * @param rotationTolerance The rotation tolerance for stopping the command
+   * @param translationConstraints Translation velocity/acceleration targets
+   * @param rotationConstraints Rotation velocity/acceleration targets
+   * @return The command to drive to the given pose
+   */
   public Command goToPose(
       Supplier<Pose2d> target,
       double translationTolerance,
@@ -355,22 +369,21 @@ public class Swerve extends SubsystemBase {
 
   public void addVisionMeasurement(Pose3d visionPose, double timestamp, Matrix<N3, N1> stdDevs) {
     if (RobotBase.isReal()) {
-
-      if (Math.abs(visionPose.getRotation().getMeasureX().in(Degrees)) > 10
-          || Math.abs(visionPose.getRotation().getMeasureY().in(Degrees)) > 10) {
-        Logger.recordOutput("Errors/RejectedPoses", visionPose);
-        return;
+      if (!(Math.abs(visionPose.getRotation().getMeasureX().in(Degrees)) > 10
+          || Math.abs(visionPose.getRotation().getMeasureY().in(Degrees)) > 10
+          || Math.abs(visionPose.getTranslation().getZ()) > Units.inchesToMeters(12))) {
+        Logger.recordOutput("Vision/ProcessedPoses", visionPose);
+        poseEstimator.addVisionMeasurement(visionPose.toPose2d(), timestamp, stdDevs);
       }
-      // Reject poses too far off the floor
-      if (Math.abs(visionPose.getTranslation().getZ()) > Units.inchesToMeters(12)) {
-        Logger.recordOutput("Errors/RejectedPoses", visionPose);
-        return;
-      }
-
-      poseEstimator.addVisionMeasurement(visionPose.toPose2d(), timestamp, stdDevs);
     }
   }
 
+  /**
+   * Runs a characterization routine that will determine the "real" wheel radius of the swerve
+   * modules It does this by rotating the robot and measuring the distance traveled by the wheels.
+   * It then compares the expected distance based on the gyro reading to the observed distance to
+   * back calculate the "real" wheel radius.
+   */
   public Command wheelRadiusCharacterization() {
 
     double driveRadius =
@@ -461,10 +474,8 @@ public class Swerve extends SubsystemBase {
           RobotBase.isSimulation() ? getPose().getRotation() : gyroInputs.yawPosition);
 
       Pose3d estPose = camera.getEstimatedPose();
-      if (estPose.getTranslation().getZ() < 10) {
-        Logger.recordOutput("Vision/ProcessedPoses", estPose);
-        addVisionMeasurement(estPose, camera.getLatestTimestamp(), camera.getLatestStdDevs());
-      }
+
+      addVisionMeasurement(estPose, camera.getLatestTimestamp(), camera.getLatestStdDevs());
     }
   }
 }

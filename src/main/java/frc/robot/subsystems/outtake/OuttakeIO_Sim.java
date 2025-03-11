@@ -4,7 +4,6 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import frc.robot.Constants;
-import org.littletonrobotics.junction.AutoLogOutput;
 
 public class OuttakeIO_Sim implements OuttakeIO {
 
@@ -12,7 +11,6 @@ public class OuttakeIO_Sim implements OuttakeIO {
   private double outtakeVoltage = 0;
 
   // Setpoint variable
-  @AutoLogOutput(key = "Outtake/RPM Setpoint")
   private double rpmSetpoint = 0;
 
   // Simulated motor
