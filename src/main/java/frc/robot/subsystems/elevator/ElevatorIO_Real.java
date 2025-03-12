@@ -124,10 +124,7 @@ public class ElevatorIO_Real implements ElevatorIO {
 
     // followMotor.setControl(new Follower(CAN.Elevetor_Leader.id, false));
 
-    runAlgaeArm(inputs.kPosition);
-
-    inputs.algaeMotorVoltage = algaeMotor.getBusVoltage();
-    inputs.algaeSetpoint = algaeArmMotorSetpoint;
+    
 
     // Logging for motion magic internal variables for tuning purposes.
     Logger.recordOutput("Elevator/RawPosition", leaderMotor.getPosition().getValueAsDouble());
@@ -148,37 +145,5 @@ public class ElevatorIO_Real implements ElevatorIO {
   public void changeSetpoint(double setpoint) {
     kSetpoint = setpoint;
   }
-
-  // Automatically extends the algae arm when the elevator is up
-  public void runAlgaeArm(double elevatorPosition) {
-
-    // Stop the motor if it has been running for 0.25 seconds
-    if (algaeArmTimer.hasElapsed(0.25)) {
-      if (algaeArmOut) {
-        algaeArmMotorSetpoint = Constants.Elevator.kAlgaeStrength / -3;
-      } else {
-        algaeArmMotorSetpoint = Constants.Elevator.kAlgaeStrength / 1.5;
-      }
-    }
-
-    if (MathUtil.isNear(0, elevatorPosition, Units.inchesToMeters(1.0)) && algaeArmOut) {
-      // If elevator is down and the arm is out bring the arm in
-      algaeArmOut = false;
-      algaeArmMotorSetpoint = Constants.Elevator.kAlgaeStrength / 1.5;
-      algaeArmTimer.stop();
-      algaeArmTimer.reset();
-      algaeArmTimer.start();
-      Logger.recordOutput("Command Log", "Algae Arm Out");
-    } else if (!MathUtil.isNear(0, elevatorPosition, Units.inchesToMeters(1.0)) && !algaeArmOut) {
-      // If elevator is up and the arm is not out, bring the arm out
-      algaeArmOut = true;
-      algaeArmMotorSetpoint = -Constants.Elevator.kAlgaeStrength;
-      algaeArmTimer.stop();
-      algaeArmTimer.reset();
-      algaeArmTimer.start();
-      Logger.recordOutput("Command Log", "Algae Arm In");
-    }
-
-    algaeMotor.set(ControlMode.PercentOutput, algaeArmMotorSetpoint);
-  }
 }
+  
