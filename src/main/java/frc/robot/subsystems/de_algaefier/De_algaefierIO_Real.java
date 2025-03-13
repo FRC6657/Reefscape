@@ -8,8 +8,9 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.EncoderConfig;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
-import edu.wpi.first.math.controller.ProfiledPIDController;
-import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
+
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.util.Units;
 import frc.robot.Constants;
 import frc.robot.Constants.De_algaefier;
@@ -21,9 +22,9 @@ public class De_algaefierIO_Real implements De_algaefierIO {
 
   private double setpoint;
 
-  private ProfiledPIDController pivotPID =
-      new ProfiledPIDController(
-          1.3, 0, 0, new Constraints(Units.degreesToRadians(200), Units.degreesToRadians(300)));
+  private PIDController pivotPID =
+      new PIDController(
+          1.3, 0, 0);
 
   public De_algaefierIO_Real() {
 
@@ -38,6 +39,9 @@ public class De_algaefierIO_Real implements De_algaefierIO {
             .idleMode(IdleMode.kBrake),
         ResetMode.kResetSafeParameters,
         PersistMode.kPersistParameters);
+
+
+    
   }
 
   @Override
@@ -49,5 +53,12 @@ public class De_algaefierIO_Real implements De_algaefierIO {
     inputs.kCurrent = kPivot.getOutputCurrent();
     inputs.kVoltage = kPivot.getBusVoltage();
     inputs.kTemp = kPivot.getMotorTemperature();
+
+    kPivot.set(pivotPID.calculate(inputs.kPosition));
+  }
+
+  @Override
+  public void changeSetpoint(double rotations){
+    pivotPID.setSetpoint(MathUtil.clamp(rotations, De_algaefier.minAngle, De_algaefier.maxAngle));
   }
 }

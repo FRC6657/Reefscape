@@ -17,4 +17,6 @@ public interface De_algaefierIO {
   }
 
   public default void updateInputs(De_algaefierIOInputs inputs) {}
+
+  public default void changeSetpoint(double rotations){}
 }
