@@ -1,6 +1,5 @@
 package frc.robot.subsystems.elevator;
 
-import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.InvertType;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.VictorSPX;
@@ -9,7 +8,6 @@ import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
@@ -124,8 +122,6 @@ public class ElevatorIO_Real implements ElevatorIO {
 
     // followMotor.setControl(new Follower(CAN.Elevetor_Leader.id, false));
 
-    
-
     // Logging for motion magic internal variables for tuning purposes.
     Logger.recordOutput("Elevator/RawPosition", leaderMotor.getPosition().getValueAsDouble());
     Logger.recordOutput("Elevator/RawVelocity", leaderMotor.getVelocity().getValueAsDouble());
@@ -146,4 +142,3 @@ public class ElevatorIO_Real implements ElevatorIO {
     kSetpoint = setpoint;
   }
 }
-  

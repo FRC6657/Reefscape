@@ -409,6 +409,17 @@ public class Constants {
             .withMotionMagicAcceleration((kMaxAcceleration / stages) / (sprocketPD * Math.PI));
   }
 
+  public static class De_algaefier {
+    public static double pivotGearing = (10d / 1) * (3d / 2);
+
+    public static double maxAngle = Units.degreesToRadians(45);
+    public static double minAngle = Units.degreesToRadians(5);
+    // TODO find these angles
+    public static double algaeScoreAngle = Units.degreesToRadians(37);
+
+    public static final int kPivotSupplyLimit = 20;
+  }
+
   public static final class ClimberConstants {
     public static double maxRotations = 90;
     public static double minRotations = 0;
