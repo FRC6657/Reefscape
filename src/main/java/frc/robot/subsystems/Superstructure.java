@@ -6,7 +6,9 @@ import choreo.auto.AutoTrajectory;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
@@ -18,6 +20,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ScheduleCommand;
 import frc.robot.Constants;
 import frc.robot.Constants.FieldConstants.ReefSlot;
+import frc.robot.subsystems.de_algaefier.De_algaefier;
 import frc.robot.subsystems.drivebase.Swerve;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.intake.Intake;
@@ -34,6 +37,7 @@ public class Superstructure {
   Elevator elevator;
   Outtake outtake;
   Intake intake;
+  De_algaefier dealg;
 
   @AutoLogOutput(key = "RobotStates/Selected Reef")
   private String selectedReef = "Left"; // Selected Reef Pole
@@ -58,22 +62,25 @@ public class Superstructure {
   };
 
   // Constructor
-  public Superstructure(Swerve drivebase, Elevator elevator, Outtake outtake, Intake intake) {
+  public Superstructure(
+      Swerve drivebase, Elevator elevator, Outtake outtake, Intake intake, De_algaefier dealg) {
     this.drivebase = drivebase;
     this.elevator = elevator;
     this.outtake = outtake;
     this.intake = intake;
+    this.dealg = dealg;
   }
 
   /*
    * Grab and Log the 3D positions of all robot mechanisms for 3D visualization.
    */
   public void update3DPose() {
-    Pose3d[] mechanismPoses = new Pose3d[4];
+    Pose3d[] mechanismPoses = new Pose3d[5];
     mechanismPoses[0] = intake.get3DPose();
     mechanismPoses[1] = elevator.get3DPoses()[0];
     mechanismPoses[2] = elevator.get3DPoses()[1];
     mechanismPoses[3] = elevator.get3DPoses()[2];
+    mechanismPoses[4] = new Pose3d(elevator.get3DPoses()[2].getTranslation().plus(new Translation3d(-0.330200, 0, 0.591850)), new Rotation3d(0, -Units.degreesToRadians(dealg.getPosition()), 0));
 
     Logger.recordOutput("3D Poses", mechanismPoses);
   }

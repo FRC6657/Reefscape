@@ -8,10 +8,10 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.EncoderConfig;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
-
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.RobotController;
 import frc.robot.Constants;
 import frc.robot.Constants.De_algaefier;
 
@@ -20,11 +20,7 @@ public class De_algaefierIO_Real implements De_algaefierIO {
   private SparkMax kPivot;
   private RelativeEncoder kEncoder;
 
-  private double setpoint;
-
-  private PIDController pivotPID =
-      new PIDController(
-          1.3, 0, 0);
+  private PIDController pivotPID = new PIDController(1.3, 0, 0);
 
   public De_algaefierIO_Real() {
 
@@ -39,26 +35,24 @@ public class De_algaefierIO_Real implements De_algaefierIO {
             .idleMode(IdleMode.kBrake),
         ResetMode.kResetSafeParameters,
         PersistMode.kPersistParameters);
-
-
-    
   }
 
   @Override
   public void updateInputs(De_algaefierIOInputs inputs) {
-    inputs.kSetpoint = setpoint;
-    inputs.kPosition = kEncoder.getPosition();
-    inputs.kVelocity = kEncoder.getVelocity();
+
+    inputs.kSetpoint = Units.rotationsToDegrees(pivotPID.getSetpoint());
+    inputs.kPosition = Units.rotationsToDegrees(kEncoder.getPosition());
+    inputs.kVelocity = Units.rotationsToDegrees(kEncoder.getVelocity());
 
     inputs.kCurrent = kPivot.getOutputCurrent();
-    inputs.kVoltage = kPivot.getBusVoltage();
+    inputs.kVoltage = kPivot.getAppliedOutput() * RobotController.getBatteryVoltage();
     inputs.kTemp = kPivot.getMotorTemperature();
 
-    kPivot.set(pivotPID.calculate(inputs.kPosition));
+    kPivot.set(pivotPID.calculate(kEncoder.getPosition()));
   }
 
   @Override
-  public void changeSetpoint(double rotations){
+  public void changeSetpoint(double rotations) {
     pivotPID.setSetpoint(MathUtil.clamp(rotations, De_algaefier.minAngle, De_algaefier.maxAngle));
   }
 }

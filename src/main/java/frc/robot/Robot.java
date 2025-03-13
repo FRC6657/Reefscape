@@ -9,6 +9,7 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
@@ -21,6 +22,9 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.subsystems.Superstructure;
+import frc.robot.subsystems.de_algaefier.De_algaefier;
+import frc.robot.subsystems.de_algaefier.De_algaefierIO_Real;
+import frc.robot.subsystems.de_algaefier.De_algaefierIO_Sim;
 import frc.robot.subsystems.drivebase.GyroIO;
 import frc.robot.subsystems.drivebase.GyroIO_Real;
 import frc.robot.subsystems.drivebase.ModuleIO;
@@ -52,6 +56,7 @@ public class Robot extends LoggedRobot {
   private final Elevator elevator;
   private final Intake intake;
   private final Outtake outtake;
+  private final De_algaefier dealg;
 
   private final Superstructure superstructure;
   private final AutoFactory autoFactory;
@@ -82,8 +87,10 @@ public class Robot extends LoggedRobot {
     elevator = new Elevator(RobotBase.isReal() ? new ElevatorIO_Real() : new ElevatorIO_Sim());
     intake = new Intake(RobotBase.isReal() ? new IntakeIO_Real() : new IntakeIO_Sim());
     outtake = new Outtake(RobotBase.isReal() ? new OuttakeIO_Real() : new OuttakeIO_Sim());
+    dealg =
+        new De_algaefier(RobotBase.isReal() ? new De_algaefierIO_Real() : new De_algaefierIO_Sim());
 
-    superstructure = new Superstructure(swerve, elevator, outtake, intake);
+    superstructure = new Superstructure(swerve, elevator, outtake, intake, dealg);
 
     autoFactory =
         new AutoFactory(swerve::getPose, swerve::resetPose, swerve::followTrajectory, true, swerve);
@@ -129,6 +136,11 @@ public class Robot extends LoggedRobot {
                             (DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red)
                                 ? Rotation2d.k180deg
                                 : Rotation2d.kZero))));
+
+    driver
+        .b()
+        .onTrue(dealg.changeSetpoint(Units.degreesToRotations(70)))
+        .onFalse(dealg.changeSetpoint(0));
 
     driver.a().whileTrue(superstructure.AutoAim());
     driver.a().onFalse(Commands.runOnce(() -> swerve.drive(new ChassisSpeeds())));

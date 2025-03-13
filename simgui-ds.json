@@ -97,6 +97,9 @@
     {
       "guid": "03000000edfe00000000000000000000",
       "useGamepad": true
+    },
+    {
+      "useGamepad": true
     }
   ]
 }

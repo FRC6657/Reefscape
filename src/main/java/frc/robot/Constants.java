@@ -412,8 +412,8 @@ public class Constants {
   public static class De_algaefier {
     public static double pivotGearing = (10d / 1) * (3d / 2);
 
-    public static double maxAngle = Units.degreesToRotations(0);
-    public static double minAngle = Units.degreesToRotations(70);
+    public static double maxAngle = Units.degreesToRotations(70);
+    public static double minAngle = Units.degreesToRotations(0);
     // TODO find these angles
     public static double algaeScoreAngle = Units.degreesToRotations(37);
 
