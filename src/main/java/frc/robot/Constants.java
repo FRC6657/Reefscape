@@ -415,7 +415,6 @@ public class Constants {
     public static double maxAngle = Units.degreesToRotations(70);
     public static double minAngle = Units.degreesToRotations(0);
     // TODO find these angles
-    public static double algaeScoreAngle = Units.degreesToRotations(37);
 
     public static final int kPivotSupplyLimit = 20;
   }

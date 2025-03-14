@@ -168,7 +168,11 @@ public class Superstructure {
   // Select Coral Mode
   public Command selectPiece(String piece) {
     return Commands.runOnce(() -> selectedPiece = piece)
-        .andThen(logMessage("Selected Piece: " + piece));
+        .andThen(logMessage("Selected Piece: " + piece))
+        .andThen(Commands.either(
+          dealg.changeSetpoint(Constants.De_algaefier.minAngle),
+          dealg.changeSetpoint(Constants.De_algaefier.mazAngle),
+          () -> selectedPiece == "Coral"));
   }
 
   // Change Elevator Setpoint to the selected reef level.
@@ -190,6 +194,19 @@ public class Superstructure {
         outtake.changeRollerSetpoint(-0.5),
         Commands.waitUntil(outtake::coralDetected),
         outtake.changeRollerSetpoint(0));
+
+    return Commands.either(
+      Commands.sequence(
+        logMessage("Elevator Intake"),
+        outtake.changeRollerSetpoint(-0.5),
+        Commands.waitUntil(outtake::coralDetected),
+        outtake.changeRollerSetpoint(0)),
+      Commands.sequence(
+        logMessage("Elevator Algae Intake"),
+        outtake.changeRollerSetpoint(0.5)//TODO verify
+      ),
+      () -> selectedPiece == "Coral"
+    );
   }
 
   // Command for intaking game pieces from the ground
@@ -248,6 +265,10 @@ public class Superstructure {
         Commands.waitUntil(() -> !outtake.coralDetected()).unless(RobotBase::isSimulation),
         Commands.waitSeconds(0.3),
         outtake.changeRollerSetpoint(0));
+  }
+
+  public Command AlgaeReefIntake(){
+    return null;
   }
 
   // Scores a piece.
