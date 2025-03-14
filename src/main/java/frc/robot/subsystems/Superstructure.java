@@ -80,7 +80,13 @@ public class Superstructure {
     mechanismPoses[1] = elevator.get3DPoses()[0];
     mechanismPoses[2] = elevator.get3DPoses()[1];
     mechanismPoses[3] = elevator.get3DPoses()[2];
-    mechanismPoses[4] = new Pose3d(elevator.get3DPoses()[2].getTranslation().plus(new Translation3d(-0.330200, 0, 0.591850)), new Rotation3d(0, -Units.degreesToRadians(dealg.getPosition()), 0));
+    mechanismPoses[4] =
+        new Pose3d(
+            elevator
+                .get3DPoses()[2]
+                .getTranslation()
+                .plus(new Translation3d(-0.330200, 0, 0.591850)),
+            new Rotation3d(0, -Units.degreesToRadians(dealg.getPosition()), 0));
 
     Logger.recordOutput("3D Poses", mechanismPoses);
   }
@@ -169,10 +175,11 @@ public class Superstructure {
   public Command selectPiece(String piece) {
     return Commands.runOnce(() -> selectedPiece = piece)
         .andThen(logMessage("Selected Piece: " + piece))
-        .andThen(Commands.either(
-          dealg.changeSetpoint(Constants.De_algaefier.minAngle),
-          dealg.changeSetpoint(Constants.De_algaefier.mazAngle),
-          () -> selectedPiece == "Coral"));
+        .andThen(
+            Commands.either(
+                dealg.changeSetpoint(Constants.De_algaefier.minAngle),
+                dealg.changeSetpoint(Constants.De_algaefier.maxAngle),
+                () -> selectedPiece == "Coral"));
   }
 
   // Change Elevator Setpoint to the selected reef level.
@@ -187,26 +194,17 @@ public class Superstructure {
                     + elevatorLevel));
   }
 
-  // Command for intaking coral from the human player station
   public Command ElevatorIntake() {
-    return Commands.sequence(
-        logMessage("Elevator Intake"),
-        outtake.changeRollerSetpoint(-0.5),
-        Commands.waitUntil(outtake::coralDetected),
-        outtake.changeRollerSetpoint(0));
-
     return Commands.either(
-      Commands.sequence(
-        logMessage("Elevator Intake"),
-        outtake.changeRollerSetpoint(-0.5),
-        Commands.waitUntil(outtake::coralDetected),
-        outtake.changeRollerSetpoint(0)),
-      Commands.sequence(
-        logMessage("Elevator Algae Intake"),
-        outtake.changeRollerSetpoint(0.5)//TODO verify
-      ),
-      () -> selectedPiece == "Coral"
-    );
+        Commands.sequence(
+            logMessage("Elevator Intake"),
+            outtake.changeRollerSetpoint(-0.5),
+            Commands.waitUntil(outtake::coralDetected),
+            outtake.changeRollerSetpoint(0)),
+        Commands.sequence(
+            logMessage("Elevator Algae Intake"), outtake.changeRollerSetpoint(0.5) // TODO verify
+            ),
+        () -> selectedPiece == "Coral");
   }
 
   // Command for intaking game pieces from the ground
@@ -265,10 +263,6 @@ public class Superstructure {
         Commands.waitUntil(() -> !outtake.coralDetected()).unless(RobotBase::isSimulation),
         Commands.waitSeconds(0.3),
         outtake.changeRollerSetpoint(0));
-  }
-
-  public Command AlgaeReefIntake(){
-    return null;
   }
 
   // Scores a piece.
