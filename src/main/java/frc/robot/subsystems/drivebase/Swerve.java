@@ -37,6 +37,8 @@ import frc.robot.subsystems.vision.ApriltagCamera;
 import frc.robot.subsystems.vision.ApriltagCameraIO_Real;
 import frc.robot.subsystems.vision.ApriltagCameraIO_Sim;
 import java.util.Arrays;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
@@ -53,6 +55,17 @@ public class Swerve extends SubsystemBase {
   private final SwerveDrivePoseEstimator poseEstimator;
 
   private final ApriltagCamera[] cameras;
+
+  static final Lock odometryLock = new ReentrantLock();
+  static final double odometryFrequency = 150;
+
+  private SwerveModulePosition[] lastModulePositions = // For delta tracking
+    new SwerveModulePosition[] {
+      new SwerveModulePosition(),
+      new SwerveModulePosition(),
+      new SwerveModulePosition(),
+      new SwerveModulePosition()
+    };
 
   public Swerve(GyroIO gyroIO, ModuleIO[] moduleIOs) {
 
@@ -105,6 +118,8 @@ public class Swerve extends SubsystemBase {
     // Enable Wrapping
     thetaController.enableContinuousInput(-Math.PI, Math.PI);
     choreoThetaController.enableContinuousInput(-Math.PI, Math.PI);
+
+    PhoenixOdometryThread.getInstance().start();
   }
 
   /**
@@ -437,16 +452,35 @@ public class Swerve extends SubsystemBase {
   @Override
   public void periodic() {
 
+    odometryLock.lock();
     gyroIO.updateInputs(gyroInputs);
     Logger.processInputs("Swerve/Gyro", gyroInputs);
     for (Module module : modules) {
       module.updateInputs();
     }
+    odometryLock.unlock();
 
     if (RobotBase.isReal()) {
-      poseEstimator.update(
-          gyroInputs.yawPosition,
-          Arrays.stream(modules).map(m -> m.getPosition()).toArray(SwerveModulePosition[]::new));
+      
+      double[] sampleTimestamps = modules[0].getOdometryTimestamps();
+      for (int i = 0; i < sampleTimestamps.length; i++){
+        SwerveModulePosition[] modulePositions = new SwerveModulePosition[4];
+        SwerveModulePosition[] moduleDeltas = new SwerveModulePosition[4];
+        for (int moduleIndex = 0; moduleIndex < 4; moduleIndex++) {
+          modulePositions[moduleIndex] = modules[moduleIndex].getOdometryPositions()[i];
+          moduleDeltas[moduleIndex] =
+              new SwerveModulePosition(
+                  modulePositions[moduleIndex].distanceMeters
+                      - lastModulePositions[moduleIndex].distanceMeters,
+                  modulePositions[moduleIndex].angle);
+          lastModulePositions[moduleIndex] = modulePositions[moduleIndex];
+        poseEstimator.updateWithTime(sampleTimestamps[i], gyroInputs.yawPositions[i], modulePositions);
+      }
+    }
+
+      // poseEstimator.update(
+      //     gyroInputs.yawPosition,
+      //     Arrays.stream(modules).map(m -> m.getPosition()).toArray(SwerveModulePosition[]::new));
     } else {
       var simHeading = getPose().getRotation();
       var gyroDelta =
@@ -470,7 +504,7 @@ public class Swerve extends SubsystemBase {
         camera.updateSimPose(getPose());
       }
       camera.updateInputs(
-          RobotBase.isSimulation() ? Timer.getFPGATimestamp() : gyroInputs.timestamp,
+          RobotBase.isSimulation() ? Timer.getFPGATimestamp() : gyroInputs.yawTimestamp,
           RobotBase.isSimulation() ? getPose().getRotation() : gyroInputs.yawPosition);
 
       Pose3d estPose = camera.getEstimatedPose();

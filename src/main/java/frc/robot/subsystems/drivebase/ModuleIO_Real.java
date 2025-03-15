@@ -12,6 +12,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import frc.robot.Constants;
 import frc.robot.Constants.Swerve.ModuleConstants;
+import java.util.Queue;
 
 public class ModuleIO_Real implements ModuleIO {
 
@@ -39,6 +40,10 @@ public class ModuleIO_Real implements ModuleIO {
   private final VelocityVoltage drivePID = new VelocityVoltage(0.0);
   private final MotionMagicVoltage turnPID = new MotionMagicVoltage(0.0);
 
+  private final Queue<Double> timestampQueue;
+  private final Queue<Double> drivePositionQueue;
+  private final Queue<Double> turnPositionQueue;
+
   public ModuleIO_Real(ModuleConstants constants) {
 
     this.constants = constants;
@@ -64,15 +69,16 @@ public class ModuleIO_Real implements ModuleIO {
     turnAppliedVolts = turn.getMotorVoltage();
     turnCurrent = turn.getStatorCurrent();
 
+    BaseStatusSignal.setUpdateFrequencyForAll(
+        Swerve.odometryFrequency, drivePosition, turnPosition);
+
     // Set Status Signal Update Frequency
     BaseStatusSignal.setUpdateFrequencyForAll(
         50,
-        drivePosition,
         driveVelocity,
         driveAppliedVolts,
         driveCurrent,
         driveSupplyCurrent,
-        turnPosition,
         turnVelocity,
         turnAppliedVolts,
         turnCurrent);
@@ -94,6 +100,10 @@ public class ModuleIO_Real implements ModuleIO {
                       .setStatusFramePeriod(1);
               encoder.setSettings(stg, 0, 1);
             });
+
+    timestampQueue = PhoenixOdometryThread.getInstance().makeTimestampQueue();
+    drivePositionQueue = PhoenixOdometryThread.getInstance().registerSignal(drive.getPosition());
+    turnPositionQueue = PhoenixOdometryThread.getInstance().registerSignal(turn.getPosition());
   }
 
   @Override
@@ -125,6 +135,20 @@ public class ModuleIO_Real implements ModuleIO {
     inputs.turnVelocityRadPerSec = Units.rotationsToRadians(turnVelocity.getValueAsDouble());
     inputs.turnAppliedVolts = turnAppliedVolts.getValueAsDouble();
     inputs.turnCurrentAmps = turnCurrent.getValueAsDouble();
+
+    inputs.odometryTimestamps =
+        timestampQueue.stream().mapToDouble((Double value) -> value).toArray();
+    inputs.odometryDrivePositions =
+        drivePositionQueue.stream()
+            .mapToDouble((Double value) -> value)
+            .toArray();
+    inputs.odometryTurnPositions =
+        turnPositionQueue.stream()
+            .map((Double value) -> Rotation2d.fromRotations(value))
+            .toArray(Rotation2d[]::new);
+    timestampQueue.clear();
+    drivePositionQueue.clear();
+    turnPositionQueue.clear();
   }
 
   @Override

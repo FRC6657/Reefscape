@@ -20,6 +20,10 @@ public interface ModuleIO {
     public double turnVelocityRadPerSec = 0.0;
     public double turnAppliedVolts = 0.0;
     public double turnCurrentAmps = 0.0;
+
+    public double[] odometryTimestamps = new double[] {};
+    public double[] odometryDrivePositions = new double[] {};
+    public Rotation2d[] odometryTurnPositions = new Rotation2d[] {};
   }
 
   public default void updateInputs(ModuleIOInputs inputs) {}

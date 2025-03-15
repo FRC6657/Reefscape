@@ -10,6 +10,8 @@ public class Module {
   private ModuleIO io;
   private ModuleIOInputsAutoLogged inputs = new ModuleIOInputsAutoLogged();
 
+  private SwerveModulePosition[] odometryPositions = new SwerveModulePosition[] {};
+
   public Module(ModuleIO io) {
     this.io = io;
   }
@@ -44,8 +46,22 @@ public class Module {
   // Update Module IO
   public void updateInputs() {
     io.updateInputs(inputs);
-    Logger.processInputs(
-        new StringBuilder("Swerve/").append(inputs.prefix).append(" Module").toString(), inputs);
+    Logger.processInputs(new StringBuilder("Swerve/").append(inputs.prefix).append(" Module").toString(), inputs);
+
+    int sampleCount = inputs.odometryTimestamps.length; // All signals are sampled together
+    odometryPositions = new SwerveModulePosition[sampleCount];
+    for (int i = 0; i < sampleCount; i++) {
+      odometryPositions[i] = new SwerveModulePosition(inputs.odometryDrivePositions[i], inputs.odometryTurnPositions[i]);
+    }
+
+  }
+
+  public double[] getOdometryTimestamps() {
+    return inputs.odometryTimestamps;
+  }
+
+  public SwerveModulePosition[] getOdometryPositions() {
+    return odometryPositions;
   }
 
   /** Reset the drive encoder to 0 */

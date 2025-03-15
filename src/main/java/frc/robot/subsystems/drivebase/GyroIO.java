@@ -10,7 +10,9 @@ public interface GyroIO {
     public Rotation2d yawPosition = new Rotation2d();
     public double yaw = 0.0;
     public double yawVelocityRadPerSec = 0.0;
-    public double timestamp = 0.0;
+    public double yawTimestamp = 0.0; // Timestamp of the latest yaw reading
+    public double[] yawTimestamps = new double[] {};
+    public Rotation2d[] yawPositions = new Rotation2d[] {};
   }
 
   public default void updateInputs(GyroIOInputs inputs) {}
