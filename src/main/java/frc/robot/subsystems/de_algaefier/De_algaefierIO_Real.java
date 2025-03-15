@@ -13,6 +13,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.RobotController;
 import frc.robot.Constants;
 import frc.robot.Constants.De_algaefier;
+import org.littletonrobotics.junction.Logger;
 
 public class De_algaefierIO_Real implements De_algaefierIO {
 
@@ -30,25 +31,27 @@ public class De_algaefierIO_Real implements De_algaefierIO {
     config.inverted(false);
     config.smartCurrentLimit(De_algaefier.kPivotSupplyLimit);
     config.idleMode(IdleMode.kBrake);
+
     config.encoder.positionConversionFactor(1d / De_algaefier.pivotGearing);
     config.encoder.velocityConversionFactor(1d / De_algaefier.pivotGearing);
 
-    config.signals.absoluteEncoderPositionAlwaysOn(false);
-    config.signals.absoluteEncoderPositionAlwaysOn(false);
-    config.signals.analogPositionAlwaysOn(false);
-    config.signals.analogVelocityAlwaysOn(false);
-    config.signals.appliedOutputPeriodMs(50);
-    config.signals.busVoltagePeriodMs(50);
-    config.signals.externalOrAltEncoderPositionAlwaysOn(false);
-    config.signals.externalOrAltEncoderVelocityAlwaysOn(false);
-    config.signals.iAccumulationAlwaysOn(false);
-    config.signals.motorTemperaturePeriodMs(100);
-    config.signals.outputCurrentPeriodMs(50);
-    config.signals.primaryEncoderPositionPeriodMs(50);
-    config.signals.primaryEncoderVelocityPeriodMs(50);
+    // config.signals.absoluteEncoderPositionAlwaysOn(false);
+    // config.signals.absoluteEncoderPositionAlwaysOn(false);
+    // config.signals.analogPositionAlwaysOn(false);
+    // config.signals.analogVelocityAlwaysOn(false);
+    // config.signals.appliedOutputPeriodMs(50);
+    // config.signals.busVoltagePeriodMs(50);
+    // config.signals.externalOrAltEncoderPositionAlwaysOn(false);
+    // config.signals.externalOrAltEncoderVelocityAlwaysOn(false);
+    // config.signals.iAccumulationAlwaysOn(false);
+    // config.signals.motorTemperaturePeriodMs(100);
+    // config.signals.outputCurrentPeriodMs(50);
+    // config.signals.primaryEncoderPositionPeriodMs(50);
+    // config.signals.primaryEncoderVelocityPeriodMs(50);
 
     // configure the motor
     kPivot.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+    changeSetpoint(0);
   }
 
   @Override
@@ -61,7 +64,9 @@ public class De_algaefierIO_Real implements De_algaefierIO {
     inputs.kVoltage = kPivot.getAppliedOutput() * RobotController.getBatteryVoltage();
     inputs.kTemp = kPivot.getMotorTemperature();
 
-    kPivot.set(pivotPID.calculate(kEncoder.getPosition()));
+    Logger.recordOutput("PIDTest", pivotPID.calculate(kEncoder.getPosition()));
+
+    // kPivot.set(pivotPID.calculate(kEncoder.getPosition()));
     inputs.kSetpoint =
         Units.rotationsToDegrees(
             pivotPID

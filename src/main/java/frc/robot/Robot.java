@@ -9,7 +9,6 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
@@ -136,11 +135,10 @@ public class Robot extends LoggedRobot {
                             (DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red)
                                 ? Rotation2d.k180deg
                                 : Rotation2d.kZero))));
-
-    driver
+    debug
         .b()
-        .onTrue(dealg.changeSetpoint(Units.degreesToRotations(70)))
-        .onFalse(dealg.changeSetpoint(0));
+        .onTrue(outtake.changeRollerSetpoint(-0.4))
+        .onFalse(outtake.changeRollerSetpoint(-0.1));
 
     driver.a().whileTrue(superstructure.AutoAim());
     driver.a().onFalse(Commands.runOnce(() -> swerve.drive(new ChassisSpeeds())));
@@ -156,11 +154,6 @@ public class Robot extends LoggedRobot {
     operator.button(3).onTrue(superstructure.selectReef("Right"));
 
     operator.button(4).onTrue(superstructure.HomeRobot());
-    operator
-        .button(1)
-        .onTrue(outtake.changeRollerSetpoint(-0.8))
-        .onFalse(outtake.changeRollerSetpoint(0));
-
     operator
         .button(1)
         .onTrue(outtake.changeRollerSetpoint(-0.8))

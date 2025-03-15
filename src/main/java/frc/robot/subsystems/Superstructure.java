@@ -46,7 +46,7 @@ public class Superstructure {
   private int elevatorLevel = 2; // Selected Reef Level
 
   @AutoLogOutput(key = "RobotStates/Selected Piece")
-  private String selectedPiece = "Algae";
+  private String selectedPiece = "Coral";
 
   // Array for easily grabbing setpoint heights.
   private double[] elevatorSetpoints = {
@@ -202,7 +202,7 @@ public class Superstructure {
             Commands.waitUntil(outtake::coralDetected),
             outtake.changeRollerSetpoint(0)),
         Commands.sequence(
-            logMessage("Elevator Algae Intake"), outtake.changeRollerSetpoint(0.7) // TODO verify
+            logMessage("Elevator Algae Intake"), outtake.changeRollerSetpoint(-0.7) // TODO verify
             ),
         () -> selectedPiece == "Coral");
   }
@@ -210,7 +210,7 @@ public class Superstructure {
   public Command PassiveElevatorIntake() {
     return Commands.either(
         outtake.changeRollerSetpoint(0),
-        outtake.changeRollerSetpoint(-0.3),
+        outtake.changeRollerSetpoint(-0.15),
         () -> selectedPiece == "Coral");
   }
 

@@ -6,7 +6,6 @@ import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.reduxrobotics.sensors.canandmag.Canandmag;
-import com.reduxrobotics.sensors.canandmag.CanandmagSettings;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
@@ -81,19 +80,21 @@ public class ModuleIO_Real implements ModuleIO {
     drive.optimizeBusUtilization();
     turn.optimizeBusUtilization();
 
-    // Get the encoder value and turn off the encoder status frames.
-    encoder
-        .getAbsPositionFrame()
-        .addCallback(
-            frame -> {
-              turn.setPosition(frame.getValue());
-              CanandmagSettings stg =
-                  new CanandmagSettings()
-                      .setPositionFramePeriod(0)
-                      .setVelocityFramePeriod(0)
-                      .setStatusFramePeriod(1);
-              encoder.setSettings(stg, 0, 1);
-            });
+    // // Get the encoder value and turn off the encoder status frames.
+    // encoder
+    //     .getAbsPositionFrame()
+    //     .addCallback(
+    //         frame -> {
+    //           turn.setPosition(frame.getValue());
+    //           CanandmagSettings stg =
+    //               new CanandmagSettings()
+    //                   .setPositionFramePeriod(0)
+    //                   .setVelocityFramePeriod(0)
+    //                   .setStatusFramePeriod(1);
+    //           encoder.setSettings(stg, 0, 1);
+    //         });
+
+    turn.setPosition(encoder.getAbsPosition());
   }
 
   @Override
