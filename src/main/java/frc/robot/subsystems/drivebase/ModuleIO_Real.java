@@ -1,7 +1,5 @@
 package frc.robot.subsystems.drivebase;
 
-import java.util.function.BiConsumer;
-
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VelocityVoltage;
@@ -9,11 +7,9 @@ import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.reduxrobotics.sensors.canandmag.Canandmag;
 import com.reduxrobotics.sensors.canandmag.CanandmagSettings;
-
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.AsynchronousInterrupt;
 import frc.robot.Constants;
 import frc.robot.Constants.Swerve.ModuleConstants;
 
@@ -85,18 +81,19 @@ public class ModuleIO_Real implements ModuleIO {
     drive.optimizeBusUtilization();
     turn.optimizeBusUtilization();
 
-    //Get the encoder value and turn off the encoder status frames.
-    encoder.getAbsPositionFrame().addCallback(
-      frame -> {
-        turn.setPosition(frame.getValue());
-        CanandmagSettings stg = new CanandmagSettings()
-        .setPositionFramePeriod(0)
-        .setVelocityFramePeriod(0)
-        .setStatusFramePeriod(1);
-        encoder.setSettings(stg, 0, 1);
-      }
-    );
-
+    // Get the encoder value and turn off the encoder status frames.
+    encoder
+        .getAbsPositionFrame()
+        .addCallback(
+            frame -> {
+              turn.setPosition(frame.getValue());
+              CanandmagSettings stg =
+                  new CanandmagSettings()
+                      .setPositionFramePeriod(0)
+                      .setVelocityFramePeriod(0)
+                      .setStatusFramePeriod(1);
+              encoder.setSettings(stg, 0, 1);
+            });
   }
 
   @Override

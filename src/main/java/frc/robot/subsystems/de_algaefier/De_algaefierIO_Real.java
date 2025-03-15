@@ -5,7 +5,6 @@ import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.config.EncoderConfig;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.MathUtil;
@@ -49,10 +48,7 @@ public class De_algaefierIO_Real implements De_algaefierIO {
     config.signals.primaryEncoderVelocityPeriodMs(50);
 
     // configure the motor
-    kPivot.configure(
-        config,
-        ResetMode.kResetSafeParameters,
-        PersistMode.kPersistParameters);
+    kPivot.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
   }
 
   @Override

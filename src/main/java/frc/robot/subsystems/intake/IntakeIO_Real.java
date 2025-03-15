@@ -63,10 +63,7 @@ public class IntakeIO_Real implements IntakeIO {
     config.signals.primaryEncoderPositionAlwaysOn(false);
     config.signals.primaryEncoderVelocityAlwaysOn(false);
 
-    pivotMotor.configure(
-        config,
-        ResetMode.kResetSafeParameters,
-        PersistMode.kPersistParameters);
+    pivotMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
     // Configure the leading roller motor
     var rollerConfigurator = rollerMotor.getConfigurator();
