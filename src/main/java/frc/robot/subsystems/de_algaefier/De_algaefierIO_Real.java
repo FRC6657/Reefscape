@@ -27,12 +27,30 @@ public class De_algaefierIO_Real implements De_algaefierIO {
     kPivot = new SparkMax(Constants.CAN.AlgaeMotor.id, MotorType.kBrushless);
     kEncoder = kPivot.getEncoder();
 
+    SparkMaxConfig config = new SparkMaxConfig();
+    config.inverted(false);
+    config.smartCurrentLimit(De_algaefier.kPivotSupplyLimit);
+    config.idleMode(IdleMode.kBrake);
+    config.encoder.positionConversionFactor(1d / De_algaefier.pivotGearing);
+    config.encoder.velocityConversionFactor(1d / De_algaefier.pivotGearing);
+
+    config.signals.absoluteEncoderPositionAlwaysOn(false);
+    config.signals.absoluteEncoderPositionAlwaysOn(false);
+    config.signals.analogPositionAlwaysOn(false);
+    config.signals.analogVelocityAlwaysOn(false);
+    config.signals.appliedOutputPeriodMs(50);
+    config.signals.busVoltagePeriodMs(50);
+    config.signals.externalOrAltEncoderPositionAlwaysOn(false);
+    config.signals.externalOrAltEncoderVelocityAlwaysOn(false);
+    config.signals.iAccumulationAlwaysOn(false);
+    config.signals.motorTemperaturePeriodMs(100);
+    config.signals.outputCurrentPeriodMs(50);
+    config.signals.primaryEncoderPositionPeriodMs(50);
+    config.signals.primaryEncoderVelocityPeriodMs(50);
+
     // configure the motor
     kPivot.configure(
-        new SparkMaxConfig()
-            .apply(new EncoderConfig().positionConversionFactor(1d / De_algaefier.pivotGearing))
-            .smartCurrentLimit(De_algaefier.kPivotSupplyLimit)
-            .idleMode(IdleMode.kBrake),
+        config,
         ResetMode.kResetSafeParameters,
         PersistMode.kPersistParameters);
   }
