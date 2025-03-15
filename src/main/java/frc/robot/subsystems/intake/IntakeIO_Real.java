@@ -45,11 +45,26 @@ public class IntakeIO_Real implements IntakeIO {
     rollerMotor = new TalonFX(Constants.CAN.IntakeRoller.id);
     encoder = new Canandmag(Constants.CAN.IntakeEncoder.id);
 
+    SparkMaxConfig config = new SparkMaxConfig();
+    config.inverted(false);
+    config.smartCurrentLimit(40);
+    config.idleMode(IdleMode.kCoast);
+    config.signals.absoluteEncoderPositionAlwaysOn(false);
+    config.signals.absoluteEncoderPositionAlwaysOn(false);
+    config.signals.analogPositionAlwaysOn(false);
+    config.signals.analogVelocityAlwaysOn(false);
+    config.signals.appliedOutputPeriodMs(50);
+    config.signals.busVoltagePeriodMs(50);
+    config.signals.externalOrAltEncoderPositionAlwaysOn(false);
+    config.signals.externalOrAltEncoderVelocityAlwaysOn(false);
+    config.signals.iAccumulationAlwaysOn(false);
+    config.signals.motorTemperaturePeriodMs(100);
+    config.signals.outputCurrentPeriodMs(50);
+    config.signals.primaryEncoderPositionAlwaysOn(false);
+    config.signals.primaryEncoderVelocityAlwaysOn(false);
+
     pivotMotor.configure(
-        new SparkMaxConfig()
-            .apply(new EncoderConfig().positionConversionFactor(1d / Constants.Intake.pivotGearing))
-            .smartCurrentLimit(40)
-            .idleMode(IdleMode.kCoast),
+        config,
         ResetMode.kResetSafeParameters,
         PersistMode.kPersistParameters);
 
@@ -90,8 +105,6 @@ public class IntakeIO_Real implements IntakeIO {
     inputs.encoderRelPosition = Units.rotationsToRadians(encoder.getPosition());
     inputs.encoderVelocity = Units.rotationsToRadians(encoder.getVelocity());
 
-    inputs.pivotMotorPosition = Units.rotationsToRadians(pivotMotor.getEncoder().getPosition());
-    inputs.pivotMotorVelocity = Units.rotationsToRadians(pivotMotor.getEncoder().getVelocity());
     inputs.pivotMotorCurrent = pivotMotor.getOutputCurrent();
     inputs.pivotMotorVoltage = pivotMotor.getAppliedOutput() * RobotController.getBatteryVoltage();
     inputs.pivotMotorTemp = pivotMotor.getMotorTemperature();
