@@ -58,7 +58,7 @@ public class Superstructure {
     // Here on out is for algae
     Units.inchesToMeters(5), // L2
     Units.inchesToMeters(20), // L3
-    Units.inchesToMeters(57)
+    Constants.Elevator.maxHeight // L4 + Algae mode = score on barge
   };
 
   // Constructor
@@ -202,8 +202,15 @@ public class Superstructure {
             Commands.waitUntil(outtake::coralDetected),
             outtake.changeRollerSetpoint(0)),
         Commands.sequence(
-            logMessage("Elevator Algae Intake"), outtake.changeRollerSetpoint(0.5) // TODO verify
+            logMessage("Elevator Algae Intake"), outtake.changeRollerSetpoint(0.7) // TODO verify
             ),
+        () -> selectedPiece == "Coral");
+  }
+
+  public Command PassiveElevatorIntake() {
+    return Commands.either(
+        outtake.changeRollerSetpoint(0),
+        outtake.changeRollerSetpoint(-0.3),
         () -> selectedPiece == "Coral");
   }
 
@@ -298,18 +305,20 @@ public class Superstructure {
   public Command AutoAim() {
     return Commands.sequence(
         // Select Elevator Height If In Algae Mode
-        Commands.either(
-                selectElevatorHeight(2),
-                selectElevatorHeight(3),
-                () -> {
-                  Pose2d nearestReef = getNearestReef();
-                  return nearestReef == Constants.FieldConstants.ReefPoses.Reef_1.blue.algae
-                      || nearestReef == Constants.FieldConstants.ReefPoses.Reef_3.blue.algae
-                      || nearestReef == Constants.FieldConstants.ReefPoses.Reef_5.blue.algae
-                      || nearestReef == Constants.FieldConstants.ReefPoses.Reef_2.red.algae
-                      || nearestReef == Constants.FieldConstants.ReefPoses.Reef_4.red.algae
-                      || nearestReef == Constants.FieldConstants.ReefPoses.Reef_6.red.algae;
-                })
+        Commands.sequence(
+                Commands.either(
+                    selectElevatorHeight(2),
+                    selectElevatorHeight(3),
+                    () -> {
+                      Pose2d nearestReef = getNearestReef();
+                      return nearestReef == Constants.FieldConstants.ReefPoses.Reef_1.blue.algae
+                          || nearestReef == Constants.FieldConstants.ReefPoses.Reef_3.blue.algae
+                          || nearestReef == Constants.FieldConstants.ReefPoses.Reef_5.blue.algae
+                          || nearestReef == Constants.FieldConstants.ReefPoses.Reef_2.red.algae
+                          || nearestReef == Constants.FieldConstants.ReefPoses.Reef_4.red.algae
+                          || nearestReef == Constants.FieldConstants.ReefPoses.Reef_6.red.algae;
+                    }),
+                ElevatorIntake())
             .onlyIf(() -> selectedPiece == "Algae"),
         // Reset Auto Aim PID to reset the rate limiter
         drivebase.resetAutoAimPID(),
@@ -335,7 +344,8 @@ public class Superstructure {
                         drivebase
                             .driveVelocity(() -> new ChassisSpeeds(-1, 0, 0))
                             .withTimeout(0.25),
-                        Commands.runOnce(() -> drivebase.drive(new ChassisSpeeds()), drivebase)),
+                        Commands.runOnce(() -> drivebase.drive(new ChassisSpeeds()), drivebase),
+                        PassiveElevatorIntake()),
                     () -> selectedPiece == "Coral")));
   }
 

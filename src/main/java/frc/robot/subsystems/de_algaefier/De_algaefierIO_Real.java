@@ -54,7 +54,6 @@ public class De_algaefierIO_Real implements De_algaefierIO {
   @Override
   public void updateInputs(De_algaefierIOInputs inputs) {
 
-    inputs.kSetpoint = Units.rotationsToDegrees(pivotPID.getSetpoint());
     inputs.kPosition = Units.rotationsToDegrees(kEncoder.getPosition());
     inputs.kVelocity = Units.rotationsToDegrees(kEncoder.getVelocity());
 
@@ -63,6 +62,11 @@ public class De_algaefierIO_Real implements De_algaefierIO {
     inputs.kTemp = kPivot.getMotorTemperature();
 
     kPivot.set(pivotPID.calculate(kEncoder.getPosition()));
+    inputs.kSetpoint =
+        Units.rotationsToDegrees(
+            pivotPID
+                .getSetpoint()); // I think it would be optimal to move this line to directly after
+    // PID.calculate
   }
 
   @Override

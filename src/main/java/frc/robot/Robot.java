@@ -182,7 +182,7 @@ public class Robot extends LoggedRobot {
     driver
         .rightBumper()
         .onTrue(superstructure.ElevatorIntake())
-        .onFalse(outtake.changeRollerSetpoint(0));
+        .onFalse(superstructure.PassiveElevatorIntake());
 
     // General Score
     driver.leftTrigger().onTrue(superstructure.Score()).onFalse(superstructure.HomeRobot());
