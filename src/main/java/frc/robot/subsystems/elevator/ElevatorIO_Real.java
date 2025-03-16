@@ -10,7 +10,6 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.RobotController;
-import edu.wpi.first.wpilibj.Timer;
 import frc.robot.Constants;
 import frc.robot.Constants.CAN;
 import org.littletonrobotics.junction.Logger;
@@ -24,10 +23,6 @@ public class ElevatorIO_Real implements ElevatorIO {
 
   private double kSetpoint = Constants.Elevator.minHeight;
   private MotionMagicVoltage motionMagicVoltage = new MotionMagicVoltage(0);
-
-  private double algaeArmMotorSetpoint = Constants.Elevator.kAlgaeStrength / 3;
-  private boolean algaeArmOut = false;
-  private Timer algaeArmTimer = new Timer();
 
   public ElevatorIO_Real() {
 

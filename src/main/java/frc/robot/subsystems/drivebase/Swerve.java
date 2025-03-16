@@ -60,12 +60,12 @@ public class Swerve extends SubsystemBase {
   static final double odometryFrequency = 150;
 
   private SwerveModulePosition[] lastModulePositions = // For delta tracking
-    new SwerveModulePosition[] {
-      new SwerveModulePosition(),
-      new SwerveModulePosition(),
-      new SwerveModulePosition(),
-      new SwerveModulePosition()
-    };
+      new SwerveModulePosition[] {
+        new SwerveModulePosition(),
+        new SwerveModulePosition(),
+        new SwerveModulePosition(),
+        new SwerveModulePosition()
+      };
 
   public Swerve(GyroIO gyroIO, ModuleIO[] moduleIOs) {
 
@@ -461,9 +461,9 @@ public class Swerve extends SubsystemBase {
     odometryLock.unlock();
 
     if (RobotBase.isReal()) {
-      
+
       double[] sampleTimestamps = modules[0].getOdometryTimestamps();
-      for (int i = 0; i < sampleTimestamps.length; i++){
+      for (int i = 0; i < sampleTimestamps.length; i++) {
         SwerveModulePosition[] modulePositions = new SwerveModulePosition[4];
         SwerveModulePosition[] moduleDeltas = new SwerveModulePosition[4];
         for (int moduleIndex = 0; moduleIndex < 4; moduleIndex++) {
@@ -474,9 +474,10 @@ public class Swerve extends SubsystemBase {
                       - lastModulePositions[moduleIndex].distanceMeters,
                   modulePositions[moduleIndex].angle);
           lastModulePositions[moduleIndex] = modulePositions[moduleIndex];
-        poseEstimator.updateWithTime(sampleTimestamps[i], gyroInputs.yawPositions[i], modulePositions);
+          poseEstimator.updateWithTime(
+              sampleTimestamps[i], gyroInputs.yawPositions[i], modulePositions);
+        }
       }
-    }
 
       // poseEstimator.update(
       //     gyroInputs.yawPosition,

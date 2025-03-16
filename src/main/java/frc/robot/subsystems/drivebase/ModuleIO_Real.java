@@ -139,9 +139,7 @@ public class ModuleIO_Real implements ModuleIO {
     inputs.odometryTimestamps =
         timestampQueue.stream().mapToDouble((Double value) -> value).toArray();
     inputs.odometryDrivePositions =
-        drivePositionQueue.stream()
-            .mapToDouble((Double value) -> value)
-            .toArray();
+        drivePositionQueue.stream().mapToDouble((Double value) -> value).toArray();
     inputs.odometryTurnPositions =
         turnPositionQueue.stream()
             .map((Double value) -> Rotation2d.fromRotations(value))

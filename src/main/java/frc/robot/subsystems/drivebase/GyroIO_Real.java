@@ -37,8 +37,8 @@ public class GyroIO_Real implements GyroIO {
 
     gyro.optimizeBusUtilization(); // Turn down all other status frames we dont use
 
-    yawPositionQueue = PhoenixOdometryThread.getInstance().makeTimestampQueue();
-    yawTimestampQueue = PhoenixOdometryThread.getInstance().registerSignal(gyro.getYaw());
+    yawTimestampQueue = PhoenixOdometryThread.getInstance().makeTimestampQueue();
+    yawPositionQueue = PhoenixOdometryThread.getInstance().registerSignal(gyro.getYaw());
   }
 
   @Override

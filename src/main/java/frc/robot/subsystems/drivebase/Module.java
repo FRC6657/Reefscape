@@ -46,14 +46,16 @@ public class Module {
   // Update Module IO
   public void updateInputs() {
     io.updateInputs(inputs);
-    Logger.processInputs(new StringBuilder("Swerve/").append(inputs.prefix).append(" Module").toString(), inputs);
+    Logger.processInputs(
+        new StringBuilder("Swerve/").append(inputs.prefix).append(" Module").toString(), inputs);
 
     int sampleCount = inputs.odometryTimestamps.length; // All signals are sampled together
     odometryPositions = new SwerveModulePosition[sampleCount];
     for (int i = 0; i < sampleCount; i++) {
-      odometryPositions[i] = new SwerveModulePosition(inputs.odometryDrivePositions[i], inputs.odometryTurnPositions[i]);
+      odometryPositions[i] =
+          new SwerveModulePosition(
+              inputs.odometryDrivePositions[i], inputs.odometryTurnPositions[i]);
     }
-
   }
 
   public double[] getOdometryTimestamps() {
