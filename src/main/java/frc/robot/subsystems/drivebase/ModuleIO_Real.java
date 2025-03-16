@@ -106,8 +106,9 @@ public class ModuleIO_Real implements ModuleIO {
                       .setPositionFramePeriod(50)
                       .setVelocityFramePeriod(0)
                       .setStatusFramePeriod(1);
-              encoder.setSettings(stg, 0, 1);
-            });
+    encoder.setSettings(stg, 0, 1);
+
+    turn.setPosition(encoder.getAbsPosition());
 
     timestampQueue = PhoenixOdometryThread.getInstance().makeTimestampQueue();
     drivePositionQueue = PhoenixOdometryThread.getInstance().registerSignal(drive.getPosition());
