@@ -126,9 +126,9 @@ public class Constants {
   public static class AutoConstants {
 
     // Choreo
-    public static final PIDController kXController_Choreo = new PIDController(4, 0, 0);
-    public static final PIDController kYController_Choreo = new PIDController(4, 0, 0);
-    public static final PIDController kThetaController_Choreo = new PIDController(4, 0, 0);
+    public static final PIDController kXController_Choreo = new PIDController(0.1, 0, 0);
+    public static final PIDController kYController_Choreo = new PIDController(0.1, 0, 0);
+    public static final PIDController kThetaController_Choreo = new PIDController(0.1, 0, 0);
 
     // Position PID
 
@@ -292,7 +292,7 @@ public class Constants {
             .withMotorOutput(
                 new MotorOutputConfigs()
                     .withInverted(InvertedValue.Clockwise_Positive)
-                    .withNeutralMode(NeutralModeValue.Coast))
+                    .withNeutralMode(NeutralModeValue.Brake))
             .withFeedback(new FeedbackConfigs().withSensorToMechanismRatio(driveRotorToMeters))
             .withSlot0(new Slot0Configs().withKV(12d / maxLinearSpeed).withKS(0).withKP(2.25));
     // .withMotionMagic(
@@ -311,7 +311,7 @@ public class Constants {
             .withMotorOutput(
                 new MotorOutputConfigs()
                     .withInverted(InvertedValue.Clockwise_Positive)
-                    .withNeutralMode(NeutralModeValue.Coast))
+                    .withNeutralMode(NeutralModeValue.Brake))
             .withFeedback(new FeedbackConfigs().withSensorToMechanismRatio(turnRatio))
             .withSlot0(
                 new Slot0Configs()
@@ -356,8 +356,8 @@ public class Constants {
   public static class Outtake {
     public static double gearing = 11.0 / 24.0;
 
-    public static final double kSupplyLimit = 30;
-    public static final double kStatorLimit = 60;
+    public static final double kSupplyLimit = 20;
+    public static final double kStatorLimit = 40;
 
     public static final CurrentLimitsConfigs currentConfigs =
         new CurrentLimitsConfigs()
@@ -401,7 +401,7 @@ public class Constants {
             .withSupplyCurrentLowerTime(0);
 
     public static double kMaxVelocity = 114; // Inches/s of Carriage Travel
-    public static double kMaxAcceleration = 1500; // Inches/s/s of Carriage Travel
+    public static double kMaxAcceleration = 300; // Inches/s/s of Carriage Travel
 
     public static MotionMagicConfigs kMotionMagicConfig =
         new MotionMagicConfigs()
@@ -412,7 +412,7 @@ public class Constants {
   public static class De_algaefier {
     public static double pivotGearing = (10d / 1) * (3d / 2);
 
-    public static double maxAngle = Units.degreesToRotations(70);
+    public static double maxAngle = Units.degreesToRotations(65);
     public static double minAngle = Units.degreesToRotations(0);
     // TODO find these angles
 
