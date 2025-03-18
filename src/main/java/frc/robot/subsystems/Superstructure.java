@@ -293,7 +293,7 @@ public class Superstructure {
   /** Auto aim wrapper command. Used to select level and pole side before auto aiming. */
   public Command AutoAim(int coralLevel, String reefPole) {
     return Commands.sequence(
-        selectPiece("Coral"), selectElevatorHeight(coralLevel), selectReef(reefPole), AutoAim());
+        selectPiece("Coral"), selectElevatorHeight(coralLevel), selectReef(reefPole), AutoAim(false));
   }
 
   /**
@@ -302,7 +302,7 @@ public class Superstructure {
    * <p>Will use the selected reef pole and level to aim at the nearest reef sector. In algae mode
    * it will select the correct elevator height based on the nearest reef sector.
    */
-  public Command AutoAim() {
+  public Command AutoAim(boolean lead) {
     return Commands.sequence(
         // Select Elevator Height If In Algae Mode
         Commands.sequence(
@@ -325,32 +325,32 @@ public class Superstructure {
         // Drive towards the pose with a larger tolerance
         // While raising the elevator.
         Commands.parallel(
-                drivebase.goToPose(
-                    () -> getNearestReef(),
-                    Units.inchesToMeters(12),
-                    Units.degreesToRadians(5),
-                    new Constraints(3, 3),
-                    new Constraints(Units.rotationsToRadians(2), Units.rotationsToRadians(4))),
-                raiseElevator().andThen(Commands.waitUntil(elevator::atSetpoint)))
+                drivebase
+                    .goToPoseCoarse(
+                        () -> getNearestReef(),
+                        new Constraints(3, 3),
+                        new Constraints(Units.rotationsToRadians(2), Units.rotationsToRadians(4))).onlyIf(() -> lead),
+                raiseElevator())
             // Approach the Reef Pole once the elevator is fully raised.
             // This has a tighter tolerance and slower speed.
             // If the robot is in algae mode it will just drive forward for a bit to grab the algae.
             // This is not PID controlled.
             .andThen(
                 Commands.either(
-                    drivebase.goToPose(
-                        () ->
-                            getNearestReef()
-                                .plus(
-                                    new Transform2d(
-                                        -0.25 - Units.inchesToMeters(1), 0, new Rotation2d()))),
+                    drivebase
+                        .goToPoseFine(
+                            () -> getNearestReef().plus(new Transform2d(-0.25 - Units.inchesToMeters(1), 0, new Rotation2d())),
+                            new Constraints(1, 1),
+                            new Constraints(Units.rotationsToRadians(2), Units.rotationsToRadians(4))
+                        ),
                     Commands.sequence(
                         drivebase
                             .driveVelocity(() -> new ChassisSpeeds(-1, 0, 0))
                             .withTimeout(0.25),
                         Commands.runOnce(() -> drivebase.drive(new ChassisSpeeds()), drivebase),
                         PassiveElevatorIntake()),
-                    () -> selectedPiece == "Coral")));
+                    () -> selectedPiece == "Coral")
+              ));
   }
 
   public AutoRoutine DirectionTest(AutoFactory factory, boolean mirror) {
@@ -376,6 +376,7 @@ public class Superstructure {
   public Command AutonomousScoringSequence(int level, String reef) {
     return Commands.sequence(
         AutoAim(4, reef),
+        Commands.waitUntil(elevator::atSetpoint),
         Score(),
         drivebase.driveVelocity(() -> new ChassisSpeeds(0.5, 0, 0)).withTimeout(0.25),
         Commands.runOnce(() -> drivebase.drive(new ChassisSpeeds()), drivebase),

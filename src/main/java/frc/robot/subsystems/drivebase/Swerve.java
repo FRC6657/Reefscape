@@ -37,6 +37,7 @@ import frc.robot.subsystems.vision.ApriltagCamera;
 import frc.robot.subsystems.vision.ApriltagCameraIO_Real;
 import frc.robot.subsystems.vision.ApriltagCameraIO_Sim;
 import java.util.Arrays;
+import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
@@ -96,11 +97,6 @@ public class Swerve extends SubsystemBase {
           //         : new ApriltagCameraIO_Sim(VisionConstants.camera3Info),
           //     VisionConstants.camera3Info)
         };
-
-    // Default auto aim PID tolerance
-    xController.setTolerance(Units.inchesToMeters(0.5));
-    yController.setTolerance(Units.inchesToMeters(0.5));
-    thetaController.setTolerance(Units.degreesToRadians(2.0));
 
     // Enable Wrapping
     thetaController.enableContinuousInput(-Math.PI, Math.PI);
@@ -272,6 +268,71 @@ public class Swerve extends SubsystemBase {
         });
   }
 
+  public BooleanSupplier atPoseFine(Supplier<Pose2d> targetPose) {
+    return () -> atPose(
+        targetPose.get(),
+        Units.inchesToMeters(0.5),  //Translation Tolerance Meters
+        Units.degreesToRadians(2.0), //Rotation Tolerance Rad
+        0.1, //Translation Velocity Tolerance m/s
+        Units.rotationsToRadians(0.5) //Rotational Velocity Tolerance rad/s
+      );
+  }
+
+  public BooleanSupplier atPoseCoarse(Supplier<Pose2d> targetPose) {
+    return () -> atPose(
+        targetPose.get(),
+        Units.inchesToMeters(6.0), //Translation Tolerance Meters
+        Units.degreesToRadians(3.0), //Rotation Tolerance Rad
+        1, //Translation Velocity Tolerance m/s
+        Units.rotationsToRadians(2.0) //Rotational Velocity Tolerance rad/s
+      );
+  }
+
+  public boolean atPose(
+      Pose2d targetPose,
+      double translationTolerance,
+      double rotationTolerance,
+      double translationVelocityTolerance,
+      double rotationVelocityTolerance) {
+
+    var currentPose = getPose();
+
+    double xError = Math.abs(currentPose.getX() - targetPose.getX());
+    double yError = Math.abs(currentPose.getY() - targetPose.getY());
+    double thetaError = Math.abs(currentPose.getRotation().getRadians()) - Math.abs(targetPose.getRotation().getRadians());
+    double xVelocity = Math.abs(getVelocityRobotRelative().vxMetersPerSecond);
+    double yVelocity = Math.abs(getVelocityRobotRelative().vyMetersPerSecond);
+    double thetaVelocity = Math.abs(getVelocityRobotRelative().omegaRadiansPerSecond);
+
+    boolean atX = xError < translationTolerance;
+    boolean atY = yError < translationTolerance;
+    boolean atTheta = thetaError < rotationTolerance;
+    boolean atXVelocity = xVelocity < translationVelocityTolerance;
+    boolean atYVelocity = yVelocity < translationVelocityTolerance;
+    boolean atThetaVelocity = thetaVelocity < rotationVelocityTolerance;
+
+    Logger.recordOutput("AutoAim/T Tolerance", translationTolerance);
+    Logger.recordOutput("AutoAim/R Tolerance", rotationTolerance);
+    Logger.recordOutput("AutoAim/ V Tolerance", translationVelocityTolerance);
+    Logger.recordOutput("AutoAim/R V Tolerance", rotationVelocityTolerance);
+    Logger.recordOutput("AutoAim/X Error", xError);
+    Logger.recordOutput("AutoAim/Y Error", yError);
+    Logger.recordOutput("AutoAim/Theta Error", thetaError);
+    Logger.recordOutput("AutoAim/AtX", atX);
+    Logger.recordOutput("AutoAim/AtY", atY);
+    Logger.recordOutput("AutoAim/AtTheta", atTheta);
+    Logger.recordOutput("AutoAim/AtXVelocity", atXVelocity);
+    Logger.recordOutput("AutoAim/AtYVelocity", atYVelocity);
+    Logger.recordOutput("AutoAim/AtThetaVelocity", atThetaVelocity);
+
+    return (xError < translationTolerance
+        && yError < translationTolerance
+        && thetaError < rotationTolerance
+        && xVelocity < translationVelocityTolerance
+        && yVelocity < translationVelocityTolerance
+        && thetaVelocity < rotationVelocityTolerance);
+  }
+
   /**
    * Default position controller with 0.5 inch translation tolerance and 2 degree rotation tolerance
    * 1 m/s translation and 2 rad/s rotation speed targets. Generally good for high precision
@@ -280,8 +341,6 @@ public class Swerve extends SubsystemBase {
   public void positionController(Pose2d targetPose) {
     positionController(
         targetPose,
-        Units.inchesToMeters(0.5),
-        Units.degreesToRadians(2.0),
         new Constraints(1, 2),
         new Constraints(Units.rotationsToRadians(1), Units.rotationsToRadians(2)));
   }
@@ -295,20 +354,11 @@ public class Swerve extends SubsystemBase {
    * @param translationConstraints The translation velocity/acceleration targets
    * @param rotationConstraints The rotation velocity/acceleration targets
    */
-  public void positionController(
-      Pose2d targetPose,
-      double translationTolerance,
-      double rotationTolerance,
-      Constraints translationConstraints,
-      Constraints rotationConstraints) {
+  public void positionController(Pose2d targetPose, Constraints translationConstraints, Constraints rotationConstraints) {
 
     xController.setConstraints(translationConstraints);
     yController.setConstraints(translationConstraints);
     thetaController.setConstraints(rotationConstraints);
-
-    xController.setTolerance(translationTolerance, Units.inchesToMeters(0.125));
-    yController.setTolerance(translationTolerance, Units.inchesToMeters(0.125));
-    thetaController.setTolerance(rotationTolerance, Units.degreesToRadians(1));
 
     double xFeedback = xController.calculate(getPose().getX(), targetPose.getX());
     double yFeedback = yController.calculate(getPose().getY(), targetPose.getY());
@@ -321,56 +371,46 @@ public class Swerve extends SubsystemBase {
             xFeedback, yFeedback, rotationFeedback, getPose().getRotation());
 
     Logger.recordOutput("AutoAim/Target", targetPose);
-    Logger.recordOutput("AutoAim/AtSetpointX", xController.atSetpoint());
-    Logger.recordOutput("AutoAim/AtSetpointY", yController.atSetpoint());
-    Logger.recordOutput("AutoAim/AtSetpointTheta", thetaController.atSetpoint());
 
     drive(out);
-  }
-
-  /**
-   * Default goToPose command with 0.5 inch translation tolerance and 2 degree rotation tolerance 1
-   * m/s translation and 2 rad/s rotation speed targets. Generally good for high precision movement.
-   */
-  public Command goToPose(Supplier<Pose2d> target) {
-    return this.goToPose(
-        target,
-        Units.inchesToMeters(0.5),
-        Units.degreesToRadians(2.0),
-        new Constraints(1, 2),
-        new Constraints(Units.rotationsToRadians(1), Units.rotationsToRadians(2)));
   }
 
   /**
    * Command to drive to a given pose with the given tolerances and constraints
    *
    * @param target The target pose
-   * @param translationTolerance The translation tolerance for stopping the command
-   * @param rotationTolerance The rotation tolerance for stopping the command
    * @param translationConstraints Translation velocity/acceleration targets
    * @param rotationConstraints Rotation velocity/acceleration targets
    * @return The command to drive to the given pose
    */
-  public Command goToPose(
+  public Command goToPoseFine(
       Supplier<Pose2d> target,
-      double translationTolerance,
-      double rotationTolerance,
       Constraints translationConstraints,
-      Constraints rotationConstraints) {
+      Constraints rotationConstraints
+  ) {
     return this.run(
-            () ->
-                positionController(
-                    target.get(),
-                    translationTolerance,
-                    rotationTolerance,
-                    translationConstraints,
-                    rotationConstraints))
-        .until(
-            () -> {
-              return xController.atSetpoint()
-                  && yController.atSetpoint()
-                  && thetaController.atSetpoint();
-            })
+            () -> positionController(target.get(), translationConstraints, rotationConstraints)
+          ).until(atPoseFine(target))
+        .andThen(Commands.runOnce(() -> this.drive(new ChassisSpeeds())));
+  }
+
+  
+  /**
+   * Command to drive to a given pose with the given tolerances and constraints
+   *
+   * @param target The target pose
+   * @param translationConstraints Translation velocity/acceleration targets
+   * @param rotationConstraints Rotation velocity/acceleration targets
+   * @return The command to drive to the given pose
+   */
+  public Command goToPoseCoarse(
+      Supplier<Pose2d> target,
+      Constraints translationConstraints,
+      Constraints rotationConstraints
+  ) {
+    return this.run(
+            () -> positionController(target.get(), translationConstraints, rotationConstraints)
+          ).until(atPoseCoarse(target))
         .andThen(Commands.runOnce(() -> this.drive(new ChassisSpeeds())));
   }
 
