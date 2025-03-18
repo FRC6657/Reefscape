@@ -219,6 +219,13 @@ public class Swerve extends SubsystemBase {
         });
   }
 
+  public Command driveRR(Supplier<ChassisSpeeds> speeds) {
+    return this.run(
+        () -> {
+          this.drive(speeds.get());
+        });
+  }
+
   PIDController choreoXController = AutoConstants.kXController_Choreo;
   PIDController choreoYController = AutoConstants.kYController_Choreo;
   PIDController choreoThetaController = AutoConstants.kThetaController_Choreo;

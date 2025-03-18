@@ -52,9 +52,9 @@ public class Superstructure {
   private double[] elevatorSetpoints = {
     0,
     0,
-    Units.inchesToMeters(14), // L2
-    Units.inchesToMeters(30), // L3
-    Units.inchesToMeters(57), // L4
+    Units.inchesToMeters(15.5), // L2
+    Units.inchesToMeters(31.5), // L3
+    Units.inchesToMeters(57.5), // L4
     // Here on out is for algae
     Units.inchesToMeters(5), // L2
     Units.inchesToMeters(20), // L3
@@ -327,8 +327,8 @@ public class Superstructure {
         Commands.parallel(
                 drivebase.goToPose(
                     () -> getNearestReef(),
-                    Units.inchesToMeters(2),
-                    Units.degreesToRadians(3),
+                    Units.inchesToMeters(12),
+                    Units.degreesToRadians(5),
                     new Constraints(3, 3),
                     new Constraints(Units.rotationsToRadians(2), Units.rotationsToRadians(4))),
                 raiseElevator().andThen(Commands.waitUntil(elevator::atSetpoint)))
@@ -339,7 +339,11 @@ public class Superstructure {
             .andThen(
                 Commands.either(
                     drivebase.goToPose(
-                        () -> getNearestReef().plus(new Transform2d(-0.25, 0, new Rotation2d()))),
+                        () ->
+                            getNearestReef()
+                                .plus(
+                                    new Transform2d(
+                                        -0.25 - Units.inchesToMeters(1), 0, new Rotation2d()))),
                     Commands.sequence(
                         drivebase
                             .driveVelocity(() -> new ChassisSpeeds(-1, 0, 0))
