@@ -20,8 +20,12 @@ public class Outtake extends SubsystemBase {
         });
   }
 
+  public void setRollerSetpoint(double setpoint) {
+    io.changeSetpoint(setpoint);
+  }
+
   public boolean coralDetected() {
-    return inputs.beamBroken;
+    return io.getBeamBroken();
   }
 
   @Override

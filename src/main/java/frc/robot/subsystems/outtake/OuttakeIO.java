@@ -6,7 +6,6 @@ public interface OuttakeIO {
 
   @AutoLog
   public static class OuttakeIOInputs {
-    public boolean beamBroken = false;
     public double kSetpoint = 0.0;
     public double kVelocity = 0.0;
     public double kTemp = 0.0;
@@ -15,6 +14,10 @@ public interface OuttakeIO {
   }
 
   public default void updateInputs(OuttakeIOInputs inputs) {}
+
+  public default boolean getBeamBroken() {
+    return true;
+  }
 
   public default void changeSetpoint(double setpoint) {}
 }
