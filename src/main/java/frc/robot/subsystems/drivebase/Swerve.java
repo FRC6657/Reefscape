@@ -269,23 +269,25 @@ public class Swerve extends SubsystemBase {
   }
 
   public BooleanSupplier atPoseFine(Supplier<Pose2d> targetPose) {
-    return () -> atPose(
-        targetPose.get(),
-        Units.inchesToMeters(0.5),  //Translation Tolerance Meters
-        Units.degreesToRadians(2.0), //Rotation Tolerance Rad
-        0.1, //Translation Velocity Tolerance m/s
-        Units.rotationsToRadians(0.5) //Rotational Velocity Tolerance rad/s
-      );
+    return () ->
+        atPose(
+            targetPose.get(),
+            Units.inchesToMeters(0.5), // Translation Tolerance Meters
+            Units.degreesToRadians(2.0), // Rotation Tolerance Rad
+            0.1, // Translation Velocity Tolerance m/s
+            Units.rotationsToRadians(0.5) // Rotational Velocity Tolerance rad/s
+            );
   }
 
   public BooleanSupplier atPoseCoarse(Supplier<Pose2d> targetPose) {
-    return () -> atPose(
-        targetPose.get(),
-        Units.inchesToMeters(6.0), //Translation Tolerance Meters
-        Units.degreesToRadians(3.0), //Rotation Tolerance Rad
-        1, //Translation Velocity Tolerance m/s
-        Units.rotationsToRadians(2.0) //Rotational Velocity Tolerance rad/s
-      );
+    return () ->
+        atPose(
+            targetPose.get(),
+            Units.inchesToMeters(6.0), // Translation Tolerance Meters
+            Units.degreesToRadians(3.0), // Rotation Tolerance Rad
+            1, // Translation Velocity Tolerance m/s
+            Units.rotationsToRadians(2.0) // Rotational Velocity Tolerance rad/s
+            );
   }
 
   public boolean atPose(
@@ -299,7 +301,9 @@ public class Swerve extends SubsystemBase {
 
     double xError = Math.abs(currentPose.getX() - targetPose.getX());
     double yError = Math.abs(currentPose.getY() - targetPose.getY());
-    double thetaError = Math.abs(currentPose.getRotation().getRadians()) - Math.abs(targetPose.getRotation().getRadians());
+    double thetaError =
+        Math.abs(currentPose.getRotation().getRadians())
+            - Math.abs(targetPose.getRotation().getRadians());
     double xVelocity = Math.abs(getVelocityRobotRelative().vxMetersPerSecond);
     double yVelocity = Math.abs(getVelocityRobotRelative().vyMetersPerSecond);
     double thetaVelocity = Math.abs(getVelocityRobotRelative().omegaRadiansPerSecond);
@@ -354,7 +358,8 @@ public class Swerve extends SubsystemBase {
    * @param translationConstraints The translation velocity/acceleration targets
    * @param rotationConstraints The rotation velocity/acceleration targets
    */
-  public void positionController(Pose2d targetPose, Constraints translationConstraints, Constraints rotationConstraints) {
+  public void positionController(
+      Pose2d targetPose, Constraints translationConstraints, Constraints rotationConstraints) {
 
     xController.setConstraints(translationConstraints);
     yController.setConstraints(translationConstraints);
@@ -386,15 +391,13 @@ public class Swerve extends SubsystemBase {
   public Command goToPoseFine(
       Supplier<Pose2d> target,
       Constraints translationConstraints,
-      Constraints rotationConstraints
-  ) {
+      Constraints rotationConstraints) {
     return this.run(
-            () -> positionController(target.get(), translationConstraints, rotationConstraints)
-          ).until(atPoseFine(target))
+            () -> positionController(target.get(), translationConstraints, rotationConstraints))
+        .until(atPoseFine(target))
         .andThen(Commands.runOnce(() -> this.drive(new ChassisSpeeds())));
   }
 
-  
   /**
    * Command to drive to a given pose with the given tolerances and constraints
    *
@@ -406,11 +409,10 @@ public class Swerve extends SubsystemBase {
   public Command goToPoseCoarse(
       Supplier<Pose2d> target,
       Constraints translationConstraints,
-      Constraints rotationConstraints
-  ) {
+      Constraints rotationConstraints) {
     return this.run(
-            () -> positionController(target.get(), translationConstraints, rotationConstraints)
-          ).until(atPoseCoarse(target))
+            () -> positionController(target.get(), translationConstraints, rotationConstraints))
+        .until(atPoseCoarse(target))
         .andThen(Commands.runOnce(() -> this.drive(new ChassisSpeeds())));
   }
 

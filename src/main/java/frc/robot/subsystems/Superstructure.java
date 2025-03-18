@@ -293,7 +293,10 @@ public class Superstructure {
   /** Auto aim wrapper command. Used to select level and pole side before auto aiming. */
   public Command AutoAim(int coralLevel, String reefPole) {
     return Commands.sequence(
-        selectPiece("Coral"), selectElevatorHeight(coralLevel), selectReef(reefPole), AutoAim(false));
+        selectPiece("Coral"),
+        selectElevatorHeight(coralLevel),
+        selectReef(reefPole),
+        AutoAim(false));
   }
 
   /**
@@ -329,7 +332,8 @@ public class Superstructure {
                     .goToPoseCoarse(
                         () -> getNearestReef(),
                         new Constraints(3, 3),
-                        new Constraints(Units.rotationsToRadians(2), Units.rotationsToRadians(4))).onlyIf(() -> lead),
+                        new Constraints(Units.rotationsToRadians(2), Units.rotationsToRadians(4)))
+                    .onlyIf(() -> lead),
                 raiseElevator())
             // Approach the Reef Pole once the elevator is fully raised.
             // This has a tighter tolerance and slower speed.
@@ -337,20 +341,21 @@ public class Superstructure {
             // This is not PID controlled.
             .andThen(
                 Commands.either(
-                    drivebase
-                        .goToPoseFine(
-                            () -> getNearestReef().plus(new Transform2d(-0.25 - Units.inchesToMeters(1), 0, new Rotation2d())),
-                            new Constraints(1, 1),
-                            new Constraints(Units.rotationsToRadians(2), Units.rotationsToRadians(4))
-                        ),
+                    drivebase.goToPoseFine(
+                        () ->
+                            getNearestReef()
+                                .plus(
+                                    new Transform2d(
+                                        -0.25 - Units.inchesToMeters(1), 0, new Rotation2d())),
+                        new Constraints(1, 1),
+                        new Constraints(Units.rotationsToRadians(2), Units.rotationsToRadians(4))),
                     Commands.sequence(
                         drivebase
                             .driveVelocity(() -> new ChassisSpeeds(-1, 0, 0))
                             .withTimeout(0.25),
                         Commands.runOnce(() -> drivebase.drive(new ChassisSpeeds()), drivebase),
                         PassiveElevatorIntake()),
-                    () -> selectedPiece == "Coral")
-              ));
+                    () -> selectedPiece == "Coral")));
   }
 
   public AutoRoutine DirectionTest(AutoFactory factory, boolean mirror) {
