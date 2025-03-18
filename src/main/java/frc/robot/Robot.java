@@ -39,10 +39,12 @@ import frc.robot.subsystems.intake.IntakeIO_Sim;
 import frc.robot.subsystems.outtake.Outtake;
 import frc.robot.subsystems.outtake.OuttakeIO_Real;
 import frc.robot.subsystems.outtake.OuttakeIO_Sim;
+import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import org.littletonrobotics.junction.networktables.NT4Publisher;
+import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
 public class Robot extends LoggedRobot {
@@ -99,15 +101,25 @@ public class Robot extends LoggedRobot {
     autoChooser.addOption("3 Piece", superstructure.L4_3Piece(autoFactory, false).cmd());
   }
 
+  public boolean replay = false;
+
   @Override
   public void robotInit() {
     Logger.recordMetadata("Arborbotics 2025", "Arborbotics 2025");
-    if (isReal()) {
-      Logger.addDataReceiver(new WPILOGWriter());
-      Logger.addDataReceiver(new NT4Publisher());
-      new PowerDistribution(1, ModuleType.kRev);
+    if (!replay) {
+      if (isReal()) {
+        Logger.addDataReceiver(new WPILOGWriter());
+        Logger.addDataReceiver(new NT4Publisher());
+        new PowerDistribution(1, ModuleType.kRev);
+      } else {
+        Logger.addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables
+      }
     } else {
-      Logger.addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables
+      setUseTiming(false);
+      String logPath = LogFileUtil.findReplayLog();
+      System.out.println(logPath);
+      Logger.setReplaySource(new WPILOGReader(logPath));
+      Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim")));
     }
 
     swerve.setDefaultCommand(
