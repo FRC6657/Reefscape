@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.NotifierCommand;
 import edu.wpi.first.wpilibj2.command.ScheduleCommand;
 import frc.robot.Constants;
 import frc.robot.Constants.FieldConstants.ReefSlot;
@@ -52,9 +53,9 @@ public class Superstructure {
   private double[] elevatorSetpoints = {
     0,
     0,
-    Units.inchesToMeters(14), // L2
-    Units.inchesToMeters(30), // L3
-    Units.inchesToMeters(57), // L4
+    Units.inchesToMeters(15.5), // L2
+    Units.inchesToMeters(31.5), // L3
+    Units.inchesToMeters(57.5), // L4
     // Here on out is for algae
     Units.inchesToMeters(5), // L2
     Units.inchesToMeters(20), // L3
@@ -199,7 +200,16 @@ public class Superstructure {
         Commands.sequence(
             logMessage("Elevator Intake"),
             outtake.changeRollerSetpoint(-0.5),
-            Commands.waitUntil(outtake::coralDetected),
+            Commands.waitUntil(outtake::coralDetected)
+                .raceWith(
+                    new NotifierCommand(
+                        () -> {
+                          if (outtake.coralDetected()) {
+                            outtake.setRollerSetpoint(0);
+                          }
+                        },
+                        250,
+                        outtake)),
             outtake.changeRollerSetpoint(0)),
         Commands.sequence(
             logMessage("Elevator Algae Intake"), outtake.changeRollerSetpoint(-0.7) // TODO verify
@@ -293,7 +303,10 @@ public class Superstructure {
   /** Auto aim wrapper command. Used to select level and pole side before auto aiming. */
   public Command AutoAim(int coralLevel, String reefPole) {
     return Commands.sequence(
-        selectPiece("Coral"), selectElevatorHeight(coralLevel), selectReef(reefPole), AutoAim());
+        selectPiece("Coral"),
+        selectElevatorHeight(coralLevel),
+        selectReef(reefPole),
+        AutoAim(false));
   }
 
   /**
@@ -302,7 +315,7 @@ public class Superstructure {
    * <p>Will use the selected reef pole and level to aim at the nearest reef sector. In algae mode
    * it will select the correct elevator height based on the nearest reef sector.
    */
-  public Command AutoAim() {
+  public Command AutoAim(boolean lead) {
     return Commands.sequence(
         // Select Elevator Height If In Algae Mode
         Commands.sequence(
@@ -325,21 +338,27 @@ public class Superstructure {
         // Drive towards the pose with a larger tolerance
         // While raising the elevator.
         Commands.parallel(
-                drivebase.goToPose(
-                    () -> getNearestReef(),
-                    Units.inchesToMeters(2),
-                    Units.degreesToRadians(3),
-                    new Constraints(3, 3),
-                    new Constraints(Units.rotationsToRadians(2), Units.rotationsToRadians(4))),
-                raiseElevator().andThen(Commands.waitUntil(elevator::atSetpoint)))
+                drivebase
+                    .goToPoseCoarse(
+                        () -> getNearestReef(),
+                        new Constraints(3, 3),
+                        new Constraints(Units.rotationsToRadians(2), Units.rotationsToRadians(4)))
+                    .onlyIf(() -> lead),
+                raiseElevator())
             // Approach the Reef Pole once the elevator is fully raised.
             // This has a tighter tolerance and slower speed.
             // If the robot is in algae mode it will just drive forward for a bit to grab the algae.
             // This is not PID controlled.
             .andThen(
                 Commands.either(
-                    drivebase.goToPose(
-                        () -> getNearestReef().plus(new Transform2d(-0.25, 0, new Rotation2d()))),
+                    drivebase.goToPoseFine(
+                        () ->
+                            getNearestReef()
+                                .plus(
+                                    new Transform2d(
+                                        -0.25 - Units.inchesToMeters(1), 0, new Rotation2d())),
+                        new Constraints(1, 1),
+                        new Constraints(Units.rotationsToRadians(2), Units.rotationsToRadians(4))),
                     Commands.sequence(
                         drivebase
                             .driveVelocity(() -> new ChassisSpeeds(-1, 0, 0))
@@ -372,6 +391,7 @@ public class Superstructure {
   public Command AutonomousScoringSequence(int level, String reef) {
     return Commands.sequence(
         AutoAim(4, reef),
+        Commands.waitUntil(elevator::atSetpoint),
         Score(),
         drivebase.driveVelocity(() -> new ChassisSpeeds(0.5, 0, 0)).withTimeout(0.25),
         Commands.runOnce(() -> drivebase.drive(new ChassisSpeeds()), drivebase),

@@ -140,7 +140,25 @@ public class Robot extends LoggedRobot {
         .onTrue(outtake.changeRollerSetpoint(-0.4))
         .onFalse(outtake.changeRollerSetpoint(-0.1));
 
-    driver.a().whileTrue(superstructure.AutoAim());
+    driver
+        .a()
+        .whileTrue(
+            Commands.sequence(
+                superstructure.AutoAim(true),
+                Commands.parallel(
+                    rumble(0.25, 1),
+                    swerve.driveRR(
+                        () ->
+                            new ChassisSpeeds(
+                                -MathUtil.applyDeadband(driver.getLeftY(), 0.1)
+                                    * Constants.Swerve.maxLinearSpeed
+                                    * 0.1,
+                                -MathUtil.applyDeadband(driver.getLeftX(), 0.1)
+                                    * Constants.Swerve.maxLinearSpeed
+                                    * 0.1,
+                                -MathUtil.applyDeadband(driver.getRightX(), 0.1)
+                                    * Constants.Swerve.maxAngularSpeed
+                                    * 0.1)))));
     driver.a().onFalse(Commands.runOnce(() -> swerve.drive(new ChassisSpeeds())));
 
     operator.button(9).onTrue(superstructure.selectElevatorHeight(2));

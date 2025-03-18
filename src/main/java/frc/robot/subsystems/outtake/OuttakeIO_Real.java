@@ -40,8 +40,12 @@ public class OuttakeIO_Real implements OuttakeIO {
   }
 
   @Override
+  public boolean getBeamBroken() {
+    return !beambreak.get();
+  }
+
+  @Override
   public void updateInputs(OuttakeIOInputs inputs) {
-    inputs.beamBroken = !beambreak.get(); // verify negation
 
     inputs.kTemp = rollerMotor.getDeviceTemp().getValueAsDouble();
     inputs.kCurrent = rollerMotor.getSupplyCurrent().getValueAsDouble();
@@ -55,5 +59,6 @@ public class OuttakeIO_Real implements OuttakeIO {
   @Override
   public void changeSetpoint(double setpoint) {
     rollerSetpoint = setpoint;
+    rollerMotor.setControl(new VoltageOut(rollerSetpoint * 12));
   }
 }

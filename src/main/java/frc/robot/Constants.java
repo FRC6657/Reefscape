@@ -137,11 +137,11 @@ public class Constants {
         new Constraints(Units.rotationsToRadians(3), Units.rotationsToRadians(10));
 
     public static final ProfiledPIDController kXController_Position =
-        new ProfiledPIDController(8, 0, 0, kAutoAimTranslationConstraints);
+        new ProfiledPIDController(3.5, 0, 0, kAutoAimTranslationConstraints);
     public static final ProfiledPIDController kYController_Position =
-        new ProfiledPIDController(8, 0, 0, kAutoAimTranslationConstraints);
+        new ProfiledPIDController(3.5, 0, 0, kAutoAimTranslationConstraints);
     public static final ProfiledPIDController kThetaController_Position =
-        new ProfiledPIDController(5, 0, 0, kAutoAimRotationConstraints);
+        new ProfiledPIDController(3, 0, 0, kAutoAimRotationConstraints);
   }
 
   public static class VisionConstants {
@@ -241,7 +241,7 @@ public class Constants {
             Rotation2d.fromDegrees(79.76),
             new int[] {1280, 800});
 
-    public static final Matrix<N3, N1> singleTagStdDev = VecBuilder.fill(1, 1, 2);
+    public static final Matrix<N3, N1> singleTagStdDev = VecBuilder.fill(4, 4, 5);
     public static final Matrix<N3, N1> multiTagStdDev = VecBuilder.fill(0.2, 0.2, 0.2);
   }
 
@@ -401,7 +401,7 @@ public class Constants {
             .withSupplyCurrentLowerTime(0);
 
     public static double kMaxVelocity = 114; // Inches/s of Carriage Travel
-    public static double kMaxAcceleration = 300; // Inches/s/s of Carriage Travel
+    public static double kMaxAcceleration = 1500; // Inches/s/s of Carriage Travel
 
     public static MotionMagicConfigs kMotionMagicConfig =
         new MotionMagicConfigs()
