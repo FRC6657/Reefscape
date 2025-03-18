@@ -200,15 +200,17 @@ public class Superstructure {
         Commands.sequence(
             logMessage("Elevator Intake"),
             outtake.changeRollerSetpoint(-0.5),
-            Commands.waitUntil(outtake::coralDetected).raceWith(
-              new NotifierCommand(() -> {
-                if (outtake.coralDetected()) {
-                  outtake.setRollerSetpoint(0);
-                }
-              }, 250, outtake)
-            ),
-            outtake.changeRollerSetpoint(0)
-        ),
+            Commands.waitUntil(outtake::coralDetected)
+                .raceWith(
+                    new NotifierCommand(
+                        () -> {
+                          if (outtake.coralDetected()) {
+                            outtake.setRollerSetpoint(0);
+                          }
+                        },
+                        250,
+                        outtake)),
+            outtake.changeRollerSetpoint(0)),
         Commands.sequence(
             logMessage("Elevator Algae Intake"), outtake.changeRollerSetpoint(-0.7) // TODO verify
             ),
