@@ -48,8 +48,6 @@ public class Swerve extends SubsystemBase {
   private final SwerveDriveKinematics kinematics;
   private final SwerveDrivePoseEstimator poseEstimator;
 
-  private final ApriltagCamera[] cameras;
-
   static final Lock odometryLock = new ReentrantLock();
   static final double odometryFrequency = 150;
 
@@ -475,7 +473,6 @@ public class Swerve extends SubsystemBase {
     odometryLock.unlock();
 
     if (RobotBase.isReal()) {
-
       double[] sampleTimestamps = modules[0].getOdometryTimestamps();
       for (int i = 0; i < sampleTimestamps.length; i++) {
         SwerveModulePosition[] modulePositions = new SwerveModulePosition[4];
@@ -488,14 +485,9 @@ public class Swerve extends SubsystemBase {
                       - lastModulePositions[moduleIndex].distanceMeters,
                   modulePositions[moduleIndex].angle);
           lastModulePositions[moduleIndex] = modulePositions[moduleIndex];
-          poseEstimator.updateWithTime(
-              sampleTimestamps[i], gyroInputs.yawPositions[i], modulePositions);
+          poseEstimator.updateWithTime(sampleTimestamps[i], gyroInputs.yawPositions[i], modulePositions);
         }
       }
-
-      // poseEstimator.update(
-      //     gyroInputs.yawPosition,
-      //     Arrays.stream(modules).map(m -> m.getPosition()).toArray(SwerveModulePosition[]::new));
     } else {
       var simHeading = getPose().getRotation();
       var gyroDelta =
@@ -512,19 +504,6 @@ public class Swerve extends SubsystemBase {
       poseEstimator.update(
           simHeading,
           Arrays.stream(modules).map(m -> m.getPosition()).toArray(SwerveModulePosition[]::new));
-    }
-
-    for (var camera : cameras) {
-      if (RobotBase.isSimulation()) {
-        camera.updateSimPose(getPose());
-      }
-      camera.updateInputs(
-          RobotBase.isSimulation() ? Timer.getFPGATimestamp() : gyroInputs.yawTimestamp,
-          RobotBase.isSimulation() ? getPose().getRotation() : gyroInputs.yawPosition);
-
-      Pose3d estPose = camera.getEstimatedPose();
-
-      addVisionMeasurement(estPose, camera.getLatestTimestamp(), camera.getLatestStdDevs());
     }
   }
 }

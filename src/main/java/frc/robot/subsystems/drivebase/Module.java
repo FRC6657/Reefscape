@@ -10,7 +10,12 @@ public class Module {
   private ModuleIO io;
   private ModuleIOInputsAutoLogged inputs = new ModuleIOInputsAutoLogged();
 
-  private SwerveModulePosition[] odometryPositions = new SwerveModulePosition[] {};
+  private SwerveModulePosition[] odometryPositions = new SwerveModulePosition[] {
+    new SwerveModulePosition(),
+    new SwerveModulePosition(),
+    new SwerveModulePosition(),
+    new SwerveModulePosition()
+  };
 
   public Module(ModuleIO io) {
     this.io = io;
@@ -52,9 +57,7 @@ public class Module {
     int sampleCount = inputs.odometryTimestamps.length; // All signals are sampled together
     odometryPositions = new SwerveModulePosition[sampleCount];
     for (int i = 0; i < sampleCount; i++) {
-      odometryPositions[i] =
-          new SwerveModulePosition(
-              inputs.odometryDrivePositions[i], inputs.odometryTurnPositions[i]);
+      odometryPositions[i] = new SwerveModulePosition(inputs.odometryDrivePositions[i], inputs.odometryTurnPositions[i]);
     }
   }
 
@@ -63,6 +66,16 @@ public class Module {
   }
 
   public SwerveModulePosition[] getOdometryPositions() {
+
+    if (odometryPositions.length == 0) {
+      return new SwerveModulePosition[] {
+        new SwerveModulePosition(),
+        new SwerveModulePosition(),
+        new SwerveModulePosition(),
+        new SwerveModulePosition()
+      };
+    }
+
     return odometryPositions;
   }
 
