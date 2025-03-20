@@ -10,12 +10,7 @@ public class Module {
   private ModuleIO io;
   private ModuleIOInputsAutoLogged inputs = new ModuleIOInputsAutoLogged();
 
-  private SwerveModulePosition[] odometryPositions = new SwerveModulePosition[] {
-    new SwerveModulePosition(),
-    new SwerveModulePosition(),
-    new SwerveModulePosition(),
-    new SwerveModulePosition()
-  };
+  private SwerveModulePosition[] odometryPositions = new SwerveModulePosition[] {};
 
   public Module(ModuleIO io) {
     this.io = io;
