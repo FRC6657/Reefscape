@@ -20,12 +20,13 @@ public class De_algaefierIO_Real implements De_algaefierIO {
   private SparkMax kPivot;
   private RelativeEncoder kEncoder;
 
-  private PIDController pivotPID = new PIDController(1.3, 0, 0);
+  private PIDController pivotPID = new PIDController(5, 0, 0);
 
   public De_algaefierIO_Real() {
 
     kPivot = new SparkMax(Constants.CAN.AlgaeMotor.id, MotorType.kBrushless);
     kEncoder = kPivot.getEncoder();
+    kEncoder.setPosition(0);
 
     SparkMaxConfig config = new SparkMaxConfig();
     config.inverted(false);
@@ -66,7 +67,7 @@ public class De_algaefierIO_Real implements De_algaefierIO {
 
     Logger.recordOutput("PIDTest", pivotPID.calculate(kEncoder.getPosition()));
 
-    // kPivot.set(pivotPID.calculate(kEncoder.getPosition()));
+    kPivot.set(pivotPID.calculate(kEncoder.getPosition()));
     inputs.kSetpoint =
         Units.rotationsToDegrees(
             pivotPID

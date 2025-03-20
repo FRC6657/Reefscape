@@ -20,6 +20,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.Constants.VisionConstants;
 import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.de_algaefier.De_algaefier;
 import frc.robot.subsystems.de_algaefier.De_algaefierIO_Real;
@@ -39,10 +40,15 @@ import frc.robot.subsystems.intake.IntakeIO_Sim;
 import frc.robot.subsystems.outtake.Outtake;
 import frc.robot.subsystems.outtake.OuttakeIO_Real;
 import frc.robot.subsystems.outtake.OuttakeIO_Sim;
+import frc.robot.subsystems.vision.ApriltagCameraIO_Real;
+import frc.robot.subsystems.vision.ApriltagCameraIO_Sim;
+import frc.robot.subsystems.vision.ApriltagCameras;
+import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import org.littletonrobotics.junction.networktables.NT4Publisher;
+import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
 public class Robot extends LoggedRobot {
@@ -51,6 +57,7 @@ public class Robot extends LoggedRobot {
   private CommandGenericHID operator = new CommandGenericHID(1);
   private CommandXboxController debug = new CommandXboxController(2);
 
+  private final ApriltagCameras cameras;
   private final Swerve swerve;
   private final Elevator elevator;
   private final Intake intake;
@@ -83,6 +90,16 @@ public class Robot extends LoggedRobot {
                   : new ModuleIO_Sim(Constants.Swerve.backRightModule)
             });
 
+    cameras =
+        new ApriltagCameras(
+            swerve::addVisionMeasurement,
+            RobotBase.isReal()
+                ? new ApriltagCameraIO_Real(VisionConstants.WhiteReefInfo)
+                : new ApriltagCameraIO_Sim(VisionConstants.WhiteReefInfo, swerve::getPose),
+            RobotBase.isReal()
+                ? new ApriltagCameraIO_Real(VisionConstants.BlackReefInfo)
+                : new ApriltagCameraIO_Sim(VisionConstants.BlackReefInfo, swerve::getPose));
+
     elevator = new Elevator(RobotBase.isReal() ? new ElevatorIO_Real() : new ElevatorIO_Sim());
     intake = new Intake(RobotBase.isReal() ? new IntakeIO_Real() : new IntakeIO_Sim());
     outtake = new Outtake(RobotBase.isReal() ? new OuttakeIO_Real() : new OuttakeIO_Sim());
@@ -99,15 +116,25 @@ public class Robot extends LoggedRobot {
     autoChooser.addOption("3 Piece", superstructure.L4_3Piece(autoFactory, false).cmd());
   }
 
+  public boolean replay = false;
+
   @Override
   public void robotInit() {
     Logger.recordMetadata("Arborbotics 2025", "Arborbotics 2025");
+
     if (isReal()) {
       Logger.addDataReceiver(new WPILOGWriter());
       Logger.addDataReceiver(new NT4Publisher());
       new PowerDistribution(1, ModuleType.kRev);
     } else {
-      Logger.addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables
+      if (!replay) {
+        Logger.addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables
+      } else {
+        setUseTiming(false);
+        String logPath = LogFileUtil.findReplayLog();
+        Logger.setReplaySource(new WPILOGReader(logPath));
+        Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_replay")));
+      }
     }
 
     swerve.setDefaultCommand(

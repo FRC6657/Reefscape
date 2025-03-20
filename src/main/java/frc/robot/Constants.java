@@ -13,8 +13,6 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.apriltag.AprilTag;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
-import edu.wpi.first.math.Matrix;
-import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -24,8 +22,6 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
-import edu.wpi.first.math.numbers.N1;
-import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
 import java.util.List;
@@ -146,6 +142,23 @@ public class Constants {
 
   public static class VisionConstants {
 
+    // Basic filtering thresholds
+    public static double maxAmbiguity = 0.3;
+    public static double maxZError = 0.75;
+
+    // Standard deviation baselines, for 1 meter distance and 1 tag
+    // (Adjusted automatically based on distance and # of tags)
+    public static double linearStdDevBaseline = 0.02; // Meters
+    public static double angularStdDevBaseline = 0.06; // Radians
+
+    // Standard deviation multipliers for each camera
+    // (Adjust to trust some cameras more than others)
+    public static double[] cameraStdDevFactors =
+        new double[] {
+          1.0, // Camera 0
+          1.0 // Camera 1
+        };
+
     public static final AprilTagFieldLayout kTagLayout =
         AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeWelded);
 
@@ -228,21 +241,8 @@ public class Constants {
                     Units.inchesToMeters(3), Units.inchesToMeters(4), Units.inchesToMeters(9)),
                 new Rotation3d(
                     Math.PI, Units.degreesToRadians(0), Math.PI + Units.degreesToRadians(20))),
-            Rotation2d.fromDegrees(94.9),
-            new int[] {1600, 1200});
-
-    public static CameraInfo camera3Info =
-        new CameraInfo(
-            "White_Station",
-            new Transform3d(
-                new Translation3d(
-                    Units.inchesToMeters(7), Units.inchesToMeters(4.1), Units.inchesToMeters(9)),
-                new Rotation3d(0, Units.degreesToRadians(0), 0)),
-            Rotation2d.fromDegrees(79.76),
+            Rotation2d.fromDegrees(79.19),
             new int[] {1280, 800});
-
-    public static final Matrix<N3, N1> singleTagStdDev = VecBuilder.fill(4, 4, 5);
-    public static final Matrix<N3, N1> multiTagStdDev = VecBuilder.fill(0.2, 0.2, 0.2);
   }
 
   public static class Swerve {

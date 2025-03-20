@@ -13,7 +13,6 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
@@ -26,16 +25,11 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.RobotBase;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.Constants.AutoConstants;
-import frc.robot.Constants.VisionConstants;
-import frc.robot.subsystems.vision.ApriltagCamera;
-import frc.robot.subsystems.vision.ApriltagCameraIO_Real;
-import frc.robot.subsystems.vision.ApriltagCameraIO_Sim;
 import java.util.Arrays;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -43,7 +37,6 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
-import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 
 public class Swerve extends SubsystemBase {
 
@@ -92,25 +85,6 @@ public class Swerve extends SubsystemBase {
       modules[i] = new Module(moduleIOs[i]);
     }
 
-    cameras =
-        new ApriltagCamera[] {
-          new ApriltagCamera(
-              RobotBase.isReal()
-                  ? new ApriltagCameraIO_Real(VisionConstants.BlackReefInfo)
-                  : new ApriltagCameraIO_Sim(VisionConstants.BlackReefInfo),
-              VisionConstants.BlackReefInfo),
-          new ApriltagCamera(
-              RobotBase.isReal()
-                  ? new ApriltagCameraIO_Real(VisionConstants.WhiteReefInfo)
-                  : new ApriltagCameraIO_Sim(VisionConstants.WhiteReefInfo),
-              VisionConstants.WhiteReefInfo),
-          // new ApriltagCamera(
-          //     RobotBase.isReal()
-          //         ? new ApriltagCameraIO_Real(VisionConstants.camera3Info)
-          //         : new ApriltagCameraIO_Sim(VisionConstants.camera3Info),
-          //     VisionConstants.camera3Info)
-        };
-
     // Enable Wrapping
     thetaController.enableContinuousInput(-Math.PI, Math.PI);
     choreoThetaController.enableContinuousInput(-Math.PI, Math.PI);
@@ -137,10 +111,6 @@ public class Swerve extends SubsystemBase {
         yaw,
         Arrays.stream(modules).map(m -> m.getPosition()).toArray(SwerveModulePosition[]::new),
         pose);
-
-    for (var camera : cameras) {
-      camera.setPoseStrategy(PoseStrategy.CONSTRAINED_SOLVEPNP);
-    }
   }
 
   /**
@@ -431,14 +401,9 @@ public class Swerve extends SubsystemBase {
         .andThen(Commands.runOnce(() -> this.drive(new ChassisSpeeds())));
   }
 
-  public void addVisionMeasurement(Pose3d visionPose, double timestamp, Matrix<N3, N1> stdDevs) {
+  public void addVisionMeasurement(Pose2d visionPose, double timestamp, Matrix<N3, N1> stdDevs) {
     if (RobotBase.isReal()) {
-      if (!(Math.abs(visionPose.getRotation().getMeasureX().in(Degrees)) > 10
-          || Math.abs(visionPose.getRotation().getMeasureY().in(Degrees)) > 10
-          || Math.abs(visionPose.getTranslation().getZ()) > Units.inchesToMeters(12))) {
-        Logger.recordOutput("Vision/ProcessedPoses", visionPose);
-        poseEstimator.addVisionMeasurement(visionPose.toPose2d(), timestamp, stdDevs);
-      }
+      poseEstimator.addVisionMeasurement(visionPose, timestamp, stdDevs);
     }
   }
 
