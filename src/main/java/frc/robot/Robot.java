@@ -72,6 +72,8 @@ public class Robot extends LoggedRobot {
 
   public Robot() {
 
+    DriverStation.silenceJoystickConnectionWarning(true);
+
     swerve =
         new Swerve(
             RobotBase.isReal() ? new GyroIO_Real() : new GyroIO() {},
