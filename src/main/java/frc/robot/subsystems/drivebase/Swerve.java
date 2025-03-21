@@ -479,12 +479,17 @@ public class Swerve extends SubsystemBase {
         SwerveModulePosition[] moduleDeltas = new SwerveModulePosition[4];
         for (int moduleIndex = 0; moduleIndex < 4; moduleIndex++) {
           modulePositions[moduleIndex] = modules[moduleIndex].getOdometryPositions()[i];
-          moduleDeltas[moduleIndex] = new SwerveModulePosition(modulePositions[moduleIndex].distanceMeters - lastModulePositions[moduleIndex].distanceMeters, modulePositions[moduleIndex].angle);
+          moduleDeltas[moduleIndex] =
+              new SwerveModulePosition(
+                  modulePositions[moduleIndex].distanceMeters
+                      - lastModulePositions[moduleIndex].distanceMeters,
+                  modulePositions[moduleIndex].angle);
           lastModulePositions[moduleIndex] = modulePositions[moduleIndex];
           try {
-            poseEstimator.updateWithTime(sampleTimestamps[i], gyroInputs.yawPositions[i], modulePositions);
-          } finally{
-            Logger.recordOutput("Errors", "Pose Estimator failed to update");
+            poseEstimator.updateWithTime(
+                sampleTimestamps[i], gyroInputs.yawPositions[i], modulePositions);
+          } catch (Exception e) {
+            Logger.recordOutput("Errors", "Pose Estimator failed to update: " + e.getMessage());
           }
         }
       }
