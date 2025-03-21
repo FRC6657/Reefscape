@@ -61,16 +61,6 @@ public class Module {
   }
 
   public SwerveModulePosition[] getOdometryPositions() {
-
-    if (odometryPositions.length == 0) {
-      return new SwerveModulePosition[] {
-        new SwerveModulePosition(),
-        new SwerveModulePosition(),
-        new SwerveModulePosition(),
-        new SwerveModulePosition()
-      };
-    }
-
     return odometryPositions;
   }
 
