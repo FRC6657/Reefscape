@@ -410,7 +410,7 @@ public class Constants {
   }
 
   public static class De_algaefier {
-    public static double pivotGearing = (10d / 1) * (3d / 2);
+    public static double pivotGearing = (10d * 9) * (3d / 2);
 
     public static double maxAngle = Units.degreesToRotations(65);
     public static double minAngle = Units.degreesToRotations(0);

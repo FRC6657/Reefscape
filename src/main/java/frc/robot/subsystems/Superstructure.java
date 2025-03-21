@@ -272,14 +272,23 @@ public class Superstructure {
                 intake.changeRollerSpeed(0)));
   }
 
-  // Scores a coral from the elevator
+  // Scores a coral (or algae) from the elevator
   public Command ElevatorScore() {
-    return Commands.sequence(
+    return Commands.either(
+      Commands.sequence(
         logMessage("Elevator Score"),
         outtake.changeRollerSetpoint(-0.3),
         Commands.waitUntil(() -> !outtake.coralDetected()).unless(RobotBase::isSimulation),
         Commands.waitSeconds(0.3),
-        outtake.changeRollerSetpoint(0));
+        outtake.changeRollerSetpoint(0)),
+      Commands.sequence(
+        logMessage("Elevator Score"),
+        outtake.changeRollerSetpoint(-0.6),
+        Commands.waitSeconds(0.7),
+        outtake.changeRollerSetpoint(0)
+      ),
+      () -> selectedPiece == "Coral");
+      
   }
 
   // Scores a piece.
