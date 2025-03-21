@@ -1,7 +1,5 @@
 package frc.robot.subsystems.de_algaefier;
 
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import org.littletonrobotics.junction.AutoLog;
 
 public interface De_algaefierIO {
@@ -21,5 +19,4 @@ public interface De_algaefierIO {
   public default void updateInputs(De_algaefierIOInputs inputs) {}
 
   public default void changeSetpoint(double rotations) {}
-  
 }

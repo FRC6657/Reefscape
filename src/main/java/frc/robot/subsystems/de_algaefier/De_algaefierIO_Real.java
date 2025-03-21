@@ -65,5 +65,4 @@ public class De_algaefierIO_Real implements De_algaefierIO {
   public void changeSetpoint(double rotations) {
     pivotPID.setSetpoint(MathUtil.clamp(rotations, De_algaefier.minAngle, De_algaefier.maxAngle));
   }
-
 }
