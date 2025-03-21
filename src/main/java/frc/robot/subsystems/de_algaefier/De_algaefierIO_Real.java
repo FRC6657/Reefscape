@@ -11,6 +11,8 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Constants;
 import frc.robot.Constants.De_algaefier;
 import org.littletonrobotics.junction.Logger;
@@ -79,4 +81,10 @@ public class De_algaefierIO_Real implements De_algaefierIO {
   public void changeSetpoint(double rotations) {
     pivotPID.setSetpoint(MathUtil.clamp(rotations, De_algaefier.minAngle, De_algaefier.maxAngle));
   }
+
+  // @Override
+  // public Command changeIdleMode(boolean isBreak){
+  //   return Commands.either(
+  //     Commands.runOnce(), null, () -> isBreak);
+  // }
 }
