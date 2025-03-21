@@ -1,11 +1,8 @@
 package frc.robot.subsystems.de_algaefier;
 
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.littletonrobotics.junction.Logger;
-
-import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
 public class De_algaefier extends SubsystemBase {
 
@@ -25,7 +22,8 @@ public class De_algaefier extends SubsystemBase {
   //   return Commands.either(
   //     Commands.sequence(
   //       Commands.runOnce(() -> config.idleMode(IdleMode.kBrake)), null
-  //       //() -> kPivot.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters)
+  //       //() -> kPivot.configure(config, ResetMode.kResetSafeParameters,
+  // PersistMode.kPersistParameters)
   //     ),
   //     null,
   //     () -> isBreak);
