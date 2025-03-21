@@ -275,20 +275,18 @@ public class Superstructure {
   // Scores a coral (or algae) from the elevator
   public Command ElevatorScore() {
     return Commands.either(
-      Commands.sequence(
-        logMessage("Elevator Score"),
-        outtake.changeRollerSetpoint(-0.3),
-        Commands.waitUntil(() -> !outtake.coralDetected()).unless(RobotBase::isSimulation),
-        Commands.waitSeconds(0.3),
-        outtake.changeRollerSetpoint(0)),
-      Commands.sequence(
-        logMessage("Elevator Score"),
-        outtake.changeRollerSetpoint(-0.6),
-        Commands.waitSeconds(0.7),
-        outtake.changeRollerSetpoint(0)
-      ),
-      () -> selectedPiece == "Coral");
-      
+        Commands.sequence(
+            logMessage("Elevator Score"),
+            outtake.changeRollerSetpoint(-0.3),
+            Commands.waitUntil(() -> !outtake.coralDetected()).unless(RobotBase::isSimulation),
+            Commands.waitSeconds(0.3),
+            outtake.changeRollerSetpoint(0)),
+        Commands.sequence(
+            logMessage("Elevator Score"),
+            outtake.changeRollerSetpoint(1.0),
+            Commands.waitSeconds(0.5),
+            outtake.changeRollerSetpoint(0)),
+        () -> selectedPiece == "Coral");
   }
 
   // Scores a piece.
@@ -369,9 +367,7 @@ public class Superstructure {
                         new Constraints(1, 1),
                         new Constraints(Units.rotationsToRadians(2), Units.rotationsToRadians(4))),
                     Commands.sequence(
-                        drivebase
-                            .driveVelocity(() -> new ChassisSpeeds(-1, 0, 0))
-                            .withTimeout(0.25),
+                        drivebase.driveVelocity(() -> new ChassisSpeeds(-1, 0, 0)).withTimeout(0.5),
                         Commands.runOnce(() -> drivebase.drive(new ChassisSpeeds()), drivebase),
                         PassiveElevatorIntake()),
                     () -> selectedPiece == "Coral")));
