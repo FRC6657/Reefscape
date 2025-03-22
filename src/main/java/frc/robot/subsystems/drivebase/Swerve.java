@@ -30,6 +30,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.Constants.AutoConstants;
+import frc.robot.Robot;
 import java.util.Arrays;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -74,7 +75,7 @@ public class Swerve extends SubsystemBase {
             },
             new Pose2d(),
             VecBuilder.fill(0.6, 0.6, 0.07),
-            VecBuilder.fill(0.9, 0.9, 0.4));
+            VecBuilder.fill(2, 2, 1));
 
     this.gyroIO = gyroIO;
     this.modules = new Module[moduleIOs.length];
@@ -400,7 +401,7 @@ public class Swerve extends SubsystemBase {
   }
 
   public void addVisionMeasurement(Pose2d visionPose, double timestamp, Matrix<N3, N1> stdDevs) {
-    if (RobotBase.isReal()) {
+    if (RobotBase.isReal() || Robot.replay) {
       poseEstimator.addVisionMeasurement(visionPose, timestamp, stdDevs);
     }
   }
@@ -471,7 +472,6 @@ public class Swerve extends SubsystemBase {
       module.updateInputs();
     }
     odometryLock.unlock();
-
     if (RobotBase.isReal()) {
       double[] sampleTimestamps = modules[0].getOdometryTimestamps();
       for (int i = 0; i < sampleTimestamps.length; i++) {

@@ -118,7 +118,7 @@ public class Robot extends LoggedRobot {
     autoChooser.addOption("3 Piece", superstructure.L4_3Piece(autoFactory, false).cmd());
   }
 
-  public boolean replay = false;
+  public static boolean replay = false;
 
   @Override
   public void robotInit() {
@@ -188,7 +188,9 @@ public class Robot extends LoggedRobot {
                                 -MathUtil.applyDeadband(driver.getRightX(), 0.1)
                                     * Constants.Swerve.maxAngularSpeed
                                     * 0.1)))));
-    driver.a().onFalse(Commands.runOnce(() -> swerve.drive(new ChassisSpeeds())));
+    driver
+        .a()
+        .onFalse(Commands.runOnce(() -> swerve.drive(new ChassisSpeeds())).andThen(rumble(0, 0)));
 
     operator.button(9).onTrue(superstructure.selectElevatorHeight(2));
     operator.button(8).onTrue(superstructure.selectElevatorHeight(3));

@@ -7,8 +7,8 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
-import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.RobotController;
 import frc.robot.Constants;
@@ -20,7 +20,11 @@ public class De_algaefierIO_Real implements De_algaefierIO {
   private SparkMax kPivot;
   private RelativeEncoder kEncoder;
 
-  private PIDController pivotPID = new PIDController(5, 0, 0);
+  private double kSetpoint = 0;
+
+  private ProfiledPIDController pivotPID =
+      new ProfiledPIDController(
+          4, 0, 0, new Constraints(Units.degreesToRadians(200), Units.degreesToRadians(200)));
 
   public De_algaefierIO_Real() {
 
@@ -36,20 +40,6 @@ public class De_algaefierIO_Real implements De_algaefierIO {
     config.encoder.positionConversionFactor(1d / De_algaefier.pivotGearing);
     config.encoder.velocityConversionFactor(1d / De_algaefier.pivotGearing);
 
-    // config.signals.absoluteEncoderPositionAlwaysOn(false);
-    // config.signals.absoluteEncoderPositionAlwaysOn(false);
-    // config.signals.analogPositionAlwaysOn(false);
-    // config.signals.analogVelocityAlwaysOn(false);
-    // config.signals.appliedOutputPeriodMs(50);
-    // config.signals.busVoltagePeriodMs(50);
-    // config.signals.externalOrAltEncoderPositionAlwaysOn(false);
-    // config.signals.externalOrAltEncoderVelocityAlwaysOn(false);
-    // config.signals.iAccumulationAlwaysOn(false);
-    // config.signals.motorTemperaturePeriodMs(100);
-    // config.signals.outputCurrentPeriodMs(50);
-    // config.signals.primaryEncoderPositionPeriodMs(50);
-    // config.signals.primaryEncoderVelocityPeriodMs(50);
-
     // configure the motor
     kPivot.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     changeSetpoint(0);
@@ -57,9 +47,10 @@ public class De_algaefierIO_Real implements De_algaefierIO {
 
   @Override
   public void updateInputs(De_algaefierIOInputs inputs) {
+    inputs.kSetpoint = kSetpoint;
 
     inputs.kPosition = Units.rotationsToDegrees(kEncoder.getPosition());
-    inputs.kVelocity = Units.rotationsToDegrees(kEncoder.getVelocity());
+    inputs.kVelocity = Units.rotationsToDegrees(kEncoder.getVelocity() / 60d);
 
     inputs.kCurrent = kPivot.getOutputCurrent();
     inputs.kVoltage = kPivot.getAppliedOutput() * RobotController.getBatteryVoltage();
@@ -67,16 +58,12 @@ public class De_algaefierIO_Real implements De_algaefierIO {
 
     Logger.recordOutput("PIDTest", pivotPID.calculate(kEncoder.getPosition()));
 
-    kPivot.set(pivotPID.calculate(kEncoder.getPosition()));
-    inputs.kSetpoint =
-        Units.rotationsToDegrees(
-            pivotPID
-                .getSetpoint()); // I think it would be optimal to move this line to directly after
-    // PID.calculate
+    double pidOutput = pivotPID.calculate(inputs.kPosition, kSetpoint);
+    kPivot.setVoltage(pidOutput);
   }
 
   @Override
   public void changeSetpoint(double rotations) {
-    pivotPID.setSetpoint(MathUtil.clamp(rotations, De_algaefier.minAngle, De_algaefier.maxAngle));
+    kSetpoint = rotations;
   }
 }

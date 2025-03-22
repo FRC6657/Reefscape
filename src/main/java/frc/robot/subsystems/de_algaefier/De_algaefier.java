@@ -18,6 +18,17 @@ public class De_algaefier extends SubsystemBase {
     return this.runOnce(() -> io.changeSetpoint(rotations));
   }
 
+  // public Command changeIdleMode(Boolean isBreak){
+  //   return Commands.either(
+  //     Commands.sequence(
+  //       Commands.runOnce(() -> config.idleMode(IdleMode.kBrake)), null
+  //       //() -> kPivot.configure(config, ResetMode.kResetSafeParameters,
+  // PersistMode.kPersistParameters)
+  //     ),
+  //     null,
+  //     () -> isBreak);
+  // }
+
   public double getPosition() {
     return inputs.kPosition;
   }

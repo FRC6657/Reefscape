@@ -148,8 +148,8 @@ public class Constants {
 
     // Standard deviation baselines, for 1 meter distance and 1 tag
     // (Adjusted automatically based on distance and # of tags)
-    public static double linearStdDevBaseline = 0.02; // Meters
-    public static double angularStdDevBaseline = 0.06; // Radians
+    public static double linearStdDevBaseline = 1; // Meters
+    public static double angularStdDevBaseline = 0.12; // Radians
 
     // Standard deviation multipliers for each camera
     // (Adjust to trust some cameras more than others)
@@ -410,7 +410,7 @@ public class Constants {
   }
 
   public static class De_algaefier {
-    public static double pivotGearing = (10d / 1) * (3d / 2);
+    public static double pivotGearing = (10d * 9) * (3d / 2);
 
     public static double maxAngle = Units.degreesToRotations(65);
     public static double minAngle = Units.degreesToRotations(0);
