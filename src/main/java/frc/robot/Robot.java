@@ -210,8 +210,8 @@ public class Robot extends LoggedRobot {
     operator.button(6).onTrue(superstructure.selectReef("Left"));
     operator.button(3).onTrue(superstructure.selectReef("Right"));
 
-    
-    operator.button(4).onTrue(superstructure.HomeRobot());
+    operator.button(1).onTrue(superstructure.RaiseClimber()).onFalse(climber.setVoltage(0));
+    operator.button(4).onTrue(superstructure.LowerClimber()).onFalse(climber.setVoltage(0));
 
     // Manual Elevator Controls
     driver.povUp().onTrue(superstructure.raiseElevator());
