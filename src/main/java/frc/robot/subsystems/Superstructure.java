@@ -384,9 +384,19 @@ public class Superstructure {
     final AutoTrajectory one = routine.trajectory(mirrorFlag + name, 0);
     final AutoTrajectory two = routine.trajectory(mirrorFlag + name, 1);
     final AutoTrajectory three = routine.trajectory(mirrorFlag + name, 2);
+    final AutoTrajectory four = routine.trajectory(mirrorFlag + name, 3);
 
-    one.done().onTrue(two.cmd().asProxy());
+    one.done()
+        .onTrue(
+            Commands.sequence(
+                    outtake.changeRollerSetpoint(-0.5),
+                    Commands.waitUntil(outtake::coralDetected),
+                    outtake.changeRollerSetpoint(0),
+                    new ScheduleCommand(two.cmd()))
+                .asProxy());
     two.done().onTrue(three.cmd().asProxy());
+
+    three.done().onTrue(Commands.sequence(Commands.waitSeconds(2), four.cmd()).asProxy());
 
     routine.active().onTrue(Commands.sequence(one.resetOdometry(), one.cmd()));
 
@@ -429,6 +439,7 @@ public class Superstructure {
             Commands.sequence(
                     outtake.changeRollerSetpoint(-0.5),
                     Commands.waitUntil(outtake::coralDetected).withTimeout(3),
+                    outtake.changeRollerSetpoint(0),
                     new ScheduleCommand(I1_P2.cmd()))
                 .asProxy());
 
@@ -446,6 +457,7 @@ public class Superstructure {
             Commands.sequence(
                     outtake.changeRollerSetpoint(-0.5),
                     Commands.waitUntil(outtake::coralDetected).withTimeout(3),
+                    outtake.changeRollerSetpoint(0),
                     new ScheduleCommand(I2_P3.cmd()))
                 .asProxy());
 

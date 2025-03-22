@@ -122,9 +122,9 @@ public class Constants {
   public static class AutoConstants {
 
     // Choreo
-    public static final PIDController kXController_Choreo = new PIDController(0.1, 0, 0);
-    public static final PIDController kYController_Choreo = new PIDController(0.1, 0, 0);
-    public static final PIDController kThetaController_Choreo = new PIDController(0.1, 0, 0);
+    public static final PIDController kXController_Choreo = new PIDController(1.6, 0, 0);
+    public static final PIDController kYController_Choreo = new PIDController(1.6, 0, 0);
+    public static final PIDController kThetaController_Choreo = new PIDController(1.2, 0, 0);
 
     // Position PID
 
