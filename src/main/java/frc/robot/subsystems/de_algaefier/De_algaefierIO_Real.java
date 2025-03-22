@@ -7,8 +7,7 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
-import edu.wpi.first.math.controller.ProfiledPIDController;
-import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.RobotController;
 import frc.robot.Constants;
@@ -22,9 +21,7 @@ public class De_algaefierIO_Real implements De_algaefierIO {
 
   private double kSetpoint = 0;
 
-  private ProfiledPIDController pivotPID =
-      new ProfiledPIDController(
-          1, 0, 0, new Constraints(Units.degreesToRadians(30), Units.degreesToRadians(0)));
+  private PIDController pivotPID = new PIDController(3, 0, 0);
 
   public De_algaefierIO_Real() {
 
@@ -33,7 +30,7 @@ public class De_algaefierIO_Real implements De_algaefierIO {
     kEncoder.setPosition(0);
 
     SparkMaxConfig config = new SparkMaxConfig();
-    config.inverted(false);
+    config.inverted(true);
     config.smartCurrentLimit(De_algaefier.kPivotSupplyLimit);
     config.idleMode(IdleMode.kBrake);
 

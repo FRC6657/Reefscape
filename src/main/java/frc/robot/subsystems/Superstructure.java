@@ -311,12 +311,13 @@ public class Superstructure {
         logMessage("Raising Climber"),
         elevator.changeSetpoint(Units.inchesToMeters(20)),
         dealg.changeSetpoint(Units.degreesToRotations(30)),
-        climber.setVoltage(6));
+        intake.changePivotSetpoint(Units.degreesToRadians(50)),
+        climber.setVoltage(-11));
   }
 
   // Lowers the climer.
   public Command LowerClimber() {
-    return Commands.sequence(logMessage("Lowering Climber"), climber.setVoltage(-6));
+    return Commands.sequence(logMessage("Lowering Climber"), climber.setVoltage(6));
   }
 
   // Stows all mechanisms, and stops all rollers.
