@@ -12,9 +12,6 @@ public class ClimberIO_Sim implements ClimberIO {
   // voltage tracking
   private double voltage = 0;
 
-  // setpoint tracking
-  private double speedSetpoint = 0;
-
   private double angleSetpoint = Constants.ClimberConstants.minRotations;
 
   private DCMotorSim climberSim =
