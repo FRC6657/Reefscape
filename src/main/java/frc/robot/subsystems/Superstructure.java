@@ -21,6 +21,7 @@ import edu.wpi.first.wpilibj2.command.NotifierCommand;
 import edu.wpi.first.wpilibj2.command.ScheduleCommand;
 import frc.robot.Constants;
 import frc.robot.Constants.FieldConstants.ReefSlot;
+import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.de_algaefier.De_algaefier;
 import frc.robot.subsystems.drivebase.Swerve;
 import frc.robot.subsystems.elevator.Elevator;
@@ -39,6 +40,7 @@ public class Superstructure {
   Outtake outtake;
   Intake intake;
   De_algaefier dealg;
+  Climber climber;
 
   @AutoLogOutput(key = "RobotStates/Selected Reef")
   private String selectedReef = "Left"; // Selected Reef Pole
@@ -297,6 +299,20 @@ public class Superstructure {
     return Commands.either(GroundIntakeScore(), ElevatorScore(), elevator::isDown);
   }
 
+  // Raises the climer.
+  public Command RaiseClimber() {
+    return Commands.sequence(
+        logMessage("Raising Climber"),
+        elevator.changeSetpoint(20),
+        dealg.changeSetpoint(Units.degreesToRotations(30)),
+        climber.setVoltage(6));
+  }
+
+  // Lowers the climer.
+  public Command LowerClimber() {
+    return Commands.sequence(logMessage("Lowering Climber"), climber.setVoltage(-6));
+  }
+
   // Stows all mechanisms, and stops all rollers.
   public Command HomeRobot() {
     return Commands.sequence(
@@ -304,7 +320,11 @@ public class Superstructure {
         outtake.changeRollerSetpoint(0),
         elevator.changeSetpoint(0),
         intake.changePivotSetpoint(Constants.Intake.minAngle),
-        intake.changeRollerSpeed(0));
+        intake.changeRollerSpeed(0),
+        Commands.either(
+            dealg.changeSetpoint(Constants.De_algaefier.minAngle),
+            dealg.changeSetpoint(Constants.De_algaefier.maxAngle),
+            () -> selectedPiece == "Coral"));
   }
 
   /** Auto aim wrapper command. Used to select level and pole side before auto aiming. */
