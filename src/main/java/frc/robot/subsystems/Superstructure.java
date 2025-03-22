@@ -308,12 +308,12 @@ public class Superstructure {
   }
 
   /** Auto aim wrapper command. Used to select level and pole side before auto aiming. */
-  public Command AutoAim(int coralLevel, String reefPole) {
+  public Command AutoAim(int coralLevel, String reefPole, boolean lead) {
     return Commands.sequence(
         selectPiece("Coral"),
         selectElevatorHeight(coralLevel),
         selectReef(reefPole),
-        AutoAim(false));
+        AutoAim(lead));
   }
 
   /**
@@ -395,13 +395,14 @@ public class Superstructure {
 
   public Command AutonomousScoringSequence(int level, String reef) {
     return Commands.sequence(
-        AutoAim(4, reef),
+        Commands.runOnce(() -> drivebase.drive(new ChassisSpeeds()), drivebase),
+        AutoAim(4, reef, true),
         Commands.waitUntil(elevator::atSetpoint),
         Score(),
-        drivebase.driveVelocity(() -> new ChassisSpeeds(0.5, 0, 0)).withTimeout(0.25),
+        drivebase.driveVelocity(() -> new ChassisSpeeds(0.5, 0, 0)).withTimeout(0.125),
         Commands.runOnce(() -> drivebase.drive(new ChassisSpeeds()), drivebase),
-        HomeRobot(),
-        Commands.waitUntil(elevator::atSetpoint));
+        HomeRobot()
+        );
   }
 
   public AutoRoutine L4_3Piece(AutoFactory factory, boolean mirror) {
@@ -416,7 +417,7 @@ public class Superstructure {
     final AutoTrajectory P2_I2 = routine.trajectory(mirrorFlag + "3 Piece", 3);
     final AutoTrajectory I2_P3 = routine.trajectory(mirrorFlag + "3 Piece", 4);
 
-    S_P1.atTime("Score")
+    S_P1.atTimeBeforeEnd(0.5)
         .onTrue(
             Commands.sequence(
                     AutonomousScoringSequence(4, mirror ? "Right" : "Left"),
@@ -433,7 +434,7 @@ public class Superstructure {
                 .asProxy());
 
     I1_P2
-        .atTime("Score")
+        .atTimeBeforeEnd(0.5)
         .onTrue(
             Commands.sequence(
                     AutonomousScoringSequence(4, mirror ? "Right" : "Left"),
@@ -449,7 +450,9 @@ public class Superstructure {
                     new ScheduleCommand(I2_P3.cmd()))
                 .asProxy());
 
-    I2_P3.atTime("Score").onTrue(AutonomousScoringSequence(4, mirror ? "Left" : "Right").asProxy());
+    I2_P3
+        .atTimeBeforeEnd(0.5)
+        .onTrue(AutonomousScoringSequence(4, mirror ? "Left" : "Right").asProxy());
 
     routine.active().onTrue(Commands.sequence(S_P1.resetOdometry(), S_P1.cmd()));
 
