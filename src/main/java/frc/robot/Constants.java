@@ -318,11 +318,11 @@ public class Constants {
                     .withKV(12d / ((6300d / 60) / turnRatio))
                     .withKS(0.27)
                     .withKP(25)
-                    .withKD(0.6))
+                    .withKD(0.7))
             .withMotionMagic(
                 new MotionMagicConfigs()
                     .withMotionMagicCruiseVelocity((6300 / 60) / turnRatio)
-                    .withMotionMagicAcceleration((6300 / 60) / (turnRatio * 0.005)))
+                    .withMotionMagicAcceleration((6300 / 60) / (turnRatio * 0.001)))
             .withClosedLoopGeneral(new ClosedLoopGeneralConfigs().withContinuousWrap(true));
   }
 

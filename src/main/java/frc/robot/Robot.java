@@ -114,8 +114,8 @@ public class Robot extends LoggedRobot {
         new AutoFactory(swerve::getPose, swerve::resetPose, swerve::followTrajectory, true, swerve);
 
     autoChooser.addDefaultOption("Do Nothing", Commands.none());
-    // autoChooser.addOption("Test", superstructure.DirectionTest(autoFactory, false).cmd());
-    // autoChooser.addOption("3 Piece", superstructure.L4_3Piece(autoFactory, false).cmd());
+    autoChooser.addOption("Test", superstructure.DirectionTest(autoFactory, false).cmd());
+    autoChooser.addOption("3 Piece", superstructure.L4_3Piece(autoFactory, false).cmd());
   }
 
   public static boolean replay = false;
@@ -168,7 +168,11 @@ public class Robot extends LoggedRobot {
         .b()
         .onTrue(outtake.changeRollerSetpoint(-0.4))
         .onFalse(outtake.changeRollerSetpoint(-0.1));
-
+    debug
+        .x()
+        .onTrue(
+            Commands.runOnce(
+                () -> swerve.resetPose(new Pose2d(4, 4, Rotation2d.kCCW_90deg)), swerve));
     driver
         .a()
         .whileTrue(
@@ -247,7 +251,9 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void teleopInit() {
-    autoChooser.get().cancel();
+    if (autoChooser.get() != null) {
+      autoChooser.get().cancel();
+    }
   }
 
   private Command rumble(double duration, double intensity) {

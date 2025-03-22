@@ -103,11 +103,11 @@ public class Swerve extends SubsystemBase {
    * @param pose The new pose of the robot
    */
   public void resetPose(Pose2d pose) {
-    var yaw = RobotBase.isSimulation() ? pose.getRotation() : gyroInputs.yawPosition;
+    // var yaw = RobotBase.isSimulation() ? pose.getRotation() : gyroInputs.yawPosition;
 
-    gyroIO.setYaw(pose.getRotation());
+    // gyroIO.setYaw(pose.getRotation());
     poseEstimator.resetPosition(
-        yaw,
+        gyroInputs.yawPosition,
         Arrays.stream(modules).map(m -> m.getPosition()).toArray(SwerveModulePosition[]::new),
         pose);
   }
