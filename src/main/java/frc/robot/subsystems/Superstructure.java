@@ -401,8 +401,7 @@ public class Superstructure {
         Score(),
         drivebase.driveVelocity(() -> new ChassisSpeeds(0.5, 0, 0)).withTimeout(0.125),
         Commands.runOnce(() -> drivebase.drive(new ChassisSpeeds()), drivebase),
-        HomeRobot()
-        );
+        HomeRobot());
   }
 
   public AutoRoutine L4_3Piece(AutoFactory factory, boolean mirror) {
