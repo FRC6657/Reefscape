@@ -379,6 +379,10 @@ public class Constants {
 
     public static double kAlgaeStrength = 0.4;
 
+    public static double speedReduction =
+        1 - 1 / 4d; // will drive at this speed when elevator is at max height (60 inches)
+    public static double heightThreshold = Units.inchesToMeters(15);
+
     public static Slot0Configs motorSlot0 =
         new Slot0Configs()
             .withKS(0) // Volts

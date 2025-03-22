@@ -66,12 +66,18 @@ public class Superstructure {
 
   // Constructor
   public Superstructure(
-      Swerve drivebase, Elevator elevator, Outtake outtake, Intake intake, De_algaefier dealg) {
+      Swerve drivebase,
+      Elevator elevator,
+      Outtake outtake,
+      Intake intake,
+      De_algaefier dealg,
+      Climber climber) {
     this.drivebase = drivebase;
     this.elevator = elevator;
     this.outtake = outtake;
     this.intake = intake;
     this.dealg = dealg;
+    this.climber = climber;
   }
 
   /*
@@ -303,7 +309,7 @@ public class Superstructure {
   public Command RaiseClimber() {
     return Commands.sequence(
         logMessage("Raising Climber"),
-        elevator.changeSetpoint(20),
+        elevator.changeSetpoint(Units.inchesToMeters(20)),
         dealg.changeSetpoint(Units.degreesToRotations(30)),
         climber.setVoltage(6));
   }

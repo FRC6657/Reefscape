@@ -69,6 +69,17 @@ public class Elevator extends SubsystemBase {
     return MathUtil.isNear(0, inputs.kPosition, Units.inchesToMeters(1)) && inputs.kSetpoint == 0;
   }
 
+  @AutoLogOutput(key = "Elevator/driveSpeedMuliplier")
+  public double driveSpeedMultiplier() {
+    if (inputs.kPosition < Constants.Elevator.heightThreshold) {
+      return 1;
+    } else {
+      double rangeSize = (Constants.Elevator.maxHeight - Constants.Elevator.heightThreshold);
+      double positionInRange = (inputs.kPosition - Constants.Elevator.heightThreshold);
+      return 1 - (Constants.Elevator.speedReduction * (positionInRange / rangeSize));
+    }
+  }
+
   @Override
   public void periodic() {
     io.updateInputs(inputs);

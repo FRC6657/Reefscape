@@ -112,7 +112,7 @@ public class Robot extends LoggedRobot {
     dealg =
         new De_algaefier(RobotBase.isReal() ? new De_algaefierIO_Real() : new De_algaefierIO_Sim());
     climber = new Climber(RobotBase.isReal() ? new ClimberIO_Real() : new ClimberIO_Sim());
-    superstructure = new Superstructure(swerve, elevator, outtake, intake, dealg);
+    superstructure = new Superstructure(swerve, elevator, outtake, intake, dealg, climber);
 
     autoFactory =
         new AutoFactory(swerve::getPose, swerve::resetPose, swerve::followTrajectory, true, swerve);

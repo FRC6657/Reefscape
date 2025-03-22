@@ -24,7 +24,7 @@ public class De_algaefierIO_Real implements De_algaefierIO {
 
   private ProfiledPIDController pivotPID =
       new ProfiledPIDController(
-          4, 0, 0, new Constraints(Units.degreesToRadians(200), Units.degreesToRadians(200)));
+          1, 0, 0, new Constraints(Units.degreesToRadians(30), Units.degreesToRadians(0)));
 
   public De_algaefierIO_Real() {
 

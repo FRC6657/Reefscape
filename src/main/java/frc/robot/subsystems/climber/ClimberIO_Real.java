@@ -32,20 +32,6 @@ public class ClimberIO_Real implements ClimberIO {
     config.encoder.positionConversionFactor(1d / Constants.ClimberConstants.gearing);
     config.encoder.velocityConversionFactor(1d / Constants.ClimberConstants.gearing);
 
-    config.signals.absoluteEncoderPositionAlwaysOn(false);
-    config.signals.absoluteEncoderPositionAlwaysOn(false);
-    config.signals.analogPositionAlwaysOn(false);
-    config.signals.analogVelocityAlwaysOn(false);
-    config.signals.appliedOutputPeriodMs(50);
-    config.signals.busVoltagePeriodMs(50);
-    config.signals.externalOrAltEncoderPositionAlwaysOn(false);
-    config.signals.externalOrAltEncoderVelocityAlwaysOn(false);
-    config.signals.iAccumulationAlwaysOn(false);
-    config.signals.motorTemperaturePeriodMs(100);
-    config.signals.outputCurrentPeriodMs(50);
-    config.signals.primaryEncoderPositionPeriodMs(50);
-    config.signals.primaryEncoderVelocityPeriodMs(50);
-
     motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
     changeSetpoint(Constants.ClimberConstants.minRotations);
