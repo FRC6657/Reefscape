@@ -22,6 +22,9 @@ import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.VisionConstants;
 import frc.robot.subsystems.Superstructure;
+import frc.robot.subsystems.climber.Climber;
+import frc.robot.subsystems.climber.ClimberIO_Real;
+import frc.robot.subsystems.climber.ClimberIO_Sim;
 import frc.robot.subsystems.de_algaefier.De_algaefier;
 import frc.robot.subsystems.de_algaefier.De_algaefierIO_Real;
 import frc.robot.subsystems.de_algaefier.De_algaefierIO_Sim;
@@ -63,6 +66,7 @@ public class Robot extends LoggedRobot {
   private final Intake intake;
   private final Outtake outtake;
   private final De_algaefier dealg;
+  private final Climber climber;
 
   private final Superstructure superstructure;
   private final AutoFactory autoFactory;
@@ -107,7 +111,7 @@ public class Robot extends LoggedRobot {
     outtake = new Outtake(RobotBase.isReal() ? new OuttakeIO_Real() : new OuttakeIO_Sim());
     dealg =
         new De_algaefier(RobotBase.isReal() ? new De_algaefierIO_Real() : new De_algaefierIO_Sim());
-
+    climber = new Climber(RobotBase.isReal() ? new ClimberIO_Real() : new ClimberIO_Sim());
     superstructure = new Superstructure(swerve, elevator, outtake, intake, dealg);
 
     autoFactory =
@@ -206,12 +210,7 @@ public class Robot extends LoggedRobot {
     operator.button(6).onTrue(superstructure.selectReef("Left"));
     operator.button(3).onTrue(superstructure.selectReef("Right"));
 
-    operator.button(4).onTrue(superstructure.HomeRobot());
-    operator
-        .button(1)
-        .onTrue(outtake.changeRollerSetpoint(-0.8))
-        .onFalse(outtake.changeRollerSetpoint(0));
-
+    
     operator.button(4).onTrue(superstructure.HomeRobot());
 
     // Manual Elevator Controls
