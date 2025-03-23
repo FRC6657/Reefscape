@@ -374,9 +374,7 @@ public class Superstructure {
         Commands.parallel(
                 drivebase
                     .goToPoseCoarse(
-                        () -> getNearestReef().plus(
-                          new Transform2d(
-                              0.25, 0, new Rotation2d())),
+                        () -> getNearestReef().plus(new Transform2d(0.25, 0, new Rotation2d())),
                         new Constraints(3, 3),
                         new Constraints(Units.rotationsToRadians(2), Units.rotationsToRadians(4)))
                     .onlyIf(() -> lead),
@@ -391,8 +389,7 @@ public class Superstructure {
                         () ->
                             getNearestReef()
                                 .plus(
-                                    new Transform2d(
-                                        Units.inchesToMeters(-1), 0, new Rotation2d())),
+                                    new Transform2d(Units.inchesToMeters(-1), 0, new Rotation2d())),
                         new Constraints(1, 1),
                         new Constraints(Units.rotationsToRadians(2), Units.rotationsToRadians(4))),
                     Commands.sequence(
@@ -434,7 +431,7 @@ public class Superstructure {
 
   public Command AutonomousScoringSequence(int level, String reef) {
     return Commands.sequence(
-        Commands.runOnce(() -> drivebase.drive(new ChassisSpeeds()), drivebase),
+        // Commands.runOnce(() -> drivebase.drive(new ChassisSpeeds()), drivebase),
         AutoAim(4, reef, true),
         Commands.waitUntil(elevator::atSetpoint),
         Score(),
@@ -455,7 +452,7 @@ public class Superstructure {
     final AutoTrajectory P2_I2 = routine.trajectory(mirrorFlag + "3 Piece", 3);
     final AutoTrajectory I2_P3 = routine.trajectory(mirrorFlag + "3 Piece", 4);
 
-    S_P1.atTimeBeforeEnd(0.5)
+    S_P1.atTimeBeforeEnd(0.625)
         .onTrue(
             Commands.sequence(
                     AutonomousScoringSequence(4, mirror ? "Right" : "Left"),
@@ -473,7 +470,7 @@ public class Superstructure {
                 .asProxy());
 
     I1_P2
-        .atTimeBeforeEnd(0.5)
+        .atTimeBeforeEnd(0.875)
         .onTrue(
             Commands.sequence(
                     AutonomousScoringSequence(4, mirror ? "Right" : "Left"),
@@ -491,7 +488,7 @@ public class Superstructure {
                 .asProxy());
 
     I2_P3
-        .atTimeBeforeEnd(0.5)
+        .atTimeBeforeEnd(0.875)
         .onTrue(AutonomousScoringSequence(4, mirror ? "Left" : "Right").asProxy());
 
     routine.active().onTrue(Commands.sequence(S_P1.resetOdometry(), S_P1.cmd()));
