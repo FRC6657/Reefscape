@@ -96,15 +96,15 @@ public class Constants {
 
       // Shift the pose to the robot's left
       public Pose2d getLeftPose(Pose2d pose) {
-        return pose.transformBy(new Transform2d(0.25, -0.26, new Rotation2d()));
+        return pose.transformBy(new Transform2d(0, -0.26, new Rotation2d()));
       }
 
       public Pose2d getRightPose(Pose2d pose) {
-        return pose.transformBy(new Transform2d(0.25, 0.06, new Rotation2d()));
+        return pose.transformBy(new Transform2d(0, 0.06, new Rotation2d()));
       }
 
       public Pose2d getAlgaePose(Pose2d pose) {
-        return pose.transformBy(new Transform2d(0.25, -0.09, new Rotation2d()));
+        return pose.transformBy(new Transform2d(0, -0.09, new Rotation2d()));
       }
 
       ReefPoses(Pose2d pose) {

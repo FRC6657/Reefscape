@@ -374,7 +374,9 @@ public class Superstructure {
         Commands.parallel(
                 drivebase
                     .goToPoseCoarse(
-                        () -> getNearestReef(),
+                        () -> getNearestReef().plus(
+                          new Transform2d(
+                              0.25, 0, new Rotation2d())),
                         new Constraints(3, 3),
                         new Constraints(Units.rotationsToRadians(2), Units.rotationsToRadians(4)))
                     .onlyIf(() -> lead),
@@ -390,7 +392,7 @@ public class Superstructure {
                             getNearestReef()
                                 .plus(
                                     new Transform2d(
-                                        -0.25 - Units.inchesToMeters(1), 0, new Rotation2d())),
+                                        Units.inchesToMeters(-1), 0, new Rotation2d())),
                         new Constraints(1, 1),
                         new Constraints(Units.rotationsToRadians(2), Units.rotationsToRadians(4))),
                     Commands.sequence(
