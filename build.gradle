@@ -35,6 +35,16 @@ deploy {
                     jvmArgs.add("-XX:+AlwaysPreTouch")
                 }
 
+                // frcJava(getArtifactTypeClass('FRCJavaArtifact')) {
+                //     // Enable VisualVM connection
+                //     jvmArgs.add("-Dcom.sun.management.jmxremote=true")
+                //     jvmArgs.add("-Dcom.sun.management.jmxremote.port=1198")
+                //     jvmArgs.add("-Dcom.sun.management.jmxremote.local.only=false")
+                //     jvmArgs.add("-Dcom.sun.management.jmxremote.ssl=false")
+                //     jvmArgs.add("-Dcom.sun.management.jmxremote.authenticate=false")
+                //     jvmArgs.add("-Djava.rmi.server.hostname=127.0.0.1") // Replace with 10.66.57.2 for roboRIO
+                // }
+
                 // Static files artifact
                 frcStaticFileDeploy(getArtifactTypeClass('FileTreeArtifact')) {
                     files = project.fileTree('src/main/deploy')
