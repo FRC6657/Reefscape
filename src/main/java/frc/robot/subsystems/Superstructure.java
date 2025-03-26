@@ -446,16 +446,22 @@ public class Superstructure {
     final AutoTrajectory S_P1 = routine.trajectory("1 Piece Center", 0);
     final AutoTrajectory P1_Algae = routine.trajectory("1 Piece Center", 1);
 
-    routine.active().onTrue(Commands.sequence(S_P1.resetOdometry(), S_P1.cmd()));
+    Command Start =
+        Commands.sequence(
+                AutonomousScoringSequence(4, "Right"),
+                selectPiece("Algae"),
+                drivebase.driveRR(() -> new ChassisSpeeds(0.2, 0, 0)).withTimeout(0.5),
+                drivebase.driveRR(() -> new ChassisSpeeds(0, 0, 0)).withTimeout(0.01),
+                selectElevatorHeight(2),
+                AutoAim(true),
+                ElevatorIntake(),
+                Commands.waitSeconds(1),
+                new ScheduleCommand(P1_Algae.cmd()))
+            .asProxy();
 
-    S_P1.atTimeBeforeEnd(0.8)
-        .onTrue(
-            Commands.sequence(
-                    AutonomousScoringSequence(4, "Right"), new ScheduleCommand(P1_Algae.cmd()))
-                .asProxy());
+    P1_Algae.done().onTrue(Commands.sequence(ElevatorScore(), HomeRobot()).asProxy());
 
-    P1_Algae.done()
-        .onTrue(Commands.sequence(selectPiece("Algae"), ElevatorScore(), HomeRobot()).asProxy());
+    routine.active().onTrue(Commands.sequence(S_P1.resetOdometry(), Start));
 
     return routine;
   }
@@ -472,7 +478,7 @@ public class Superstructure {
     final AutoTrajectory P2_I2 = routine.trajectory(mirrorFlag + "3 Piece", 3);
     final AutoTrajectory I2_P3 = routine.trajectory(mirrorFlag + "3 Piece", 4);
 
-    S_P1.atTimeBeforeEnd(0.625)
+    S_P1.atTimeBeforeEnd(0.675)
         .onTrue(
             Commands.sequence(
                     AutonomousScoringSequence(4, mirror ? "Right" : "Left"),
@@ -490,7 +496,7 @@ public class Superstructure {
                 .asProxy());
 
     I1_P2
-        .atTimeBeforeEnd(0.875)
+        .atTimeBeforeEnd(1.275)
         .onTrue(
             Commands.sequence(
                     AutonomousScoringSequence(4, mirror ? "Right" : "Left"),
@@ -508,7 +514,7 @@ public class Superstructure {
                 .asProxy());
 
     I2_P3
-        .atTimeBeforeEnd(0.875)
+        .atTimeBeforeEnd(1.225)
         .onTrue(AutonomousScoringSequence(4, mirror ? "Left" : "Right").asProxy());
 
     routine.active().onTrue(Commands.sequence(S_P1.resetOdometry(), S_P1.cmd()));
