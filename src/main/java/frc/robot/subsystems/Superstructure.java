@@ -478,7 +478,7 @@ public class Superstructure {
     final AutoTrajectory P2_I2 = routine.trajectory(mirrorFlag + "3 Piece", 3);
     final AutoTrajectory I2_P3 = routine.trajectory(mirrorFlag + "3 Piece", 4);
 
-    S_P1.atTimeBeforeEnd(0.675)
+    S_P1.atTimeBeforeEnd(0.775)
         .onTrue(
             Commands.sequence(
                     AutonomousScoringSequence(4, mirror ? "Right" : "Left"),
@@ -496,7 +496,7 @@ public class Superstructure {
                 .asProxy());
 
     I1_P2
-        .atTimeBeforeEnd(1.275)
+        .atTimeBeforeEnd(1.475)
         .onTrue(
             Commands.sequence(
                     AutonomousScoringSequence(4, mirror ? "Right" : "Left"),
@@ -514,7 +514,7 @@ public class Superstructure {
                 .asProxy());
 
     I2_P3
-        .atTimeBeforeEnd(1.225)
+        .atTimeBeforeEnd(1.425)
         .onTrue(AutonomousScoringSequence(4, mirror ? "Left" : "Right").asProxy());
 
     routine.active().onTrue(Commands.sequence(S_P1.resetOdometry(), S_P1.cmd()));
