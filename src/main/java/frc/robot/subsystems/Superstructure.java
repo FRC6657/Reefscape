@@ -440,6 +440,26 @@ public class Superstructure {
         HomeRobot());
   }
 
+  public AutoRoutine CenterL4(AutoFactory factory) {
+    final AutoRoutine routine = factory.newRoutine("CenterL4");
+
+    final AutoTrajectory S_P1 = routine.trajectory("1 Piece Center", 0);
+    final AutoTrajectory P1_Algae = routine.trajectory("1 Piece Center", 1);
+
+    routine.active().onTrue(Commands.sequence(S_P1.resetOdometry(), S_P1.cmd()));
+
+    S_P1.atTimeBeforeEnd(0.8)
+        .onTrue(
+            Commands.sequence(
+                    AutonomousScoringSequence(4, "Right"), new ScheduleCommand(P1_Algae.cmd()))
+                .asProxy());
+
+    P1_Algae.done()
+        .onTrue(Commands.sequence(selectPiece("Algae"), ElevatorScore(), HomeRobot()).asProxy());
+
+    return routine;
+  }
+
   public AutoRoutine L4_3Piece(AutoFactory factory, boolean mirror) {
 
     final AutoRoutine routine = factory.newRoutine("3 Piece");
