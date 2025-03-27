@@ -95,7 +95,7 @@ public class Superstructure {
                 .get3DPoses()[2]
                 .getTranslation()
                 .plus(new Translation3d(-0.330200, 0, 0.591850)),
-            new Rotation3d(0, -Units.degreesToRadians(dealg.getPosition()), 0));
+            new Rotation3d(0, -Units.rotationsToRadians(dealg.getPosition()), 0));
 
     Logger.recordOutput("3D Poses", mechanismPoses);
   }
