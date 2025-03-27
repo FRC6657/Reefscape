@@ -1,8 +1,5 @@
 package frc.robot.subsystems.elevator;
 
-import com.ctre.phoenix.motorcontrol.InvertType;
-import com.ctre.phoenix.motorcontrol.NeutralMode;
-import com.ctre.phoenix.motorcontrol.can.VictorSPX;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
@@ -18,8 +15,6 @@ public class ElevatorIO_Real implements ElevatorIO {
 
   TalonFX leaderMotor = new TalonFX(CAN.Elevetor_Leader.id);
   TalonFX followMotor = new TalonFX(CAN.Elevator_Follower.id);
-
-  VictorSPX algaeMotor = new VictorSPX(CAN.AlgaeMotor.id);
 
   private double kSetpoint = Constants.Elevator.minHeight;
   private MotionMagicVoltage motionMagicVoltage = new MotionMagicVoltage(0);
@@ -42,11 +37,6 @@ public class ElevatorIO_Real implements ElevatorIO {
         new Follower(
             CAN.Elevetor_Leader.id,
             false)); // Only difference with the follow motor configuration is this line
-
-    // algae motor configure
-    algaeMotor.configFactoryDefault();
-    algaeMotor.setNeutralMode(NeutralMode.Brake);
-    algaeMotor.setInverted(InvertType.None);
 
     // grab important numbers for logging
     var motorPostition = leaderMotor.getPosition();
