@@ -21,7 +21,7 @@ public class De_algaefierIO_Real implements De_algaefierIO {
 
   private double kSetpoint = 0;
 
-  private PIDController pivotPID = new PIDController(3, 0, 0);
+  private PIDController pivotPID = new PIDController(30, 0, 0);
 
   public De_algaefierIO_Real() {
 
@@ -30,7 +30,7 @@ public class De_algaefierIO_Real implements De_algaefierIO {
     kEncoder.setPosition(0);
 
     SparkMaxConfig config = new SparkMaxConfig();
-    config.inverted(true);
+    config.inverted(false);
     config.smartCurrentLimit(De_algaefier.kPivotSupplyLimit);
     config.idleMode(IdleMode.kBrake);
 
@@ -46,7 +46,7 @@ public class De_algaefierIO_Real implements De_algaefierIO {
   public void updateInputs(De_algaefierIOInputs inputs) {
     inputs.kSetpoint = kSetpoint;
 
-    inputs.kPosition = Units.rotationsToDegrees(kEncoder.getPosition());
+    inputs.kPosition = kEncoder.getPosition();
     inputs.kVelocity = Units.rotationsToDegrees(kEncoder.getVelocity() / 60d);
 
     inputs.kCurrent = kPivot.getOutputCurrent();

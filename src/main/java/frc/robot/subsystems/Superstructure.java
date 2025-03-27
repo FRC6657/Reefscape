@@ -384,19 +384,12 @@ public class Superstructure {
             // If the robot is in algae mode it will just drive forward for a bit to grab the algae.
             // This is not PID controlled.
             .andThen(
-                Commands.either(
-                    drivebase.goToPoseFine(
-                        () ->
-                            getNearestReef()
-                                .plus(
-                                    new Transform2d(Units.inchesToMeters(-1), 0, new Rotation2d())),
-                        new Constraints(1, 1),
-                        new Constraints(Units.rotationsToRadians(2), Units.rotationsToRadians(4))),
-                    Commands.sequence(
-                        drivebase.driveVelocity(() -> new ChassisSpeeds(-1, 0, 0)).withTimeout(0.4),
-                        Commands.runOnce(() -> drivebase.drive(new ChassisSpeeds()), drivebase),
-                        PassiveElevatorIntake()),
-                    () -> selectedPiece == "Coral")));
+                drivebase.goToPoseFine(
+                    () ->
+                        getNearestReef()
+                            .plus(new Transform2d(Units.inchesToMeters(-1), 0, new Rotation2d())),
+                    new Constraints(1, 1),
+                    new Constraints(Units.rotationsToRadians(2), Units.rotationsToRadians(4)))));
   }
 
   public AutoRoutine DirectionTest(AutoFactory factory, boolean mirror) {
@@ -450,12 +443,11 @@ public class Superstructure {
         Commands.sequence(
                 AutonomousScoringSequence(4, "Right"),
                 selectPiece("Algae"),
-                drivebase.driveRR(() -> new ChassisSpeeds(0.2, 0, 0)).withTimeout(0.5),
+                drivebase.driveRR(() -> new ChassisSpeeds(0.4, 0, 0)).withTimeout(1.1),
                 drivebase.driveRR(() -> new ChassisSpeeds(0, 0, 0)).withTimeout(0.01),
                 selectElevatorHeight(2),
                 AutoAim(true),
                 ElevatorIntake(),
-                Commands.waitSeconds(1),
                 new ScheduleCommand(P1_Algae.cmd()))
             .asProxy();
 
