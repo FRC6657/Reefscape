@@ -1,6 +1,7 @@
 package frc.robot.subsystems.drivebase;
 
 import com.ctre.phoenix6.controls.VelocityVoltage;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.sim.ChassisReference;
 import edu.wpi.first.math.MathUtil;
@@ -8,6 +9,7 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import frc.robot.Constants;
 import frc.robot.Constants.Swerve.ModuleConstants;
@@ -29,6 +31,7 @@ public class ModuleIO_Sim implements ModuleIO {
   private double turnAppliedVolts = 0.0;
 
   private final VelocityVoltage drivePID = new VelocityVoltage(0.0);
+  private final VoltageOut driveOpenLoop = new VoltageOut(0);
   private final PIDController turnPID = new PIDController(100.0, 0.0, 0.0);
 
   public ModuleIO_Sim(ModuleConstants constants) {
@@ -88,8 +91,14 @@ public class ModuleIO_Sim implements ModuleIO {
   }
 
   @Override
-  public void setDriveSetpoint(double metersPerSecond) {
-    drive.setControl(drivePID.withVelocity(metersPerSecond));
+  public void setDriveSetpoint(double metersPerSecond, boolean openLoop) {
+    drive.setControl(
+        openLoop
+            ? driveOpenLoop.withOutput(
+                RobotController.getBatteryVoltage()
+                    * (metersPerSecond * Constants.Swerve.driveRotorToMeters)
+                    / (6380d / 60))
+            : drivePID.withVelocity(metersPerSecond));
   }
 
   @Override

@@ -127,12 +127,16 @@ public class Swerve extends SubsystemBase {
     return speeds;
   }
 
+  public void drive(ChassisSpeeds speeds) {
+    drive(speeds, false);
+  }
+
   /**
    * Runs the drivetrain at the given robot relative speeds
    *
    * @param speeds The desired robot relative speeds
    */
-  public void drive(ChassisSpeeds speeds) {
+  public void drive(ChassisSpeeds speeds, boolean openLoop) {
 
     speeds = ChassisSpeeds.discretize(speeds, 0.02);
     final SwerveModuleState[] moduleStates = kinematics.toSwerveModuleStates(speeds);
@@ -140,7 +144,7 @@ public class Swerve extends SubsystemBase {
     final SwerveModuleState[] optimizedModuleStates = new SwerveModuleState[moduleStates.length];
 
     for (int i = 0; i < moduleStates.length; i++) {
-      optimizedModuleStates[i] = modules[i].runSetpoint(moduleStates[i]); // Run setpoints
+      optimizedModuleStates[i] = modules[i].runSetpoint(moduleStates[i], openLoop); // Run setpoints
     }
 
     Logger.recordOutput("Swerve/ModuleSetpoints", optimizedModuleStates);
@@ -188,7 +192,7 @@ public class Swerve extends SubsystemBase {
                   DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue
                       ? getPose().getRotation()
                       : getPose().getRotation().minus(Rotation2d.fromDegrees(180)));
-          this.drive(speed);
+          this.drive(speed, true);
         });
   }
 

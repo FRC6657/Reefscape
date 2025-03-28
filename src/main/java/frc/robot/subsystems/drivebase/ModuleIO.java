@@ -28,7 +28,7 @@ public interface ModuleIO {
 
   public default void updateInputs(ModuleIOInputs inputs) {}
 
-  public default void setDriveSetpoint(final double metersPerSecond) {}
+  public default void setDriveSetpoint(final double metersPerSecond, final boolean openLoop) {}
 
   public default void setTurnSetpoint(final Rotation2d rotation) {}
 

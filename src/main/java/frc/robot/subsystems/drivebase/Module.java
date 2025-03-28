@@ -22,10 +22,10 @@ public class Module {
    * @param state The state to run the module with
    * @return The optimized module state being ran
    */
-  public SwerveModuleState runSetpoint(SwerveModuleState state) {
+  public SwerveModuleState runSetpoint(SwerveModuleState state, boolean openLoop) {
     state.optimize(inputs.turnPosition);
     io.setTurnSetpoint(state.angle);
-    io.setDriveSetpoint(state.speedMetersPerSecond);
+    io.setDriveSetpoint(state.speedMetersPerSecond, openLoop);
     return state;
   }
 

@@ -40,13 +40,13 @@ public class Superstructure {
   Outtake outtake;
   Intake intake;
   De_algaefier dealg;
-  Climber climber; 
+  Climber climber;
 
   @AutoLogOutput(key = "RobotStates/Selected Reef")
   private String selectedReef = "Left"; // Selected Reef Pole
 
   @AutoLogOutput(key = "RobotStates/Elevator Level")
-  private int elevatorLevel = 2; // Selected Reef Level
+  private int elevatorLevel = 4; // Selected Reef Level
 
   @AutoLogOutput(key = "RobotStates/Selected Piece")
   private String selectedPiece = "Coral";

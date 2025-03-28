@@ -9,6 +9,7 @@ import com.reduxrobotics.sensors.canandmag.Canandmag;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.RobotController;
 import frc.robot.Constants;
 import frc.robot.Constants.Swerve.ModuleConstants;
 import java.util.Queue;
@@ -37,6 +38,7 @@ public class ModuleIO_Real implements ModuleIO {
 
   // Control Signals
   private final VelocityVoltage drivePID = new VelocityVoltage(0.0);
+  private final VoltageOut driveOpenLoop = new VoltageOut(0);
   private final MotionMagicVoltage turnPID = new MotionMagicVoltage(0.0);
 
   private final Queue<Double> timestampQueue;
@@ -150,12 +152,18 @@ public class ModuleIO_Real implements ModuleIO {
   }
 
   @Override
-  public void setDriveSetpoint(double metersPerSecond) {
+  public void setDriveSetpoint(double metersPerSecond, boolean openLoop) {
     // If the robot is stopped, set the drive to 0 volts
     if (metersPerSecond == 0 && MathUtil.isNear(0.0, driveVelocity.getValueAsDouble(), 0.1)) {
       drive.setControl(new VoltageOut(0));
     } else { // Otherwise, set the drive to the desired velocity
-      drive.setControl(drivePID.withVelocity(metersPerSecond));
+      drive.setControl(
+          openLoop
+              ? driveOpenLoop.withOutput(
+                  RobotController.getBatteryVoltage()
+                      * (metersPerSecond * Constants.Swerve.driveRotorToMeters)
+                      / (6380d / 60))
+              : drivePID.withVelocity(metersPerSecond));
     }
   }
 
