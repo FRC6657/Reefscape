@@ -104,7 +104,7 @@ public class Constants {
       }
 
       public Pose2d getAlgaePose(Pose2d pose) {
-        return pose.transformBy(new Transform2d(Units.inchesToMeters(3), -0.09, new Rotation2d()));
+        return pose.transformBy(new Transform2d(Units.inchesToMeters(2), -0.09, new Rotation2d()));
       }
 
       ReefPoses(Pose2d pose) {
