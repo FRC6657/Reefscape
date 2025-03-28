@@ -8,11 +8,9 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.RobotController;
 import frc.robot.Constants;
 import frc.robot.Constants.De_algaefier;
-import org.littletonrobotics.junction.Logger;
 
 public class De_algaefierIO_Real implements De_algaefierIO {
 
@@ -44,16 +42,13 @@ public class De_algaefierIO_Real implements De_algaefierIO {
 
   @Override
   public void updateInputs(De_algaefierIOInputs inputs) {
+
     inputs.kSetpoint = kSetpoint;
-
     inputs.kPosition = kEncoder.getPosition();
-    inputs.kVelocity = Units.rotationsToDegrees(kEncoder.getVelocity() / 60d);
-
+    inputs.kVelocity = kEncoder.getVelocity() / 60d;
     inputs.kCurrent = kPivot.getOutputCurrent();
-    inputs.kVoltage = kPivot.getAppliedOutput() * RobotController.getBatteryVoltage();
+    inputs.kVoltage = kPivot.get() * RobotController.getBatteryVoltage();
     inputs.kTemp = kPivot.getMotorTemperature();
-
-    Logger.recordOutput("PIDTest", pivotPID.calculate(kEncoder.getPosition()));
 
     double pidOutput = pivotPID.calculate(inputs.kPosition, kSetpoint);
     kPivot.setVoltage(pidOutput);

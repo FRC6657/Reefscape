@@ -6,10 +6,9 @@ public interface De_algaefierIO {
 
   @AutoLog
   public static class De_algaefierIOInputs {
-    public double kSetpoint = 0;
-    public double kPosition = 0; // degrees
-    public double kVelocity = 0; // rotations
-    // public double kAcceleration = 0;
+    public double kSetpoint = 0; // Rotaions
+    public double kPosition = 0; // Rotaions
+    public double kVelocity = 0; // Rotations per second
 
     public double kVoltage = 0;
     public double kCurrent = 0;

@@ -6,7 +6,6 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import frc.robot.Constants;
@@ -31,9 +30,9 @@ public class De_algaefierIO_Sim implements De_algaefierIO {
     motor.setInputVoltage(MathUtil.clamp(output, -12, 12));
     motor.update(0.02);
 
-    inputs.kSetpoint = Units.rotationsToDegrees(pivotPID.getSetpoint());
-    inputs.kPosition = motor.getAngularPosition().in(Degrees);
-    inputs.kVelocity = motor.getAngularVelocity().in(DegreesPerSecond);
+    inputs.kSetpoint = pivotPID.getSetpoint();
+    inputs.kPosition = motor.getAngularPosition().in(Rotations);
+    inputs.kVelocity = motor.getAngularVelocity().in(RotationsPerSecond);
     inputs.kVoltage = output * RobotController.getBatteryVoltage();
   }
 

@@ -9,7 +9,6 @@ public class De_algaefier extends SubsystemBase {
   private final De_algaefierIO io;
   private final De_algaefierIOInputsAutoLogged inputs = new De_algaefierIOInputsAutoLogged();
 
-  /** Creates a new De_algaefier. */
   public De_algaefier(De_algaefierIO io) {
     this.io = io;
   }
@@ -17,17 +16,6 @@ public class De_algaefier extends SubsystemBase {
   public Command changeSetpoint(double rotations) {
     return this.runOnce(() -> io.changeSetpoint(rotations));
   }
-
-  // public Command changeIdleMode(Boolean isBreak){
-  //   return Commands.either(
-  //     Commands.sequence(
-  //       Commands.runOnce(() -> config.idleMode(IdleMode.kBrake)), null
-  //       //() -> kPivot.configure(config, ResetMode.kResetSafeParameters,
-  // PersistMode.kPersistParameters)
-  //     ),
-  //     null,
-  //     () -> isBreak);
-  // }
 
   public double getPosition() {
     return inputs.kPosition;
