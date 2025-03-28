@@ -150,13 +150,16 @@ public class Robot extends LoggedRobot {
                 new ChassisSpeeds(
                     -MathUtil.applyDeadband(driver.getLeftY(), 0.1)
                         * Constants.Swerve.maxLinearSpeed
-                        * 0.2,
+                        * 0.2
+                        * elevator.driveSpeedMultiplier(),
                     -MathUtil.applyDeadband(driver.getLeftX(), 0.1)
                         * Constants.Swerve.maxLinearSpeed
-                        * 0.2,
+                        * 0.2
+                        * elevator.driveSpeedMultiplier(),
                     -MathUtil.applyDeadband(driver.getRightX(), 0.1)
                         * Constants.Swerve.maxAngularSpeed
-                        * 0.2)));
+                        * 0.2
+                        * Math.sqrt(elevator.driveSpeedMultiplier()))));//the sqrt makes the multiplier less strong for rotating
 
     debug
         .a()
