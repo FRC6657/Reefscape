@@ -120,7 +120,8 @@ public class Robot extends LoggedRobot {
     autoChooser.addDefaultOption("Do Nothing", Commands.none());
     autoChooser.addOption("CenterL4", superstructure.CenterL4(autoFactory).cmd());
     autoChooser.addOption("Test", superstructure.DirectionTest(autoFactory, false).cmd());
-    autoChooser.addOption("3 Piece", superstructure.L4_3Piece(autoFactory, false).cmd());
+    autoChooser.addOption(
+        "3 Piece", superstructure.L4_3Piece(autoFactory, false).cmd());
   }
 
   public static boolean replay = false;
