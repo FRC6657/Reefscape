@@ -328,7 +328,7 @@ public class Constants {
 
   public static class Intake {
 
-    public static double pivotGearing = (60d / 1) * (72d / 28);
+    public static double pivotGearing = (36d / 1) * (72d / 28);
     public static double maxAngle = Units.degreesToRadians(116);
     public static double minAngle = Units.degreesToRadians(5);
 
