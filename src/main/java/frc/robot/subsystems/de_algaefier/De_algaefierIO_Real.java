@@ -7,7 +7,9 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.RobotController;
 import frc.robot.Constants;
 import frc.robot.Constants.De_algaefier;
@@ -37,7 +39,7 @@ public class De_algaefierIO_Real implements De_algaefierIO {
 
     // configure the motor
     kPivot.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-    changeSetpoint(0);
+    changeSetpoint(Units.degreesToRotations(10));
   }
 
   @Override
@@ -56,6 +58,7 @@ public class De_algaefierIO_Real implements De_algaefierIO {
 
   @Override
   public void changeSetpoint(double rotations) {
-    kSetpoint = rotations;
+    kSetpoint =
+        MathUtil.clamp(rotations, Constants.De_algaefier.minAngle, Constants.De_algaefier.maxAngle);
   }
 }

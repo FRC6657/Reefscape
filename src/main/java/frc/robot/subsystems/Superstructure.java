@@ -205,7 +205,7 @@ public class Superstructure {
         .andThen(logMessage("Selected Piece: " + piece))
         .andThen(
             Commands.either(
-                dealg.changeSetpoint(Constants.De_algaefier.minAngle),
+                dealg.changeSetpoint(Units.degreesToRotations(10)),
                 /*dealg.changeSetpoint(Constants.De_algaefier.maxAngle)*/ Commands.none(),
                 () -> selectedPiece == "Coral"));
   }
@@ -461,6 +461,7 @@ public class Superstructure {
     one.done()
         .onTrue(
             Commands.sequence(
+                    dealg.changeSetpoint(Units.degreesToRotations(10)),
                     outtake.changeRollerSetpoint(-0.5),
                     Commands.waitUntil(outtake::coralDetected),
                     outtake.changeRollerSetpoint(0),
@@ -529,7 +530,7 @@ public class Superstructure {
     final AutoTrajectory P2_I2 = routine.trajectory(mirrorFlag + "3 Piece", 3);
     final AutoTrajectory I2_P3 = routine.trajectory(mirrorFlag + "3 Piece", 4);
 
-    S_P1.atTimeBeforeEnd(0.75)
+    S_P1.atTimeBeforeEnd(0.7)
         .onTrue(
             Commands.sequence(
                     AutonomousScoringSequence(4, mirror ? "Left" : "Right"),
