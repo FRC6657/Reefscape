@@ -121,6 +121,8 @@ public class Robot extends LoggedRobot {
     autoChooser.addOption("CenterL4", superstructure.CenterL4(autoFactory).cmd());
     autoChooser.addOption("Test", superstructure.DirectionTest(autoFactory, false).cmd());
     autoChooser.addOption("3 Piece", superstructure.L4_3Piece(autoFactory, false).cmd());
+    autoChooser.addOption(
+        "Processor 3 Piece", superstructure.L4_3Piece(autoFactory, true).cmd().withTimeout(15));
   }
 
   public static boolean replay = false;
@@ -150,15 +152,15 @@ public class Robot extends LoggedRobot {
                 new ChassisSpeeds(
                     -MathUtil.applyDeadband(driver.getLeftY(), 0.1)
                         * Constants.Swerve.maxLinearSpeed
-                        * 0.3
+                        * 0.7
                         * elevator.driveSpeedMultiplier(),
                     -MathUtil.applyDeadband(driver.getLeftX(), 0.1)
                         * Constants.Swerve.maxLinearSpeed
-                        * 0.3
+                        * 0.7
                         * elevator.driveSpeedMultiplier(),
                     -MathUtil.applyDeadband(driver.getRightX(), 0.1)
                         * Constants.Swerve.maxAngularSpeed
-                        * 0.3
+                        * 0.5
                         * Math.sqrt(
                             elevator
                                 .driveSpeedMultiplier())))); // the sqrt makes the multiplier less

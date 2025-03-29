@@ -96,7 +96,8 @@ public class Constants {
 
       // Shift the pose to the robot's left
       public Pose2d getLeftPose(Pose2d pose) {
-        return pose.transformBy(new Transform2d(0, -0.26, new Rotation2d()));
+        return pose.transformBy(
+            new Transform2d(0, -0.26 - Units.inchesToMeters(1), new Rotation2d()));
       }
 
       public Pose2d getRightPose(Pose2d pose) {

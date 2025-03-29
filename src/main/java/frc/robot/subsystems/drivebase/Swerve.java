@@ -243,8 +243,8 @@ public class Swerve extends SubsystemBase {
   public Command resetAutoAimPID() {
     return Commands.runOnce(
         () -> {
-          xController.reset(getPose().getX());
-          yController.reset(getPose().getY());
+          xController.reset(getPose().getX(), getVelocityFieldRelative().vxMetersPerSecond);
+          yController.reset(getPose().getY(), getVelocityFieldRelative().vyMetersPerSecond);
           thetaController.reset(getPose().getRotation().getRadians());
         });
   }

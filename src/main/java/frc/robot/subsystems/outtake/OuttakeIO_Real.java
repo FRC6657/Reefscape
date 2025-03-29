@@ -6,6 +6,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.wpilibj.DigitalInput;
 import frc.robot.Constants;
+import org.littletonrobotics.junction.AutoLogOutput;
 
 public class OuttakeIO_Real implements OuttakeIO {
 
@@ -40,6 +41,7 @@ public class OuttakeIO_Real implements OuttakeIO {
   }
 
   @Override
+  @AutoLogOutput(key = "Outtake/BeamBroken")
   public boolean getBeamBroken() {
     return !beambreak.get();
   }

@@ -91,12 +91,12 @@ public class Superstructure {
     this.intake = intake;
     this.dealg = dealg;
     this.climber = climber;
-    climberPastFlagThreshold.onTrue(
-        Commands.runOnce(
-            () -> {
-              climbingFlag = true;
-            }));
-    climberEmergencyStop.onTrue(climber.setVoltage(0));
+    // climberPastFlagThreshold.onTrue(
+    //     Commands.runOnce(
+    //         () -> {
+    //           climbingFlag = true;
+    //         }));
+    // climberEmergencyStop.onTrue(climber.setVoltage(0));
   }
 
   /*
@@ -216,10 +216,17 @@ public class Superstructure {
         .changeSetpoint(() -> elevatorSetpoints[elevatorLevel + (selectedPiece == "Coral" ? 0 : 3)])
         .andThen(
             logMessage(
-                "Elevator Setpoint Changed To: "
-                    + elevatorSetpoints[elevatorLevel]
-                    + " Reef Level: "
-                    + elevatorLevel));
+                    "Elevator Setpoint Changed To: "
+                        + elevatorSetpoints[elevatorLevel]
+                        + " Reef Level: "
+                        + elevatorLevel)
+                .andThen(
+                    Commands.either(
+                        dealg
+                            .changeSetpoint(Units.degreesToRotations(30))
+                            .beforeStarting(Commands.waitUntil(elevator::atSetpoint)),
+                        Commands.none(),
+                        () -> selectedPiece == "Algae" && elevatorLevel == 4)));
   }
 
   public Command ElevatorIntake() {
@@ -330,7 +337,7 @@ public class Superstructure {
   public Command RaiseClimber() {
     return Commands.sequence(
         logMessage("Raising Climber"),
-        elevator.changeSetpoint(Units.inchesToMeters(20)),
+        elevator.changeSetpoint(Units.inchesToMeters(10)),
         dealg.changeSetpoint(Units.degreesToRotations(30)),
         intake.changePivotSetpoint(Units.degreesToRadians(50)),
         climber.setVoltage(-11));
@@ -425,7 +432,12 @@ public class Superstructure {
   public Command ReefLineUp() {
     return Commands.sequence(
         drivebase.goToPoseFine(
-            () -> new Pose2d(4.0, 3.0, new Rotation2d()), // TODO this position is not verified (and is likely incorect)
+            () ->
+                new Pose2d(
+                    4.0,
+                    3.0,
+                    new Rotation2d()), // TODO this position is not verified (and is likely
+            // incorect)
             new Constraints(1, 1),
             new Constraints(Units.rotationsToRadians(2), Units.rotationsToRadians(4))),
         selectPiece("Algae"),
@@ -466,7 +478,7 @@ public class Superstructure {
   public Command AutonomousScoringSequence(int level, String reef) {
     return Commands.sequence(
         // Commands.runOnce(() -> drivebase.drive(new ChassisSpeeds()), drivebase),
-        AutoAim(4, reef, true),
+        AutoAim(4, reef, false),
         Commands.waitUntil(elevator::atSetpoint),
         Score(),
         drivebase.driveVelocity(() -> new ChassisSpeeds(0.5, 0, 0)).withTimeout(0.125),
@@ -489,12 +501,16 @@ public class Superstructure {
                 selectElevatorHeight(2),
                 AutoAim(true),
                 ElevatorIntake(),
-                //new ScheduleCommand(P1_Algae.cmd())
+                // new ScheduleCommand(P1_Algae.cmd())
                 ReefLineUp(),
                 Commands.sequence(ElevatorScore(), HomeRobot()).asProxy())
             .asProxy();
 
-    P1_Algae.done().onTrue(Commands.sequence(ElevatorScore(), HomeRobot()).asProxy()); // using auto align now so this isn't run. We can switch to using trajectory if needed.
+    P1_Algae.done()
+        .onTrue(
+            Commands.sequence(ElevatorScore(), HomeRobot())
+                .asProxy()); // using auto align now so this isn't run. We can switch to using
+    // trajectory if needed.
 
     routine.active().onTrue(Commands.sequence(S_P1.resetOdometry(), Start));
 
@@ -513,10 +529,10 @@ public class Superstructure {
     final AutoTrajectory P2_I2 = routine.trajectory(mirrorFlag + "3 Piece", 3);
     final AutoTrajectory I2_P3 = routine.trajectory(mirrorFlag + "3 Piece", 4);
 
-    S_P1.atTimeBeforeEnd(0.775)
+    S_P1.atTimeBeforeEnd(0.75)
         .onTrue(
             Commands.sequence(
-                    AutonomousScoringSequence(4, mirror ? "Right" : "Left"),
+                    AutonomousScoringSequence(4, mirror ? "Left" : "Right"),
                     new ScheduleCommand(P1_I1.cmd()))
                 .asProxy());
 
@@ -531,7 +547,7 @@ public class Superstructure {
                 .asProxy());
 
     I1_P2
-        .atTimeBeforeEnd(0.75)
+        .atTimeBeforeEnd(0.8)
         .onTrue(
             Commands.sequence(
                     AutonomousScoringSequence(4, mirror ? "Right" : "Left"),
@@ -549,7 +565,7 @@ public class Superstructure {
                 .asProxy());
 
     I2_P3
-        .atTimeBeforeEnd(0.75)
+        .atTimeBeforeEnd(0.8)
         .onTrue(AutonomousScoringSequence(4, mirror ? "Left" : "Right").asProxy());
 
     routine.active().onTrue(Commands.sequence(S_P1.resetOdometry(), S_P1.cmd()));
