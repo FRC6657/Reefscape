@@ -72,7 +72,10 @@ public class Superstructure {
       new Trigger(() -> climber.inputs.setpoint < Constants.ClimberConstants.secondaryMinRotations);
 
   Trigger climberEmergencyStop =
-      new Trigger(() -> climber.inputs.setpoint > Constants.ClimberConstants.secondaryMinRotations && climbingFlag);
+      new Trigger(
+          () ->
+              climber.inputs.setpoint > Constants.ClimberConstants.secondaryMinRotations
+                  && climbingFlag);
 
   // Constructor
   public Superstructure(
@@ -236,11 +239,10 @@ public class Superstructure {
                         outtake)),
             outtake.changeRollerSetpoint(0)),
         Commands.sequence(
-            logMessage("Elevator Algae Intake"), 
-            dealg.changeSetpoint(Constants.De_algaefier.maxAngle), 
-            Commands.waitSeconds(0.2), 
-            outtake.changeRollerSetpoint(-0.7)
-            ),
+            logMessage("Elevator Algae Intake"),
+            dealg.changeSetpoint(Constants.De_algaefier.maxAngle),
+            Commands.waitSeconds(0.2),
+            outtake.changeRollerSetpoint(-0.7)),
         () -> selectedPiece == "Coral");
   }
 
@@ -340,7 +342,10 @@ public class Superstructure {
         Commands.either(
             climber.setVoltage(0),
             climber.setVoltage(6),
-            () -> climbingFlag && climber.inputs.setpoint > Constants.ClimberConstants.secondaryMinRotations + 5),
+            () ->
+                climbingFlag
+                    && climber.inputs.setpoint
+                        > Constants.ClimberConstants.secondaryMinRotations + 5),
         logMessage("Lowering Climber"),
         climber.setVoltage(6));
   }
@@ -417,6 +422,17 @@ public class Superstructure {
                     new Constraints(Units.rotationsToRadians(2), Units.rotationsToRadians(4)))));
   }
 
+  public Command ReefLineUp() {
+    return Commands.sequence(
+        drivebase.goToPoseFine(
+            () -> new Pose2d(4.0, 3.0, new Rotation2d()), // TODO this position is not verified (and is likely incorect)
+            new Constraints(1, 1),
+            new Constraints(Units.rotationsToRadians(2), Units.rotationsToRadians(4))),
+        selectPiece("Algae"),
+        selectElevatorHeight(4),
+        raiseElevator());
+  }
+
   public AutoRoutine DirectionTest(AutoFactory factory, boolean mirror) {
 
     String name = "DirectionTest";
@@ -473,10 +489,12 @@ public class Superstructure {
                 selectElevatorHeight(2),
                 AutoAim(true),
                 ElevatorIntake(),
-                new ScheduleCommand(P1_Algae.cmd()))
+                //new ScheduleCommand(P1_Algae.cmd())
+                ReefLineUp(),
+                Commands.sequence(ElevatorScore(), HomeRobot()).asProxy())
             .asProxy();
 
-    P1_Algae.done().onTrue(Commands.sequence(ElevatorScore(), HomeRobot()).asProxy());
+    P1_Algae.done().onTrue(Commands.sequence(ElevatorScore(), HomeRobot()).asProxy()); // using auto align now so this isn't run. We can switch to using trajectory if needed.
 
     routine.active().onTrue(Commands.sequence(S_P1.resetOdometry(), Start));
 
