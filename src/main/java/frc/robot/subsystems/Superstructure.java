@@ -19,6 +19,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.NotifierCommand;
 import edu.wpi.first.wpilibj2.command.ScheduleCommand;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
 import frc.robot.Constants.FieldConstants.ReefSlot;
 import frc.robot.subsystems.climber.Climber;
@@ -51,6 +52,9 @@ public class Superstructure {
   @AutoLogOutput(key = "RobotStates/Selected Piece")
   private String selectedPiece = "Coral";
 
+  @AutoLogOutput(key = "RobotStates/climbingFlag")
+  private boolean climbingFlag = false;
+
   // Array for easily grabbing setpoint heights.
   private double[] elevatorSetpoints = {
     0,
@@ -63,6 +67,12 @@ public class Superstructure {
     Units.inchesToMeters(20), // L3
     Constants.Elevator.maxHeight // L4 + Algae mode = score on barge
   };
+
+  Trigger climberPastFlagThreshold =
+      new Trigger(() -> climber.inputs.setpoint < Constants.ClimberConstants.secondaryMinRotations);
+
+  Trigger climberEmergencyStop =
+      new Trigger(() -> climber.inputs.setpoint > Constants.ClimberConstants.secondaryMinRotations && climbingFlag);
 
   // Constructor
   public Superstructure(
@@ -78,6 +88,12 @@ public class Superstructure {
     this.intake = intake;
     this.dealg = dealg;
     this.climber = climber;
+    climberPastFlagThreshold.onTrue(
+        Commands.runOnce(
+            () -> {
+              climbingFlag = true;
+            }));
+    climberEmergencyStop.onTrue(climber.setVoltage(0));
   }
 
   /*
@@ -317,7 +333,13 @@ public class Superstructure {
 
   // Lowers the climer.
   public Command LowerClimber() {
-    return Commands.sequence(logMessage("Lowering Climber"), climber.setVoltage(6));
+    return Commands.sequence(
+        Commands.either(
+            climber.setVoltage(0),
+            climber.setVoltage(6),
+            () -> climbingFlag && climber.inputs.setpoint > Constants.ClimberConstants.secondaryMinRotations + 5),
+        logMessage("Lowering Climber"),
+        climber.setVoltage(6));
   }
 
   // Stows all mechanisms, and stops all rollers.
