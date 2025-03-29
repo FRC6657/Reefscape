@@ -203,7 +203,7 @@ public class Superstructure {
         .andThen(
             Commands.either(
                 dealg.changeSetpoint(Constants.De_algaefier.minAngle),
-                dealg.changeSetpoint(Constants.De_algaefier.maxAngle),
+                /*dealg.changeSetpoint(Constants.De_algaefier.maxAngle)*/ Commands.none(),
                 () -> selectedPiece == "Coral"));
   }
 
@@ -236,7 +236,10 @@ public class Superstructure {
                         outtake)),
             outtake.changeRollerSetpoint(0)),
         Commands.sequence(
-            logMessage("Elevator Algae Intake"), outtake.changeRollerSetpoint(-0.7) // TODO verify
+            logMessage("Elevator Algae Intake"), 
+            dealg.changeSetpoint(Constants.De_algaefier.maxAngle), 
+            Commands.waitSeconds(0.2), 
+            outtake.changeRollerSetpoint(-0.7)
             ),
         () -> selectedPiece == "Coral");
   }
