@@ -414,7 +414,7 @@ public class Superstructure {
                         drivebase,
                         () -> getNearestReef().plus(new Transform2d(0.25, 0, new Rotation2d())),
                         Units.inchesToMeters(12),
-                        Units.degreesToRadians(15),
+                        Units.degreesToRadians(5),
                         new Constraints(3, 2),
                         new Constraints(Units.rotationsToRadians(1), Units.rotationsToRadians(2)))
                     // drivebase
@@ -447,21 +447,21 @@ public class Superstructure {
                     new Constraints(Units.rotationsToRadians(1), Units.rotationsToRadians(2)))));
   }
 
-  public Command ReefLineUp() {
-    return Commands.sequence(
-        drivebase.goToPoseFine(
-            () ->
-                new Pose2d(
-                    4.0,
-                    3.0,
-                    new Rotation2d()), // TODO this position is not verified (and is likely
-            // incorect)
-            new Constraints(1, 1),
-            new Constraints(Units.rotationsToRadians(2), Units.rotationsToRadians(4))),
-        selectPiece("Algae"),
-        selectElevatorHeight(4),
-        raiseElevator());
-  }
+  // public Command ReefLineUp() {
+  //   return Commands.sequence(
+  //       drivebase.goToPoseFine(
+  //           () ->
+  //               new Pose2d(
+  //                   4.0,
+  //                   3.0,
+  //                   new Rotation2d()), // TODO this position is not verified (and is likely
+  //           // incorect)
+  //           new Constraints(1, 1),
+  //           new Constraints(Units.rotationsToRadians(2), Units.rotationsToRadians(4))),
+  //       selectPiece("Algae"),
+  //       selectElevatorHeight(4),
+  //       raiseElevator());
+  // }
 
   public AutoRoutine DirectionTest(AutoFactory factory, boolean mirror) {
 
@@ -497,7 +497,7 @@ public class Superstructure {
   public Command AutonomousScoringSequence(int level, String reef) {
     return Commands.sequence(
         // Commands.runOnce(() -> drivebase.drive(new ChassisSpeeds()), drivebase),
-        AutoAim(4, reef, false),
+        AutoAim(4, reef, true),
         Commands.waitUntil(elevator::atSetpoint),
         Score(),
         drivebase.driveVelocity(() -> new ChassisSpeeds(0.5, 0, 0)).withTimeout(0.125),
@@ -521,7 +521,7 @@ public class Superstructure {
                 AutoAim(true),
                 ElevatorIntake(),
                 // new ScheduleCommand(P1_Algae.cmd())
-                ReefLineUp(),
+                //ReefLineUp(),
                 Commands.sequence(ElevatorScore(), HomeRobot()).asProxy())
             .asProxy();
 
@@ -548,7 +548,8 @@ public class Superstructure {
     final AutoTrajectory P2_I2 = routine.trajectory(mirrorFlag + "3 Piece", 3);
     final AutoTrajectory I2_P3 = routine.trajectory(mirrorFlag + "3 Piece", 4);
 
-    S_P1.atTimeBeforeEnd(0.7)
+    
+    S_P1.atTimeBeforeEnd(0.9)
         .onTrue(
             Commands.sequence(
                     AutonomousScoringSequence(4, mirror ? "Left" : "Right"),
@@ -566,7 +567,7 @@ public class Superstructure {
                 .asProxy());
 
     I1_P2
-        .atTimeBeforeEnd(0.8)
+        .atTimeBeforeEnd(1.2)
         .onTrue(
             Commands.sequence(
                     AutonomousScoringSequence(4, mirror ? "Right" : "Left"),
@@ -584,7 +585,7 @@ public class Superstructure {
                 .asProxy());
 
     I2_P3
-        .atTimeBeforeEnd(0.8)
+        .atTimeBeforeEnd(1.2)
         .onTrue(AutonomousScoringSequence(4, mirror ? "Left" : "Right").asProxy());
 
     routine.active().onTrue(Commands.sequence(S_P1.resetOdometry(), S_P1.cmd()));
