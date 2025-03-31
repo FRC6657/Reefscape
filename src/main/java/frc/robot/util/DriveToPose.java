@@ -44,7 +44,6 @@ public class DriveToPose extends Command {
   private double driveErrorAbs = 0.0;
   private double thetaErrorAbs = 0.0;
   private Supplier<Pose2d> robot;
-  private boolean running = false;
   private Supplier<Translation2d> linearFF = () -> Translation2d.kZero;
   private DoubleSupplier omegaFF = () -> 0.0;
 
@@ -89,8 +88,6 @@ public class DriveToPose extends Command {
 
   @Override
   public void execute() {
-
-    running = true;
 
     thetaController.setConstraints(
         new TrapezoidProfile.Constraints(Units.rotationsToRadians(1), Units.rotationsToRadians(1)));
@@ -200,7 +197,6 @@ public class DriveToPose extends Command {
 
   @Override
   public void end(boolean interrupted) {
-    running = false;
     drive.drive(new ChassisSpeeds());
     Logger.recordOutput("DriveToPose/Setpoint", new Pose2d[] {});
     Logger.recordOutput("DriveToPose/Goal", new Pose2d[] {});
