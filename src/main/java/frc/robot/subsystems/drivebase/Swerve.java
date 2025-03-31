@@ -245,7 +245,9 @@ public class Swerve extends SubsystemBase {
         () -> {
           xController.reset(getPose().getX(), getVelocityFieldRelative().vxMetersPerSecond);
           yController.reset(getPose().getY(), getVelocityFieldRelative().vyMetersPerSecond);
-          thetaController.reset(getPose().getRotation().getRadians(), getVelocityFieldRelative().omegaRadiansPerSecond);
+          thetaController.reset(
+              getPose().getRotation().getRadians(),
+              getVelocityFieldRelative().omegaRadiansPerSecond);
         });
   }
 
@@ -346,29 +348,31 @@ public class Swerve extends SubsystemBase {
     yController.setConstraints(translationConstraints);
     thetaController.setConstraints(rotationConstraints);
 
-
     double xFF = xController.getSetpoint().velocity;
     double yFF = yController.getSetpoint().velocity;
     double rotationFF = thetaController.getSetpoint().velocity;
 
     double xFeedback = xController.calculate(getPose().getX(), targetPose.getX());
     double yFeedback = yController.calculate(getPose().getY(), targetPose.getY());
-    double rotationFeedback = thetaController.calculate(getPose().getRotation().getRadians(), targetPose.getRotation().getRadians());
+    double rotationFeedback =
+        thetaController.calculate(
+            getPose().getRotation().getRadians(), targetPose.getRotation().getRadians());
 
-
-    Logger.recordOutput("Debug/X Setpoint" , targetPose.getX());
-    Logger.recordOutput("Debug/Y Setpoint" , targetPose.getY());
+    Logger.recordOutput("Debug/X Setpoint", targetPose.getX());
+    Logger.recordOutput("Debug/Y Setpoint", targetPose.getY());
     Logger.recordOutput("Debug/XOut", xFeedback + xFF);
     Logger.recordOutput("Debug/YOut", yFeedback + yFF);
     Logger.recordOutput("Debug/ROut", rotationFeedback + rotationFF);
-    Logger.recordOutput("Debug/X FF" , xFF);
-    Logger.recordOutput("Debug/Y FF" , yFF);
-    Logger.recordOutput("Debug/R FF" , rotationFF);
-
+    Logger.recordOutput("Debug/X FF", xFF);
+    Logger.recordOutput("Debug/Y FF", yFF);
+    Logger.recordOutput("Debug/R FF", rotationFF);
 
     ChassisSpeeds out =
         ChassisSpeeds.fromFieldRelativeSpeeds(
-            xFeedback + xFF, yFeedback + yFF, rotationFeedback + rotationFF, getPose().getRotation());
+            xFeedback + xFF,
+            yFeedback + yFF,
+            rotationFeedback + rotationFF,
+            getPose().getRotation());
 
     Logger.recordOutput("AutoAim/Target", targetPose);
 

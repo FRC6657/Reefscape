@@ -134,11 +134,11 @@ public class Constants {
         new Constraints(Units.rotationsToRadians(3), Units.rotationsToRadians(10));
 
     public static final ProfiledPIDController kXController_Position =
-        new ProfiledPIDController(3.5, 0, 0, kAutoAimTranslationConstraints); //3.5
+        new ProfiledPIDController(3.5, 0, 0, kAutoAimTranslationConstraints); // 3.5
     public static final ProfiledPIDController kYController_Position =
-        new ProfiledPIDController(3.5, 0, 0, kAutoAimTranslationConstraints); //3.5
+        new ProfiledPIDController(3.5, 0, 0, kAutoAimTranslationConstraints); // 3.5
     public static final ProfiledPIDController kThetaController_Position =
-        new ProfiledPIDController(3, 0, 0, kAutoAimRotationConstraints); //3
+        new ProfiledPIDController(3, 0, 0, kAutoAimRotationConstraints); // 3
   }
 
   public static class VisionConstants {

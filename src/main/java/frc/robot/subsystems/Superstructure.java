@@ -28,6 +28,7 @@ import frc.robot.subsystems.drivebase.Swerve;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.outtake.Outtake;
+import frc.robot.util.DriveToPose;
 import java.util.ArrayList;
 import java.util.List;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -405,15 +406,24 @@ public class Superstructure {
                 ElevatorIntake())
             .onlyIf(() -> selectedPiece == "Algae"),
         // Reset Auto Aim PID to reset the rate limiter
-        drivebase.resetAutoAimPID(),
+        // drivebase.resetAutoAimPID(),
         // Drive towards the pose with a larger tolerance
         // While raising the elevator.
         Commands.parallel(
-                drivebase
-                    .goToPoseCoarse(
+                new DriveToPose(
+                        drivebase,
                         () -> getNearestReef().plus(new Transform2d(0.25, 0, new Rotation2d())),
-                        new Constraints(3, 3),
-                        new Constraints(Units.rotationsToRadians(2), Units.rotationsToRadians(4)))
+                        Units.inchesToMeters(12),
+                        Units.degreesToRadians(15),
+                        new Constraints(3, 2),
+                        new Constraints(Units.rotationsToRadians(1), Units.rotationsToRadians(2)))
+                    // drivebase
+                    //     .goToPoseCoarse(
+                    //         () -> getNearestReef().plus(new Transform2d(0.25, 0, new
+                    // Rotation2d())),
+                    //         new Constraints(3, 3),
+                    //         new Constraints(Units.rotationsToRadians(2),
+                    // Units.rotationsToRadians(4)))
                     .onlyIf(() -> lead),
                 raiseElevator())
             // Approach the Reef Pole once the elevator is fully raised.
@@ -421,12 +431,20 @@ public class Superstructure {
             // If the robot is in algae mode it will just drive forward for a bit to grab the algae.
             // This is not PID controlled.
             .andThen(
-                drivebase.goToPoseFine(
-                    () ->
-                        getNearestReef()
-                            .plus(new Transform2d(Units.inchesToMeters(-1), 0, new Rotation2d())),
+                // drivebase.goToPoseFine(
+                //     () ->
+                //         getNearestReef()
+                //             .plus(new Transform2d(Units.inchesToMeters(-1), 0, new
+                // Rotation2d())),
+                //     new Constraints(3, 3),
+                //     new Constraints(Units.rotationsToRadians(2), Units.rotationsToRadians(4)))
+                new DriveToPose(
+                    drivebase,
+                    this::getNearestReef,
+                    Units.inchesToMeters(0.5),
+                    Units.degreesToRadians(1),
                     new Constraints(1, 1),
-                    new Constraints(Units.rotationsToRadians(2), Units.rotationsToRadians(4)))));
+                    new Constraints(Units.rotationsToRadians(1), Units.rotationsToRadians(2)))));
   }
 
   public Command ReefLineUp() {

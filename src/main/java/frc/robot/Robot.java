@@ -205,6 +205,7 @@ public class Robot extends LoggedRobot {
                                 -MathUtil.applyDeadband(driver.getRightX(), 0.1)
                                     * Constants.Swerve.maxAngularSpeed
                                     * 0.1)))));
+
     driver
         .a()
         .onFalse(Commands.runOnce(() -> swerve.drive(new ChassisSpeeds())).andThen(rumble(0, 0)));
