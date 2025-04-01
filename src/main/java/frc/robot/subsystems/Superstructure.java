@@ -3,11 +3,13 @@ package frc.robot.subsystems;
 import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
@@ -186,6 +188,53 @@ public class Superstructure {
     // If the selected reef is invalid return the robot's current pose.
     Logger.recordOutput("Errors", "Invalid Reef Selected '" + selectedReef + "'");
     return nearestReefMiddle;
+  }
+
+  @AutoLogOutput(key = "RobotStates/Nearest Substation")
+  public Pose2d getNearestSubstation() {
+
+    Pose2d currentPose = drivebase.getPose();
+
+    Rotation2d[] headings = {
+      new Rotation2d(2.2), new Rotation2d(-2.2), new Rotation2d(0.94), new Rotation2d(-0.94)
+    };
+
+    Translation2d[] sub1Line = {new Translation2d(0.635, 6.696), new Translation2d(1.593, 7.419)};
+    Translation2d[] sub2Line = {new Translation2d(0.635, 1.336), new Translation2d(1.593, 0.633)};
+    Translation2d[] sub3Line = {new Translation2d(15.9, 7.42), new Translation2d(16.9, 6.7)};
+    Translation2d[] sub4Line = {new Translation2d(15.95, 0.64), new Translation2d(16.9, 1.33)};
+    Translation2d[][] substationLines = {sub1Line, sub2Line, sub3Line, sub4Line};
+
+    double minDist = Double.MAX_VALUE;
+    Pose2d nearestPoint = new Pose2d();
+
+    int index = 0;
+    for (Translation2d[] line : substationLines) {
+      Translation2d start = line[0];
+      Translation2d end = line[1];
+
+      double dx = end.getX() - start.getX();
+      double dy = end.getY() - start.getY();
+
+      double l2 = dx * dx + dy * dy;
+
+      double t =
+          ((currentPose.getX() - start.getX()) * dx + (currentPose.getY() - start.getY()) * dy)
+              / l2;
+      double tClamped = MathUtil.clamp(t, 0, 1);
+
+      Translation2d closestPoint =
+          new Translation2d(start.getX() + tClamped * dx, start.getY() + tClamped * dy);
+      double dist = currentPose.getTranslation().getDistance(closestPoint);
+
+      if (dist < minDist) {
+        minDist = dist;
+        nearestPoint = new Pose2d(closestPoint, headings[index]);
+      }
+      index++;
+    }
+
+    return nearestPoint;
   }
 
   // Simple command to change the selected reef level.
@@ -415,7 +464,7 @@ public class Superstructure {
                         () -> getNearestReef().plus(new Transform2d(0.25, 0, new Rotation2d())),
                         Units.inchesToMeters(12),
                         Units.degreesToRadians(5),
-                        new Constraints(3, 2),
+                        new Constraints(4, 2),
                         new Constraints(Units.rotationsToRadians(1), Units.rotationsToRadians(2)))
                     // drivebase
                     //     .goToPoseCoarse(

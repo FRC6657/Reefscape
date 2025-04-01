@@ -9,6 +9,8 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
@@ -46,6 +48,7 @@ import frc.robot.subsystems.outtake.OuttakeIO_Sim;
 import frc.robot.subsystems.vision.ApriltagCameraIO_Real;
 import frc.robot.subsystems.vision.ApriltagCameraIO_Sim;
 import frc.robot.subsystems.vision.ApriltagCameras;
+import frc.robot.util.DriveToPose;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
@@ -208,6 +211,23 @@ public class Robot extends LoggedRobot {
 
     driver
         .a()
+        .onFalse(Commands.runOnce(() -> swerve.drive(new ChassisSpeeds())).andThen(rumble(0, 0)));
+
+    driver
+        .b()
+        .whileTrue(
+            new DriveToPose(
+                    swerve,
+                    superstructure::getNearestSubstation,
+                    Units.inchesToMeters(1),
+                    Units.degreesToRadians(1),
+                    new Constraints(5, 3),
+                    new Constraints(Units.rotationsToRadians(3), Units.rotationsToRadians(6)))
+                .alongWith(superstructure.ElevatorIntake())
+                .beforeStarting(superstructure.selectPiece("Coral")));
+
+    driver
+        .b()
         .onFalse(Commands.runOnce(() -> swerve.drive(new ChassisSpeeds())).andThen(rumble(0, 0)));
 
     operator.button(9).onTrue(superstructure.selectElevatorHeight(2));
