@@ -447,21 +447,23 @@ public class Superstructure {
                     new Constraints(Units.rotationsToRadians(1), Units.rotationsToRadians(2)))));
   }
 
-  // public Command ReefLineUp() {
-  //   return Commands.sequence(
-  //       drivebase.goToPoseFine(
-  //           () ->
-  //               new Pose2d(
-  //                   4.0,
-  //                   3.0,
-  //                   new Rotation2d()), // TODO this position is not verified (and is likely
-  //           // incorect)
-  //           new Constraints(1, 1),
-  //           new Constraints(Units.rotationsToRadians(2), Units.rotationsToRadians(4))),
-  //       selectPiece("Algae"),
-  //       selectElevatorHeight(4),
-  //       raiseElevator());
-  // }
+  public Command ReefLineUp() {
+    return Commands.sequence(
+        new DriveToPose(
+            drivebase,
+            () -> {
+              if (DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red)
+                return new Pose2d(9.9, 2.5, new Rotation2d(0));
+              else return new Pose2d(7.6, 5.4, new Rotation2d(Math.PI));
+            },
+            Units.inchesToMeters(0.5),
+            Units.degreesToRadians(1),
+            new Constraints(1, 1),
+            new Constraints(Units.rotationsToRadians(1), Units.rotationsToRadians(2))),
+        selectPiece("Algae"),
+        selectElevatorHeight(4),
+        raiseElevator());
+  }
 
   public AutoRoutine DirectionTest(AutoFactory factory, boolean mirror) {
 
@@ -510,6 +512,8 @@ public class Superstructure {
 
     final AutoTrajectory S_P1 = routine.trajectory("1 Piece Center", 0);
     final AutoTrajectory P1_Algae = routine.trajectory("1 Piece Center", 1);
+    final AutoTrajectory Barge_Algae = routine.trajectory("1 Piece Center", 2);
+    final AutoTrajectory Algae_Barge = routine.trajectory("1 Piece Center", 3);
 
     Command Start =
         Commands.sequence(
@@ -521,8 +525,9 @@ public class Superstructure {
                 AutoAim(true),
                 ElevatorIntake(),
                 // new ScheduleCommand(P1_Algae.cmd())
-                //ReefLineUp(),
-                Commands.sequence(ElevatorScore(), HomeRobot()).asProxy())
+                ReefLineUp(),
+                Commands.sequence(ElevatorScore(), HomeRobot()),
+                new ScheduleCommand(Barge_Algae.cmd()))
             .asProxy();
 
     P1_Algae.done()
@@ -530,6 +535,17 @@ public class Superstructure {
             Commands.sequence(ElevatorScore(), HomeRobot())
                 .asProxy()); // using auto align now so this isn't run. We can switch to using
     // trajectory if needed.
+
+    Barge_Algae.atTimeBeforeEnd(0.3)
+        .onTrue(
+            Commands.sequence(
+                    selectElevatorHeight(3),
+                    AutoAim(true),
+                    ElevatorIntake(),
+                    ReefLineUp(),
+                    ElevatorScore(),
+                    HomeRobot())
+                .asProxy());
 
     routine.active().onTrue(Commands.sequence(S_P1.resetOdometry(), Start));
 
@@ -548,7 +564,6 @@ public class Superstructure {
     final AutoTrajectory P2_I2 = routine.trajectory(mirrorFlag + "3 Piece", 3);
     final AutoTrajectory I2_P3 = routine.trajectory(mirrorFlag + "3 Piece", 4);
 
-    
     S_P1.atTimeBeforeEnd(0.9)
         .onTrue(
             Commands.sequence(
