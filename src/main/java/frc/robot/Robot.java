@@ -57,6 +57,8 @@ import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
+import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
+
 public class Robot extends LoggedRobot {
 
   private CommandXboxController driver = new CommandXboxController(0);
@@ -274,6 +276,17 @@ public class Robot extends LoggedRobot {
   @Override
   public void autonomousInit() {
     autoChooser.get().schedule();
+  }
+
+
+  @Override
+  public void disabledInit() {
+    intake.changePivotIdlemode(IdleMode.kCoast);
+  }
+
+  @Override
+  public void disabledExit() {
+    intake.changePivotIdlemode(IdleMode.kBrake);
   }
 
   @Override

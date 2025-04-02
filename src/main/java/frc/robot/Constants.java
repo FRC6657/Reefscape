@@ -331,7 +331,7 @@ public class Constants {
 
     public static double pivotGearing = (36d / 1) * (72d / 28);
     public static double maxAngle = Units.degreesToRadians(116);
-    public static double minAngle = Units.degreesToRadians(5);
+    public static double minAngle = Units.degreesToRadians(0);
 
     public static double coralScoreAngle = Units.degreesToRadians(15);
     public static double algaeScoreAngle = Units.degreesToRadians(5);
