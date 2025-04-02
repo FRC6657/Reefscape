@@ -551,8 +551,8 @@ public class Superstructure {
         AutoAim(4, reef, true),
         Commands.waitUntil(elevator::atSetpoint),
         Score(),
-        drivebase.driveVelocity(() -> new ChassisSpeeds(0.5, 0, 0)).withTimeout(0.125),
-        Commands.runOnce(() -> drivebase.drive(new ChassisSpeeds()), drivebase),
+        // drivebase.driveVelocity(() -> new ChassisSpeeds(0.5, 0, 0)).withTimeout(0.125),
+        // Commands.runOnce(() -> drivebase.drive(new ChassisSpeeds()), drivebase),
         HomeRobot());
   }
 

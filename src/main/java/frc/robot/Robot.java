@@ -5,6 +5,7 @@
 package frc.robot;
 
 import choreo.auto.AutoFactory;
+import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -56,8 +57,6 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
-
-import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
 public class Robot extends LoggedRobot {
 
@@ -277,7 +276,6 @@ public class Robot extends LoggedRobot {
   public void autonomousInit() {
     autoChooser.get().schedule();
   }
-
 
   @Override
   public void disabledInit() {
