@@ -656,4 +656,65 @@ public class Superstructure {
 
     return routine;
   }
+
+  public AutoRoutine Trough_3Piece(AutoFactory factory, boolean mirror) {
+
+    final AutoRoutine routine = factory.newRoutine("Safe Trough Auto");
+
+    String mirrorFlag = mirror ? "mirrored_" : "";
+
+    final AutoTrajectory S_P1 = routine.trajectory(mirrorFlag + "Safe Trough Auto", 0);
+    final AutoTrajectory P1_I1 = routine.trajectory(mirrorFlag + "Safe Trough Auto", 1);
+    final AutoTrajectory I1_P2 = routine.trajectory(mirrorFlag + "Safe Trough Auto", 2);
+    final AutoTrajectory P2_I2 = routine.trajectory(mirrorFlag + "Safe Trough Auto", 3);
+    final AutoTrajectory I2_P3 = routine.trajectory(mirrorFlag + "Safe Trough Auto", 4);
+
+    Command Start =
+        Commands.sequence(
+                drivebase
+                    .driveRR(() -> new ChassisSpeeds(0.2 * Constants.Swerve.maxLinearSpeed, 0, 0))
+                    .withTimeout(2),
+                drivebase
+                    .driveRR(() -> new ChassisSpeeds(0.05 * Constants.Swerve.maxLinearSpeed, 0, 0))
+                    .withTimeout(0.2),
+                GroundIntakeScore(),
+                P1_I1.cmd())
+            .asProxy();
+
+    P1_I1
+        .done()
+        .onTrue(
+            Commands.sequence(
+                    outtake.changeRollerSetpoint(-0.5),
+                    Commands.waitUntil(outtake::coralDetected).withTimeout(3),
+                    outtake.changeRollerSetpoint(0),
+                    new ScheduleCommand(I1_P2.cmd()))
+                .asProxy());
+
+    I1_P2
+        .atTimeBeforeEnd(1.0)
+        .onTrue(
+            Commands.sequence(
+                    AutonomousScoringSequence(4, mirror ? "Right" : "Left"),
+                    new ScheduleCommand(P2_I2.cmd()))
+                .asProxy());
+
+    P2_I2
+        .done()
+        .onTrue(
+            Commands.sequence(
+                    outtake.changeRollerSetpoint(-0.5),
+                    Commands.waitUntil(outtake::coralDetected).withTimeout(3),
+                    outtake.changeRollerSetpoint(0),
+                    new ScheduleCommand(I2_P3.cmd()))
+                .asProxy());
+
+    I2_P3
+        .atTimeBeforeEnd(1.0)
+        .onTrue(AutonomousScoringSequence(4, mirror ? "Left" : "Right").asProxy());
+
+    routine.active().onTrue(Commands.sequence(S_P1.resetOdometry(), Start));
+
+    return routine;
+  }
 }

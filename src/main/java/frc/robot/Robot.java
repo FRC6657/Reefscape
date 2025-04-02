@@ -127,6 +127,7 @@ public class Robot extends LoggedRobot {
     autoChooser.addOption("3 Piece", superstructure.L4_3Piece(autoFactory, false).cmd());
     autoChooser.addOption(
         "Processor 3 Piece", superstructure.L4_3Piece(autoFactory, true).cmd().withTimeout(15));
+    autoChooser.addOption("Trough 3 Piece", superstructure.Trough_3Piece(autoFactory, false).cmd());
   }
 
   public static boolean replay = false;
