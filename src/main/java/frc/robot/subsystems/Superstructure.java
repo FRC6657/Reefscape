@@ -71,13 +71,13 @@ public class Superstructure {
     Constants.Elevator.maxHeight // L4 + Algae mode = score on barge
   };
 
-  Trigger climberPastFlagThreshold =
-      new Trigger(() -> climber.inputs.setpoint < Constants.ClimberConstants.secondaryMinRotations);
+  Trigger climberExtendedThreshold = new Trigger(() -> climber.inputs.position > Constants.ClimberConstants.maxRotations);
+  Trigger climberPastFlagThreshold = new Trigger(() -> climber.inputs.position > Constants.ClimberConstants.secondaryMinRotations);
 
   Trigger climberEmergencyStop =
       new Trigger(
           () ->
-              climber.inputs.setpoint > Constants.ClimberConstants.secondaryMinRotations
+              climber.inputs.position < Constants.ClimberConstants.secondaryMinRotations
                   && climbingFlag);
 
   // Constructor
@@ -94,12 +94,10 @@ public class Superstructure {
     this.intake = intake;
     this.dealg = dealg;
     this.climber = climber;
-    // climberPastFlagThreshold.onTrue(
-    //     Commands.runOnce(
-    //         () -> {
-    //           climbingFlag = true;
-    //         }));
-    // climberEmergencyStop.onTrue(climber.setVoltage(0));
+    
+    climberPastFlagThreshold.onTrue(Commands.runOnce(() -> {climbingFlag = true;}));
+    climberEmergencyStop.onTrue(climber.setVoltage(0));
+    climberExtendedThreshold.onTrue(climber.setVoltage(0));
   }
 
   /*

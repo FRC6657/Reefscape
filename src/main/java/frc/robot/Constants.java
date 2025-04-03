@@ -425,10 +425,10 @@ public class Constants {
   }
 
   public static final class ClimberConstants {
-    public static double maxRotations = 90;
-    public static double secondaryMinRotations = 30;
+    public static double maxRotations = 15;
+    public static double secondaryMinRotations = 10;
     public static double minRotations = 0;
-    public static double gearing = 60d;
+    public static double gearing = 100d;
     public static int currentLimit = 40;
   }
 }
