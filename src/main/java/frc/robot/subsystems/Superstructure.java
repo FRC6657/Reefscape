@@ -601,6 +601,64 @@ public class Superstructure {
     return routine;
   }
 
+  public AutoRoutine ThreeAlgae(AutoFactory factory) {
+    final AutoRoutine routine = factory.newRoutine("Three Algae");
+
+    final AutoTrajectory S_P1 = routine.trajectory("Three Algae", 0);
+    final AutoTrajectory P1_B1 =
+        routine.trajectory(
+            "Three Algae",
+            1); // These are not in use since we just use goToPose instead of using the trajectory
+    // when alligning to the barge
+    final AutoTrajectory B1_A2 = routine.trajectory("Three Algae", 2);
+    final AutoTrajectory A2_B2 = routine.trajectory("Three Algae", 3);
+    final AutoTrajectory B2_A3 = routine.trajectory("Three Algae", 4);
+    final AutoTrajectory A3_B3 = routine.trajectory("Three Algae", 5);
+
+    Command Start =
+        Commands.sequence(
+                AutonomousScoringSequence(4, "Right"),
+                selectPiece("Algae"),
+                drivebase.driveRR(() -> new ChassisSpeeds(0.4, 0, 0)).withTimeout(1.1),
+                drivebase.driveRR(() -> new ChassisSpeeds(0, 0, 0)).withTimeout(0.01),
+                selectElevatorHeight(2),
+                AutoAim(true),
+                ElevatorIntake(),
+                ReefLineUp(),
+                Commands.sequence(ElevatorScore(), HomeRobot()),
+                new ScheduleCommand(B1_A2.cmd()))
+            .asProxy();
+
+    B1_A2
+        .atTimeBeforeEnd(0.7)
+        .onTrue(
+            Commands.sequence(
+                    selectElevatorHeight(3),
+                    AutoAim(true),
+                    ElevatorIntake(),
+                    ReefLineUp(),
+                    ElevatorScore(),
+                    HomeRobot(),
+                    B2_A3.cmd())
+                .asProxy());
+
+    B2_A3
+        .atTimeBeforeEnd(0.6)
+        .onTrue(
+            Commands.sequence(
+                    selectElevatorHeight(3),
+                    AutoAim(true),
+                    ElevatorIntake(),
+                    ReefLineUp(),
+                    ElevatorScore(),
+                    HomeRobot())
+                .asProxy());
+
+    routine.active().onTrue(Commands.sequence(S_P1.resetOdometry(), Start));
+
+    return routine;
+  }
+
   public AutoRoutine L4_3Piece(AutoFactory factory, boolean mirror) {
 
     final AutoRoutine routine = factory.newRoutine("3 Piece");
