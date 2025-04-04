@@ -1,7 +1,6 @@
 package frc.robot.subsystems.climber;
 
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
@@ -19,8 +18,7 @@ public class ClimberIO_Sim implements ClimberIO {
               DCMotor.getNEO(1), 0.0001, Constants.ClimberConstants.gearing),
           DCMotor.getNEO(1));
 
-  public ClimberIO_Sim() {
-  }
+  public ClimberIO_Sim() {}
 
   @Override
   public void updateInputs(ClimberIOInputs inputs) {

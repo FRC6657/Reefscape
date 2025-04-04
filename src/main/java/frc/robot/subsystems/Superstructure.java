@@ -71,8 +71,10 @@ public class Superstructure {
     Constants.Elevator.maxHeight // L4 + Algae mode = score on barge
   };
 
-  Trigger climberExtendedThreshold = new Trigger(() -> climber.inputs.position > Constants.ClimberConstants.maxRotations);
-  Trigger climberPastFlagThreshold = new Trigger(() -> climber.inputs.position > Constants.ClimberConstants.secondaryMinRotations);
+  Trigger climberExtendedThreshold =
+      new Trigger(() -> climber.inputs.position > Constants.ClimberConstants.maxRotations);
+  Trigger climberPastFlagThreshold =
+      new Trigger(() -> climber.inputs.position > Constants.ClimberConstants.secondaryMinRotations);
 
   Trigger climberEmergencyStop =
       new Trigger(
@@ -94,8 +96,12 @@ public class Superstructure {
     this.intake = intake;
     this.dealg = dealg;
     this.climber = climber;
-    
-    climberPastFlagThreshold.onTrue(Commands.runOnce(() -> {climbingFlag = true;}));
+
+    climberPastFlagThreshold.onTrue(
+        Commands.runOnce(
+            () -> {
+              climbingFlag = true;
+            }));
     climberEmergencyStop.onTrue(climber.setVoltage(0));
     climberExtendedThreshold.onTrue(climber.setVoltage(0));
   }
@@ -496,6 +502,12 @@ public class Superstructure {
 
   public Command ReefLineUp() {
     return Commands.sequence(
+        drivebase
+            .driveRR(() -> new ChassisSpeeds(0.6, 0, 0))
+            .withTimeout(0.5), // get safely away from the reef
+        selectPiece("Algae"),
+        selectElevatorHeight(4),
+        raiseElevator(),
         new DriveToPose(
             drivebase,
             () -> {
@@ -506,10 +518,7 @@ public class Superstructure {
             Units.inchesToMeters(0.5),
             Units.degreesToRadians(1),
             new Constraints(1, 1),
-            new Constraints(Units.rotationsToRadians(1), Units.rotationsToRadians(2))),
-        selectPiece("Algae"),
-        selectElevatorHeight(4),
-        raiseElevator());
+            new Constraints(Units.rotationsToRadians(1), Units.rotationsToRadians(2))));
   }
 
   public AutoRoutine DirectionTest(AutoFactory factory, boolean mirror) {
@@ -573,7 +582,8 @@ public class Superstructure {
                 ElevatorIntake(),
                 // new ScheduleCommand(P1_Algae.cmd())
                 ReefLineUp(),
-                Commands.sequence(ElevatorScore(), HomeRobot()),
+                ElevatorScore(), 
+                HomeRobot(),
                 new ScheduleCommand(Barge_Algae.cmd()))
             .asProxy();
 
