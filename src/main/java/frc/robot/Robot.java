@@ -236,18 +236,18 @@ public class Robot extends LoggedRobot {
         .b()
         .onFalse(Commands.runOnce(() -> swerve.drive(new ChassisSpeeds())).andThen(rumble(0, 0)));
 
-    operator.button(3).onTrue(superstructure.selectElevatorHeight(2)); // 9
-    operator.button(6).onTrue(superstructure.selectElevatorHeight(3)); // 8
-    operator.button(9).onTrue(superstructure.selectElevatorHeight(4)); // 7
+    operator.button(9).onTrue(superstructure.selectElevatorHeight(2)); // 9
+    operator.button(8).onTrue(superstructure.selectElevatorHeight(3)); // 8
+    operator.button(7).onTrue(superstructure.selectElevatorHeight(4)); // 7
 
-    operator.button(4).onTrue(superstructure.selectPiece("Coral")); // 2
+    operator.button(2).onTrue(superstructure.selectPiece("Coral")); // 2
     operator.button(5).onTrue(superstructure.selectPiece("Algae")); // 5
 
-    operator.button(2).onTrue(superstructure.selectReef("Left")); // 6
-    operator.button(1).onTrue(superstructure.selectReef("Right")); // 3
+    operator.button(6).onTrue(superstructure.selectReef("Left")); // 6
+    operator.button(3).onTrue(superstructure.selectReef("Right")); // 3
 
-    operator.button(7).onTrue(superstructure.RaiseClimber()).onFalse(climber.setVoltage(0)); // 1
-    operator.button(8).onTrue(superstructure.LowerClimber()).onFalse(climber.setVoltage(0)); // 4
+    operator.button(1).onTrue(superstructure.RaiseClimber()).onFalse(climber.setVoltage(0)); // 1
+    operator.button(4).onTrue(superstructure.LowerClimber()).onFalse(climber.setVoltage(0)); // 4
 
     // Manual Elevator Controls
     driver.povUp().onTrue(superstructure.raiseElevator());

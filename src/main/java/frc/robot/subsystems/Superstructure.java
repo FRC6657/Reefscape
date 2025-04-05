@@ -744,13 +744,15 @@ public class Superstructure {
                     .driveRR(() -> new ChassisSpeeds(0.05 * Constants.Swerve.maxLinearSpeed, 0, 0))
                     .withTimeout(0.2),
                 GroundIntakeScore(),
-                P1_I1.cmd())
+                P1_I1.cmd(),
+                dealg.changeSetpoint(Units.degreesToRotations(10)))
             .asProxy();
 
     P1_I1
         .done()
         .onTrue(
             Commands.sequence(
+                    dealg.changeSetpoint(Units.degreesToRotations(10)),
                     outtake.changeRollerSetpoint(-0.5),
                     Commands.waitUntil(outtake::coralDetected).withTimeout(3),
                     outtake.changeRollerSetpoint(0),
@@ -762,13 +764,15 @@ public class Superstructure {
         .onTrue(
             Commands.sequence(
                     AutonomousScoringSequence(4, mirror ? "Right" : "Left"),
-                    new ScheduleCommand(P2_I2.cmd()))
+                    new ScheduleCommand(P2_I2.cmd()),
+                    dealg.changeSetpoint(Units.degreesToRotations(10)))
                 .asProxy());
 
     P2_I2
         .done()
         .onTrue(
             Commands.sequence(
+                    dealg.changeSetpoint(Units.degreesToRotations(10)),
                     outtake.changeRollerSetpoint(-0.5),
                     Commands.waitUntil(outtake::coralDetected).withTimeout(3),
                     outtake.changeRollerSetpoint(0),
