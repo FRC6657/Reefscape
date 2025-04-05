@@ -97,13 +97,13 @@ public class Superstructure {
     this.dealg = dealg;
     this.climber = climber;
 
-    climberPastFlagThreshold.onTrue(
-        Commands.runOnce(
-            () -> {
-              climbingFlag = true;
-            }));
-    climberEmergencyStop.onTrue(climber.setVoltage(0));
-    climberExtendedThreshold.onTrue(climber.setVoltage(0));
+    // climberPastFlagThreshold.onTrue(
+    //     Commands.runOnce(
+    //         () -> {
+    //           climbingFlag = true;
+    //         }));
+    // climberEmergencyStop.onTrue(climber.setVoltage(0));
+    // climberExtendedThreshold.onTrue(climber.setVoltage(0));
   }
 
   /*
@@ -393,8 +393,8 @@ public class Superstructure {
     return Commands.sequence(
         logMessage("Raising Climber"),
         elevator.changeSetpoint(Units.inchesToMeters(10)),
-        intake.changePivotSetpoint(Units.degreesToRadians(50)),
-        climber.setVoltage(-11.8));
+        intake.changePivotSetpoint(Constants.Intake.maxAngle),
+        climber.setVoltage(-12));
   }
 
   // Lowers the climer.
@@ -402,7 +402,7 @@ public class Superstructure {
     return Commands.sequence(
         Commands.either(
             climber.setVoltage(0),
-            climber.setVoltage(11),
+            climber.setVoltage(12),
             () ->
                 climbingFlag
                     && climber.inputs.setpoint
@@ -496,7 +496,7 @@ public class Superstructure {
                     this::getNearestReef,
                     Units.inchesToMeters(0.75),
                     Units.degreesToRadians(1),
-                    new Constraints(2, 1),
+                    new Constraints(2.5, 1.5),
                     new Constraints(Units.rotationsToRadians(1), Units.rotationsToRadians(2)))));
   }
 
@@ -555,7 +555,7 @@ public class Superstructure {
   public Command AutonomousScoringSequence(int level, String reef) {
     return Commands.sequence(
         // Commands.runOnce(() -> drivebase.drive(new ChassisSpeeds()), drivebase),
-        AutoAim(4, reef, true),
+        AutoAim(4, reef, false),
         Commands.waitUntil(elevator::atSetpoint),
         Score(),
         // drivebase.driveVelocity(() -> new ChassisSpeeds(0.5, 0, 0)).withTimeout(0.125),
@@ -573,7 +573,7 @@ public class Superstructure {
 
     Command Start =
         Commands.sequence(
-                AutonomousScoringSequence(4, "Right"),
+                AutonomousScoringSequence(4, "Left"),
                 selectPiece("Algae"),
                 drivebase.driveRR(() -> new ChassisSpeeds(0.4, 0, 0)).withTimeout(1.1),
                 drivebase.driveRR(() -> new ChassisSpeeds(0, 0, 0)).withTimeout(0.01),
