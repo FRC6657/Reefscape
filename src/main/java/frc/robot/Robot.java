@@ -103,10 +103,10 @@ public class Robot extends LoggedRobot {
     cameras =
         new ApriltagCameras(
             swerve::addVisionMeasurement,
-            RobotBase.isReal()
+            RobotBase.isReal() || replay
                 ? new ApriltagCameraIO_Real(VisionConstants.WhiteReefInfo)
                 : new ApriltagCameraIO_Sim(VisionConstants.WhiteReefInfo, swerve::getPose),
-            RobotBase.isReal()
+            RobotBase.isReal() || replay
                 ? new ApriltagCameraIO_Real(VisionConstants.BlackReefInfo)
                 : new ApriltagCameraIO_Sim(VisionConstants.BlackReefInfo, swerve::getPose));
 
