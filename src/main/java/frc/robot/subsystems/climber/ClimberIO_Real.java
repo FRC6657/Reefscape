@@ -34,12 +34,14 @@ public class ClimberIO_Real implements ClimberIO {
 
     motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
+    motor.getEncoder().setPosition(0);
+
     changeSetpoint(Constants.ClimberConstants.minRotations);
   }
 
   @Override
   public void updateInputs(ClimberIOInputs inputs) {
-    inputs.position = motor.getEncoder().getPosition();
+    inputs.position = -motor.getEncoder().getPosition();
     inputs.velocity = motor.getEncoder().getVelocity();
     inputs.current = motor.getOutputCurrent();
     inputs.voltage = motor.getAppliedOutput() * RobotController.getBatteryVoltage();

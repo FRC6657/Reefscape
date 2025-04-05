@@ -98,7 +98,8 @@ public class Swerve extends SubsystemBase {
    */
   public void resetPose(Pose2d pose) {
 
-    var yaw = RobotBase.isSimulation() ? pose.getRotation() : gyroInputs.yawPosition;
+    var yaw =
+        (RobotBase.isSimulation() && !Robot.replay) ? pose.getRotation() : gyroInputs.yawPosition;
     poseEstimator.resetPosition(
         yaw,
         Arrays.stream(modules).map(m -> m.getPosition()).toArray(SwerveModulePosition[]::new),
@@ -487,7 +488,7 @@ public class Swerve extends SubsystemBase {
       module.updateInputs();
     }
     odometryLock.unlock();
-    if (RobotBase.isReal()) {
+    if (RobotBase.isReal() || Robot.replay) {
       double[] sampleTimestamps = modules[0].getOdometryTimestamps();
       for (int i = 0; i < sampleTimestamps.length; i++) {
         SwerveModulePosition[] modulePositions = new SwerveModulePosition[4];

@@ -128,9 +128,10 @@ public class Robot extends LoggedRobot {
     autoChooser.addOption("3 Piece", superstructure.L4_3Piece(autoFactory, false).cmd());
     autoChooser.addOption(
         "Processor 3 Piece", superstructure.L4_3Piece(autoFactory, true).cmd().withTimeout(15));
-    autoChooser.addOption("Trough 3 Piece", superstructure.Trough_3Piece(autoFactory, false).cmd());
-    autoChooser.addOption(
-        "Trough 3 Piece Procesor", superstructure.Trough_3Piece(autoFactory, true).cmd());
+    // autoChooser.addOption("Trough 3 Piece", superstructure.Trough_3Piece(autoFactory,
+    // false).cmd());
+    // autoChooser.addOption(
+    //     "Trough 3 Piece Procesor", superstructure.Trough_3Piece(autoFactory, true).cmd());
   }
 
   public static boolean replay = false;
@@ -198,7 +199,7 @@ public class Robot extends LoggedRobot {
         .a()
         .whileTrue(
             Commands.sequence(
-                superstructure.AutoAim(true),
+                superstructure.AutoAim(false),
                 Commands.parallel(
                     rumble(0.25, 1),
                     swerve.driveRR(
@@ -235,18 +236,18 @@ public class Robot extends LoggedRobot {
         .b()
         .onFalse(Commands.runOnce(() -> swerve.drive(new ChassisSpeeds())).andThen(rumble(0, 0)));
 
-    operator.button(9).onTrue(superstructure.selectElevatorHeight(2));
-    operator.button(8).onTrue(superstructure.selectElevatorHeight(3));
-    operator.button(7).onTrue(superstructure.selectElevatorHeight(4));
+    operator.button(3).onTrue(superstructure.selectElevatorHeight(2)); // 9
+    operator.button(6).onTrue(superstructure.selectElevatorHeight(3)); // 8
+    operator.button(9).onTrue(superstructure.selectElevatorHeight(4)); // 7
 
-    operator.button(2).onTrue(superstructure.selectPiece("Coral"));
-    operator.button(5).onTrue(superstructure.selectPiece("Algae"));
+    operator.button(4).onTrue(superstructure.selectPiece("Coral")); // 2
+    operator.button(5).onTrue(superstructure.selectPiece("Algae")); // 5
 
-    operator.button(6).onTrue(superstructure.selectReef("Left"));
-    operator.button(3).onTrue(superstructure.selectReef("Right"));
+    operator.button(2).onTrue(superstructure.selectReef("Left")); // 6
+    operator.button(1).onTrue(superstructure.selectReef("Right")); // 3
 
-    operator.button(1).onTrue(superstructure.RaiseClimber()).onFalse(climber.setVoltage(0));
-    operator.button(4).onTrue(superstructure.LowerClimber()).onFalse(climber.setVoltage(0));
+    operator.button(7).onTrue(superstructure.RaiseClimber()).onFalse(climber.setVoltage(0)); // 1
+    operator.button(8).onTrue(superstructure.LowerClimber()).onFalse(climber.setVoltage(0)); // 4
 
     // Manual Elevator Controls
     driver.povUp().onTrue(superstructure.raiseElevator());
@@ -295,6 +296,7 @@ public class Robot extends LoggedRobot {
   public void teleopInit() {
     if (autoChooser.get() != null) {
       autoChooser.get().cancel();
+      superstructure.HomeRobot().schedule();
     }
   }
 

@@ -62,7 +62,7 @@ public class Superstructure {
   private double[] elevatorSetpoints = {
     0,
     0,
-    Units.inchesToMeters(15.5), // L2
+    Units.inchesToMeters(16.5), // L2
     Units.inchesToMeters(31.5), // L3
     Units.inchesToMeters(57.5), // L4
     // Here on out is for algae
@@ -287,6 +287,7 @@ public class Superstructure {
     return Commands.either(
         Commands.sequence(
             logMessage("Elevator Intake"),
+            dealg.changeSetpoint(Units.degreesToRotations(10)),
             outtake.changeRollerSetpoint(-0.5),
             Commands.waitUntil(outtake::coralDetected)
                 .raceWith(
@@ -392,9 +393,8 @@ public class Superstructure {
     return Commands.sequence(
         logMessage("Raising Climber"),
         elevator.changeSetpoint(Units.inchesToMeters(10)),
-        dealg.changeSetpoint(Units.degreesToRotations(30)),
         intake.changePivotSetpoint(Units.degreesToRadians(50)),
-        climber.setVoltage(-11));
+        climber.setVoltage(-11.8));
   }
 
   // Lowers the climer.
@@ -402,7 +402,7 @@ public class Superstructure {
     return Commands.sequence(
         Commands.either(
             climber.setVoltage(0),
-            climber.setVoltage(6),
+            climber.setVoltage(11),
             () ->
                 climbingFlag
                     && climber.inputs.setpoint
@@ -468,7 +468,7 @@ public class Superstructure {
                         () -> getNearestReef().plus(new Transform2d(0.25, 0, new Rotation2d())),
                         Units.inchesToMeters(12),
                         Units.degreesToRadians(5),
-                        new Constraints(4, 2),
+                        new Constraints(4, 4),
                         new Constraints(Units.rotationsToRadians(1), Units.rotationsToRadians(2)))
                     // drivebase
                     //     .goToPoseCoarse(
@@ -494,9 +494,9 @@ public class Superstructure {
                 new DriveToPose(
                     drivebase,
                     this::getNearestReef,
-                    Units.inchesToMeters(0.5),
+                    Units.inchesToMeters(0.75),
                     Units.degreesToRadians(1),
-                    new Constraints(1, 1),
+                    new Constraints(2, 1),
                     new Constraints(Units.rotationsToRadians(1), Units.rotationsToRadians(2)))));
   }
 
@@ -515,8 +515,8 @@ public class Superstructure {
                 return new Pose2d(9.9, 2.5, new Rotation2d(0));
               else return new Pose2d(7.6, 5.4, new Rotation2d(Math.PI));
             },
-            Units.inchesToMeters(0.5),
-            Units.degreesToRadians(1),
+            Units.inchesToMeters(2.0),
+            Units.degreesToRadians(5),
             new Constraints(1, 1),
             new Constraints(Units.rotationsToRadians(1), Units.rotationsToRadians(2))));
   }
@@ -582,7 +582,7 @@ public class Superstructure {
                 ElevatorIntake(),
                 // new ScheduleCommand(P1_Algae.cmd())
                 ReefLineUp(),
-                ElevatorScore(), 
+                ElevatorScore(),
                 HomeRobot(),
                 new ScheduleCommand(Barge_Algae.cmd()))
             .asProxy();
