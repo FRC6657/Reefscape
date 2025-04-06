@@ -35,7 +35,7 @@ public class DriveToPose extends Command {
   private TrapezoidProfile driveProfile;
   private final PIDController driveController = new PIDController(4, 0.0, 0.0, 0.02);
   private final ProfiledPIDController thetaController =
-      new ProfiledPIDController(4, 0.0, 0.0, new TrapezoidProfile.Constraints(0.0, 0.0), 0.02);
+      new ProfiledPIDController(4.5, 0.0, 0.0, new TrapezoidProfile.Constraints(0.0, 0.0), 0.02);
 
   private Translation2d lastSetpointTranslation = Translation2d.kZero;
   private Translation2d lastSetpointVelocity = Translation2d.kZero;
