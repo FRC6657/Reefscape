@@ -50,6 +50,7 @@ import frc.robot.subsystems.vision.ApriltagCameraIO_Real;
 import frc.robot.subsystems.vision.ApriltagCameraIO_Sim;
 import frc.robot.subsystems.vision.ApriltagCameras;
 import frc.robot.util.DriveToPose;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
@@ -78,6 +79,9 @@ public class Robot extends LoggedRobot {
   private LoggedDashboardChooser<Command> autoChooser =
       new LoggedDashboardChooser<>("Auto Chooser");
 
+  @AutoLogOutput(key = "RobotStates/SlowMode")
+  private boolean slowMode = false;
+
   public Robot() {
 
     DriverStation.silenceJoystickConnectionWarning(true);
@@ -103,10 +107,10 @@ public class Robot extends LoggedRobot {
     cameras =
         new ApriltagCameras(
             swerve::addVisionMeasurement,
-            RobotBase.isReal()
+            RobotBase.isReal() || replay
                 ? new ApriltagCameraIO_Real(VisionConstants.WhiteReefInfo)
                 : new ApriltagCameraIO_Sim(VisionConstants.WhiteReefInfo, swerve::getPose),
-            RobotBase.isReal()
+            RobotBase.isReal() || replay
                 ? new ApriltagCameraIO_Real(VisionConstants.BlackReefInfo)
                 : new ApriltagCameraIO_Sim(VisionConstants.BlackReefInfo, swerve::getPose));
 
@@ -128,9 +132,10 @@ public class Robot extends LoggedRobot {
     autoChooser.addOption("3 Piece", superstructure.L4_3Piece(autoFactory, false).cmd());
     autoChooser.addOption(
         "Processor 3 Piece", superstructure.L4_3Piece(autoFactory, true).cmd().withTimeout(15));
-    autoChooser.addOption("Trough 3 Piece", superstructure.Trough_3Piece(autoFactory, false).cmd());
-    autoChooser.addOption(
-        "Trough 3 Piece Procesor", superstructure.Trough_3Piece(autoFactory, true).cmd());
+    // autoChooser.addOption("Trough 3 Piece", superstructure.Trough_3Piece(autoFactory,
+    // false).cmd());
+    // autoChooser.addOption(
+    //     "Trough 3 Piece Procesor", superstructure.Trough_3Piece(autoFactory, true).cmd());
   }
 
   public static boolean replay = false;
@@ -160,18 +165,19 @@ public class Robot extends LoggedRobot {
                 new ChassisSpeeds(
                     -MathUtil.applyDeadband(driver.getLeftY(), 0.1)
                         * Constants.Swerve.maxLinearSpeed
-                        * 0.7
-                        * elevator.driveSpeedMultiplier(),
+                        * 0.8
+                        * elevator.driveSpeedMultiplier()
+                        * (slowMode ? 0.3 : 1),
                     -MathUtil.applyDeadband(driver.getLeftX(), 0.1)
                         * Constants.Swerve.maxLinearSpeed
-                        * 0.7
-                        * elevator.driveSpeedMultiplier(),
+                        * 0.8
+                        * elevator.driveSpeedMultiplier()
+                        * (slowMode ? 0.3 : 1),
                     -MathUtil.applyDeadband(driver.getRightX(), 0.1)
                         * Constants.Swerve.maxAngularSpeed
                         * 0.5
-                        * Math.sqrt(
-                            elevator
-                                .driveSpeedMultiplier())))); // the sqrt makes the multiplier less
+                        * Math.sqrt(elevator.driveSpeedMultiplier())
+                        * (slowMode ? 0.3 : 1)))); // the sqrt makes the multiplier less
     // strong for rotating
 
     debug
@@ -198,7 +204,9 @@ public class Robot extends LoggedRobot {
         .a()
         .whileTrue(
             Commands.sequence(
-                superstructure.AutoAim(true),
+                superstructure.AutoAim(false),
+                Commands.waitUntil(elevator::atSetpoint),
+                // superstructure.Score(),
                 Commands.parallel(
                     rumble(0.25, 1),
                     swerve.driveRR(
@@ -235,18 +243,20 @@ public class Robot extends LoggedRobot {
         .b()
         .onFalse(Commands.runOnce(() -> swerve.drive(new ChassisSpeeds())).andThen(rumble(0, 0)));
 
-    operator.button(9).onTrue(superstructure.selectElevatorHeight(2));
-    operator.button(8).onTrue(superstructure.selectElevatorHeight(3));
-    operator.button(7).onTrue(superstructure.selectElevatorHeight(4));
+    driver.x().onTrue(Commands.runOnce(() -> this.slowMode = !this.slowMode));
 
-    operator.button(2).onTrue(superstructure.selectPiece("Coral"));
-    operator.button(5).onTrue(superstructure.selectPiece("Algae"));
+    operator.button(9).onTrue(superstructure.selectElevatorHeight(2)); // 9
+    operator.button(8).onTrue(superstructure.selectElevatorHeight(3)); // 8
+    operator.button(7).onTrue(superstructure.selectElevatorHeight(4)); // 7
 
-    operator.button(6).onTrue(superstructure.selectReef("Left"));
-    operator.button(3).onTrue(superstructure.selectReef("Right"));
+    operator.button(2).onTrue(superstructure.selectPiece("Coral")); // 2
+    operator.button(5).onTrue(superstructure.selectPiece("Algae")); // 5
 
-    operator.button(1).onTrue(superstructure.RaiseClimber()).onFalse(climber.setVoltage(0));
-    operator.button(4).onTrue(superstructure.LowerClimber()).onFalse(climber.setVoltage(0));
+    operator.button(6).onTrue(superstructure.selectReef("Left")); // 6
+    operator.button(3).onTrue(superstructure.selectReef("Right")); // 3
+
+    operator.button(1).onTrue(superstructure.RaiseClimber()).onFalse(climber.setVoltage(0)); // 1
+    operator.button(4).onTrue(superstructure.LowerClimber()).onFalse(climber.setVoltage(0)); // 4
 
     // Manual Elevator Controls
     driver.povUp().onTrue(superstructure.raiseElevator());
@@ -295,6 +305,7 @@ public class Robot extends LoggedRobot {
   public void teleopInit() {
     if (autoChooser.get() != null) {
       autoChooser.get().cancel();
+      superstructure.HomeRobot().schedule();
     }
   }
 

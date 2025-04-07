@@ -33,9 +33,9 @@ public class DriveToPose extends Command {
   private final Supplier<Pose2d> target;
 
   private TrapezoidProfile driveProfile;
-  private final PIDController driveController = new PIDController(3.5, 0.0, 0.0, 0.02);
+  private final PIDController driveController = new PIDController(3.75, 0.0, 0.0, 0.02);
   private final ProfiledPIDController thetaController =
-      new ProfiledPIDController(4, 0.0, 0.0, new TrapezoidProfile.Constraints(0.0, 0.0), 0.02);
+      new ProfiledPIDController(4.375, 0.0, 0.0, new TrapezoidProfile.Constraints(0.0, 0.0), 0.02);
 
   private Translation2d lastSetpointTranslation = Translation2d.kZero;
   private Translation2d lastSetpointVelocity = Translation2d.kZero;
@@ -61,8 +61,8 @@ public class DriveToPose extends Command {
 
     // Enable continuous input for theta controller
     thetaController.enableContinuousInput(-Math.PI, Math.PI);
-    driveController.setTolerance(tTol, tTol / 2);
-    thetaController.setTolerance(rTol, rTol / 2);
+    driveController.setTolerance(tTol, tTol / 1);
+    thetaController.setTolerance(rTol, rTol / 1);
 
     driveProfile = new TrapezoidProfile(tCon);
     thetaController.setConstraints(rCon);

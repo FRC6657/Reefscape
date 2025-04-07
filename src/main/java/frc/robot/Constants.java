@@ -145,11 +145,11 @@ public class Constants {
 
     // Basic filtering thresholds
     public static double maxAmbiguity = 0.3;
-    public static double maxZError = 0.75;
+    public static double maxZError = 0.15;
 
     // Standard deviation baselines, for 1 meter distance and 1 tag
     // (Adjusted automatically based on distance and # of tags)
-    public static double linearStdDevBaseline = 1; // Meters
+    public static double linearStdDevBaseline = 1.5; // Meters
     public static double angularStdDevBaseline = 0.12; // Radians
 
     // Standard deviation multipliers for each camera
@@ -425,8 +425,8 @@ public class Constants {
   }
 
   public static final class ClimberConstants {
-    public static double maxRotations = 15;
-    public static double secondaryMinRotations = 10;
+    public static double maxRotations = 5;
+    public static double secondaryMinRotations = 1.3;
     public static double minRotations = 0;
     public static double gearing = 100d;
     public static int currentLimit = 40;
