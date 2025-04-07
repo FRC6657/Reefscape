@@ -495,7 +495,7 @@ public class Superstructure {
                     drivebase,
                     this::getNearestReef,
                     Units.inchesToMeters(0.75),
-                    Units.degreesToRadians(1.25),
+                    Units.degreesToRadians(1),
                     new Constraints(2.5, 1.5),
                     new Constraints(Units.rotationsToRadians(1), Units.rotationsToRadians(2)))));
   }

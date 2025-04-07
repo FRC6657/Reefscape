@@ -50,7 +50,6 @@ import frc.robot.subsystems.vision.ApriltagCameraIO_Real;
 import frc.robot.subsystems.vision.ApriltagCameraIO_Sim;
 import frc.robot.subsystems.vision.ApriltagCameras;
 import frc.robot.util.DriveToPose;
-
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
@@ -79,8 +78,8 @@ public class Robot extends LoggedRobot {
 
   private LoggedDashboardChooser<Command> autoChooser =
       new LoggedDashboardChooser<>("Auto Chooser");
-  
-      @AutoLogOutput(key="RobotStates/SlowMode")
+
+  @AutoLogOutput(key = "RobotStates/SlowMode")
   private boolean slowMode = false;
 
   public Robot() {
@@ -206,6 +205,8 @@ public class Robot extends LoggedRobot {
         .whileTrue(
             Commands.sequence(
                 superstructure.AutoAim(false),
+                Commands.waitUntil(elevator::atSetpoint),
+                // superstructure.Score(),
                 Commands.parallel(
                     rumble(0.25, 1),
                     swerve.driveRR(
@@ -242,11 +243,7 @@ public class Robot extends LoggedRobot {
         .b()
         .onFalse(Commands.runOnce(() -> swerve.drive(new ChassisSpeeds())).andThen(rumble(0, 0)));
 
-    driver.x().onTrue(
-        Commands.runOnce(
-            () -> this.slowMode = !this.slowMode
-        )
-    );
+    driver.x().onTrue(Commands.runOnce(() -> this.slowMode = !this.slowMode));
 
     operator.button(9).onTrue(superstructure.selectElevatorHeight(2)); // 9
     operator.button(8).onTrue(superstructure.selectElevatorHeight(3)); // 8
