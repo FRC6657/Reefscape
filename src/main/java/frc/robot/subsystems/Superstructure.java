@@ -393,7 +393,7 @@ public class Superstructure {
     return Commands.sequence(
         logMessage("Raising Climber"),
         elevator.changeSetpoint(Units.inchesToMeters(10)),
-        intake.changePivotSetpoint(Constants.Intake.maxAngle),
+        intake.changePivotSetpoint(Units.degreesToRadians(35)),
         climber.setVoltage(-12));
   }
 
