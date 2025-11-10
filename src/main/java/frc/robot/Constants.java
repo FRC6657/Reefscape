@@ -357,8 +357,8 @@ public class Constants {
   public static class Outtake {
     public static double gearing = 11.0 / 24.0;
 
-    public static final double kSupplyLimit = 20;
-    public static final double kStatorLimit = 40;
+    public static final double kSupplyLimit = 15;
+    public static final double kStatorLimit = 30;
 
     public static final CurrentLimitsConfigs currentConfigs =
         new CurrentLimitsConfigs()
